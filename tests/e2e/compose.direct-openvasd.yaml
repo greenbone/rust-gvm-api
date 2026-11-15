@@ -34,7 +34,7 @@ services:
 
   gpg-data:
     <<: *direct-profile
-    image: registry.community.greenbone.net/community/gpg-data:latest@sha256:9495e444f1fc5ed48645239331390d45b37988bcc4f841c3b99324240194b2de
+    image: registry.community.greenbone.net/community/gpg-data:latest@sha256:b71ef998e19d738ece74c96aaf419efde4071ed8824608553021c60b0d2c8bc7
     volumes:
       - gpg_data_vol:/mnt
 

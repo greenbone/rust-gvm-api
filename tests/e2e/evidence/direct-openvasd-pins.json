@@ -29,7 +29,7 @@
     "vulnerability-tests": "registry.community.greenbone.net/community/vulnerability-tests:latest@sha256:851983199d390aeb04d3c03eacdd1334ea351ebaf44e3c69791e6056efd5b31a",
     "data-objects": "registry.community.greenbone.net/community/data-objects:latest@sha256:d441df44088a368d6474bce174197b7f7dee3f0baeec9b0cdcbc5653309da66c",
     "report-formats": "registry.community.greenbone.net/community/report-formats:latest@sha256:7ad0fee3214ee1b309cc8990d2edcd1af68ef1e0f40b9bb349adca9a5af6d32c",
-    "gpg-data": "registry.community.greenbone.net/community/gpg-data:latest@sha256:9495e444f1fc5ed48645239331390d45b37988bcc4f841c3b99324240194b2de",
+    "gpg-data": "registry.community.greenbone.net/community/gpg-data:latest@sha256:b71ef998e19d738ece74c96aaf419efde4071ed8824608553021c60b0d2c8bc7",
     "notus-data": "registry.community.greenbone.net/community/notus-data:latest@sha256:ecae93207cf3e675358568b5d31e37a805ead7327aca8c33230348352dd52d5a",
     "pg-gvm-migrator": "registry.community.greenbone.net/community/pg-gvm-migrator:stable@sha256:8fc1cc11cac0481674527e01ec7610a8195110cf117d700bd47fe3af7012b34d",
     "pg-gvm": "registry.community.greenbone.net/community/pg-gvm:stable@sha256:a18d9e2f0cbba7839e65547a2331ce8f984500e8c4fbe91d08f9a48036d03fa2",
