@@ -17,6 +17,7 @@ from typing import Any
 from shadow_evidence_ledger import (
     JOB,
     REPOSITORY,
+    REPOSITORY_ALIASES,
     WORKFLOW,
     LedgerError,
     append_entry,
@@ -146,7 +147,7 @@ def trusted_environment() -> dict[str, str]:
         raise PersistenceError(f"missing workflow identity: {', '.join(missing)}")
     environment = dict(os.environ)
     if (
-        environment["GITHUB_REPOSITORY"] != REPOSITORY
+        environment["GITHUB_REPOSITORY"] not in REPOSITORY_ALIASES
         or environment["GITHUB_EVENT_NAME"] not in TRUSTED_EVENTS
         or environment["GITHUB_REF"] not in TRUSTED_REFS
     ):

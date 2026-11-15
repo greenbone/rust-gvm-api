@@ -482,6 +482,51 @@ class E2eEvidenceTests(unittest.TestCase):
             with self.assertRaisesRegex(PERSIST_LEDGER.PersistenceError, "untrusted"):
                 PERSIST_LEDGER.trusted_environment()
 
+    def test_persistence_accepts_transferred_repository_on_trusted_ref(self) -> None:
+        """A GitHub owner transfer must not reject otherwise trusted main evidence."""
+
+        environment = {
+            "GITHUB_REPOSITORY": "greenbone/rust-gvm-api",
+            "GITHUB_RUN_ID": "7",
+            "GITHUB_RUN_ATTEMPT": "1",
+            "GITHUB_EVENT_NAME": "push",
+            "GITHUB_REF": "refs/heads/main",
+            "GITHUB_SHA": "a" * 40,
+        }
+        with patch.dict(PERSIST_LEDGER.os.environ, environment, clear=True):
+            self.assertEqual(
+                PERSIST_LEDGER.trusted_environment()["GITHUB_REPOSITORY"],
+                "greenbone/rust-gvm-api",
+            )
+
+        environment["GITHUB_REPOSITORY"] = "example/rust-gvm-api"
+        with patch.dict(PERSIST_LEDGER.os.environ, environment, clear=True):
+            with self.assertRaisesRegex(PERSIST_LEDGER.PersistenceError, "untrusted"):
+                PERSIST_LEDGER.trusted_environment()
+
+    def test_durable_ledger_accepts_current_repository_owner_urls(self) -> None:
+        """Transferred GitHub run URLs remain valid while the ledger identity stays stable."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            args = self.phase3_fixture(Path(directory))
+            ledger = LEDGER.validate_ledger(args.ledger_root)
+            entry = ledger["entries"][0]
+            run_dir = args.ledger_root / "runs" / f"{entry['runId']}-{entry['runAttempt']}"
+            files = {
+                item["path"]: (run_dir / item["path"]).read_bytes()
+                for item in entry["files"]
+            }
+            run_evidence = json.loads(files["final/run-evidence.json"])
+            run_url = (
+                "https://github.com/greenbone/rust-gvm-api/actions/runs/"
+                f"{entry['runId']}"
+            )
+            run_evidence["runUrl"] = run_url
+            run_evidence["jobUrl"] = f"{run_url}/job/{run_evidence['jobId']}"
+            files["final/run-evidence.json"] = json.dumps(run_evidence).encode()
+
+            LEDGER.validate_finalized_payload(entry, files)
+
     def test_finalizer_distinguishes_uploaded_artifacts_from_complete_diagnostics(self) -> None:
         """Two missing failure diagnostics must remain visible even when an artifact uploaded."""
 
