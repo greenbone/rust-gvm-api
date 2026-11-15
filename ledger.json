@@ -3,5 +3,81 @@
   "repository": "greenbone-hive/rust-gvm-api",
   "workflow": ".github/workflows/nightly-e2e.yml",
   "job": "Direct OpenVASD Shadow E2E (advisory)",
-  "entries": []
+  "entries": [
+    {
+      "sequence": 1,
+      "runId": 43730382261,
+      "runAttempt": 1,
+      "createdAt": "2026-11-15T15:31:48Z",
+      "comparisonFingerprint": "9484b1c0afef5f3c6cfe326d2353896a10d9bf65fb6b50a73c1859046f899a1a",
+      "evidenceArtifactId": 14168796398,
+      "rawArtifactId": 14168551954,
+      "provenanceSha256": "fc8f1a18c6c3b6f0930ce90e1d3a4cb7df1af0a299fdb9ed2c631667fe69dec7",
+      "payloadSha256": "5630488f09e357980932b4bb7b68326505d1148939ec49b557a1ce5bd5ea32e9",
+      "previousEntrySha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "files": [
+        {
+          "path": "final/comparison.json",
+          "size": 10337,
+          "sha256": "c17994a3dd555a45913f18e7c2f9f1547d42d32d83feaf9d626346e54cfb2b02"
+        },
+        {
+          "path": "final/diagnostic-evidence.json",
+          "size": 281,
+          "sha256": "ddb5f6764d2c797519dcd8b56e05befea29fe1980c8596a8610daee4d81a88d2"
+        },
+        {
+          "path": "final/fault-mappings.json",
+          "size": 1040,
+          "sha256": "2b4a86021a751215ae87c6a1ade1d04ec55d0d07bebea40fe38cd84802d20dd2"
+        },
+        {
+          "path": "final/provenance.json",
+          "size": 3219,
+          "sha256": "fc8f1a18c6c3b6f0930ce90e1d3a4cb7df1af0a299fdb9ed2c631667fe69dec7"
+        },
+        {
+          "path": "final/run-evidence.json",
+          "size": 778,
+          "sha256": "925c002a56fc9c15c952444e170456ef5d6c756eb9c050c9cccddc856d487ccc"
+        },
+        {
+          "path": "raw/cargo.log",
+          "size": 28493,
+          "sha256": "aaee6ff01f0b9332957d8e366c03997e661e4410244e8a12a4d994a97502c163"
+        },
+        {
+          "path": "raw/compose-ps.txt",
+          "size": 4477,
+          "sha256": "280912f0e3f408e7f3e5bcab2c9c260c742d07fca2b9ab8a6a6ddc47cb3c5a01"
+        },
+        {
+          "path": "raw/compose.log",
+          "size": 887856,
+          "sha256": "a4ca94b9ee5a1f8a9ad8d568bddf18c9174b8325440a64a372f08be544e0340c"
+        },
+        {
+          "path": "raw/faults.log",
+          "size": 7232,
+          "sha256": "a9c0132830de3f549b95cd42758b1767f95022e9421960ea3e6c953ad68cdc6f"
+        },
+        {
+          "path": "raw/provenance.json",
+          "size": 3219,
+          "sha256": "fc8f1a18c6c3b6f0930ce90e1d3a4cb7df1af0a299fdb9ed2c631667fe69dec7"
+        },
+        {
+          "path": "raw/runner-container-runtime.txt",
+          "size": 800,
+          "sha256": "f4309faaebe03a9946e3889afc15d099f9013584a1b12d3f662a83ddb555a9a3"
+        },
+        {
+          "path": "raw/running-services.txt",
+          "size": 104,
+          "sha256": "b1c34cd9817648675f9e3056a9bd3c5ba0f2138e122ffb2eb24fcd5f1b50fda7"
+        }
+      ],
+      "entrySha256": "5885e5c48b030e173f1100dc3b3b76471ce4f62db8c20c12c28acf0aac490170"
+    }
+  ]
 }
