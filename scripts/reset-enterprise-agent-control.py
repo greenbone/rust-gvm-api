@@ -4,10 +4,9 @@
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
-import urllib.error
 import urllib.parse
-import urllib.request
 
 
 class ResetError(RuntimeError):
@@ -44,20 +43,35 @@ def request(
     headers = {"Accept": "application/json"}
     if token is not None:
         headers["X-Emulator-Reset-Token"] = token
-    req = urllib.request.Request(
-        validated_http_url(url),
+    return http_request(
+        url,
         method=method or ("POST" if token is not None else "GET"),
         headers=headers,
-        data=body,
+        body=body,
     )
+
+
+def http_request(
+    url: str,
+    *,
+    method: str,
+    headers: dict[str, str],
+    body: bytes | None = None,
+) -> tuple[int, bytes]:
+    """Use only a validated HTTP(S) endpoint and preserve non-success responses."""
+
+    parsed = urllib.parse.urlsplit(validated_http_url(url))
+    connection_type = (
+        http.client.HTTPSConnection if parsed.scheme == "https" else http.client.HTTPConnection
+    )
+    connection = connection_type(parsed.hostname, port=parsed.port, timeout=10)
+    target = urllib.parse.urlunsplit(("", "", parsed.path, parsed.query, ""))
     try:
-        # validated_http_url excludes urllib's local-file and credential-bearing URL forms.
-        with urllib.request.urlopen(  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
-            req, timeout=10
-        ) as response:
-            return response.status, response.read()
-    except urllib.error.HTTPError as error:
-        return error.code, error.read()
+        connection.request(method, target, body=body, headers=headers)
+        response = connection.getresponse()
+        return response.status, response.read()
+    finally:
+        connection.close()
 
 
 def reset(base_url: str, token: str, name: str) -> dict[str, object]:
@@ -69,27 +83,21 @@ def reset(base_url: str, token: str, name: str) -> dict[str, object]:
 
 def reset_proxy(base_url: str, token: str) -> dict[str, object]:
     body = json.dumps({"scenario": "normal"}).encode()
-    request_object = urllib.request.Request(
-        validated_http_url(f"{base_url.rstrip('/')}/__control/scenario"),
+    status, response_body = http_request(
+        f"{base_url.rstrip('/')}/__control/scenario",
         method="PUT",
-        data=body,
+        body=body,
         headers={
             "Accept": "application/json",
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
         },
     )
-    try:
-        # validated_http_url excludes urllib's local-file and credential-bearing URL forms.
-        with urllib.request.urlopen(  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
-            request_object, timeout=10
-        ) as response:
-            status = response.status
-            document = json.loads(response.read())
-    except urllib.error.HTTPError as error:
+    if status != 200:
         raise ResetError(
-            f"Agent Control scenario proxy reset returned HTTP {error.code}: {error.read()[:512]!r}"
-        ) from error
+            f"Agent Control scenario proxy reset returned HTTP {status}: {response_body[:512]!r}"
+        )
+    document = json.loads(response_body)
     if status != 200 or document.get("scenario") != "normal":
         raise ResetError(
             f"Agent Control scenario proxy did not acknowledge normal state: HTTP {status}: {document!r}"

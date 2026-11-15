@@ -6,13 +6,12 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import hashlib
+import http.client
 import json
 import os
 import ssl
 import sys
-import urllib.error
 import urllib.parse
-import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -138,19 +137,22 @@ def request(
         )
     if not path.startswith("/") or "\r" in path or "\n" in path:
         raise CompatibilityFailure("incomplete-operator-input", f"unsafe request path: {path!r}")
-    req = urllib.request.Request(
-        f"{origin.rstrip('/')}{path}", headers={"Accept": "application/json", **headers}
+    # The supported Python runtime verifies certificates and hostnames through this explicit
+    # default context; the probe never permits a caller-supplied or verification-disabled context.
+    connection = http.client.HTTPSConnection(  # nosemgrep: python.lang.security.audit.httpsconnection-detected.httpsconnection-detected
+        parsed_origin.hostname,
+        port=parsed_origin.port,
+        timeout=timeout,
+        context=ssl.create_default_context(),
     )
     try:
-        # The origin is revalidated here so urllib cannot dispatch a local-file URL.
-        with urllib.request.urlopen(  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
-            req, timeout=timeout, context=ssl.create_default_context()
-        ) as response:
-            return response.status, preserve_headers(response.headers), response.read()
-    except urllib.error.HTTPError as error:
-        return error.code, preserve_headers(error.headers), error.read()
-    except (urllib.error.URLError, TimeoutError, OSError) as error:
+        connection.request("GET", path, headers={"Accept": "application/json", **headers})
+        response = connection.getresponse()
+        return response.status, preserve_headers(response.headers), response.read()
+    except (http.client.HTTPException, TimeoutError, OSError) as error:
         raise CompatibilityFailure("connectivity", str(error)) from error
+    finally:
+        connection.close()
 
 
 def preserve_headers(message: Any) -> dict[str, list[str]]:

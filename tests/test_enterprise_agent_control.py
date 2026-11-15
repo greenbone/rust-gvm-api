@@ -40,7 +40,7 @@ FINALIZER = load(
 
 class EnterpriseAgentControlTests(unittest.TestCase):
     def test_dynamic_url_helpers_reject_local_file_schemes_before_network_access(self) -> None:
-        """Operator-controlled URLs must never make urllib dispatch a local-file handler."""
+        """Operator-controlled URLs must never reach a transport as a local-file endpoint."""
 
         with self.assertRaises(CONFIGURE.ConfigurationError):
             CONFIGURE.api_request("file:///etc", "/passwd", "admin", "admin")
@@ -49,6 +49,19 @@ class EnterpriseAgentControlTests(unittest.TestCase):
         with self.assertRaises(REAL.CompatibilityFailure) as caught:
             REAL.request("file:///etc", "/passwd", {}, timeout=1)
         self.assertEqual(caught.exception.classification, "incomplete-operator-input")
+
+    def test_reviewed_helpers_do_not_dispatch_dynamic_urls_through_urllib(self) -> None:
+        """The review fix must remove urllib's local-file-capable dynamic dispatch entirely."""
+
+        for relative_path in (
+            "scripts/configure-enterprise-agent-owner.py",
+            "scripts/reset-enterprise-agent-control.py",
+            "scripts/run-real-agent-control-compatibility.py",
+        ):
+            with self.subTest(path=relative_path):
+                source = (ROOT / relative_path).read_text()
+                self.assertNotIn("urllib.request", source)
+                self.assertNotIn("urllib.error", source)
 
     def test_real_probe_rejects_incomplete_operator_inputs_before_network_access(self) -> None:
         """Credentials and provenance must never be guessed for the advisory real lane."""

@@ -5,12 +5,11 @@ from __future__ import annotations
 
 import argparse
 import base64
+import http.client
 import json
 import subprocess
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 
 
 AGENT_OWNER_SETTING = "1ee1f106-8b2e-461c-b426-7f5d76001b29"
@@ -48,20 +47,22 @@ def api_request(
 ) -> tuple[int, bytes]:
     if not path.startswith("/") or "\r" in path or "\n" in path:
         raise ConfigurationError(f"unsafe gateway request path: {path!r}")
+    origin = urllib.parse.urlsplit(validated_origin(base_url))
     authorization = base64.b64encode(f"{username}:{password}".encode()).decode()
-    request = urllib.request.Request(
-        f"{validated_origin(base_url)}{path}",
-        method=method,
-        headers={"Authorization": f"Basic {authorization}", "Accept": "application/json"},
+    connection_type = (
+        http.client.HTTPSConnection if origin.scheme == "https" else http.client.HTTPConnection
     )
+    connection = connection_type(origin.hostname, port=origin.port, timeout=30)
     try:
-        # The dynamic origin and path are constrained above to HTTP(S) without credentials.
-        with urllib.request.urlopen(  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
-            request, timeout=30
-        ) as response:
-            return response.status, response.read()
-    except urllib.error.HTTPError as error:
-        return error.code, error.read()
+        connection.request(
+            method,
+            path,
+            headers={"Authorization": f"Basic {authorization}", "Accept": "application/json"},
+        )
+        response = connection.getresponse()
+        return response.status, response.read()
+    finally:
+        connection.close()
 
 
 def admin_id(base_url: str, username: str, password: str) -> str:
