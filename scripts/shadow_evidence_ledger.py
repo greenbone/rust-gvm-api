@@ -13,6 +13,7 @@ from typing import Any
 SCHEMA_VERSION = 1
 ZERO_HASH = "0" * 64
 REPOSITORY = "greenbone-hive/rust-gvm-api"
+REPOSITORY_ALIASES = frozenset({REPOSITORY, "greenbone/rust-gvm-api"})
 WORKFLOW = ".github/workflows/nightly-e2e.yml"
 JOB = "Direct OpenVASD Shadow E2E (advisory)"
 REQUIRED_FINAL_DOCUMENTS = {
@@ -289,7 +290,11 @@ def validate_finalized_payload(entry: dict[str, Any], files: dict[str, bytes]) -
         "finalized run evidence",
     )
     identity = (entry["runId"], entry["runAttempt"])
-    expected_run_url = f"https://github.com/{REPOSITORY}/actions/runs/{identity[0]}"
+    expected_run_urls = {
+        f"https://github.com/{repository}/actions/runs/{identity[0]}"
+        for repository in REPOSITORY_ALIASES
+    }
+    run_url = run.get("runUrl")
     if (
         run.get("runId") != identity[0]
         or run.get("runAttempt") != identity[1]
@@ -300,11 +305,11 @@ def validate_finalized_payload(entry: dict[str, Any], files: dict[str, bytes]) -
         or run.get("headBranch") not in TRUSTED_BRANCHES
         or not isinstance(run.get("headSha"), str)
         or not run["headSha"]
-        or run.get("runUrl") != expected_run_url
+        or run_url not in expected_run_urls
         or not isinstance(run.get("jobId"), int)
         or isinstance(run.get("jobId"), bool)
         or run["jobId"] < 1
-        or run.get("jobUrl") != f"{expected_run_url}/job/{run['jobId']}"
+        or run.get("jobUrl") != f"{run_url}/job/{run['jobId']}"
         or run.get("conclusion") not in {"success", "failure", "timed_out"}
         or not isinstance(run.get("retried"), bool)
         or run["retried"] != (identity[1] > 1)
