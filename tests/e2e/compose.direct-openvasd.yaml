@@ -13,7 +13,7 @@ services:
 
   data-objects:
     <<: *direct-profile
-    image: registry.community.greenbone.net/community/data-objects:latest@sha256:d441df44088a368d6474bce174197b7f7dee3f0baeec9b0cdcbc5653309da66c
+    image: registry.community.greenbone.net/community/data-objects:latest@sha256:4242afe024ae1e361339eceb3900f93917aae769610b67a17642f81bf40194ae
     environment:
       FEED_RELEASE: "24.10"
       KEEP_ALIVE: "1"
@@ -40,7 +40,7 @@ services:
 
   notus-data:
     <<: *direct-profile
-    image: registry.community.greenbone.net/community/notus-data:latest@sha256:ecae93207cf3e675358568b5d31e37a805ead7327aca8c33230348352dd52d5a
+    image: registry.community.greenbone.net/community/notus-data:latest@sha256:2468dc7997b50482a7abc5761b6b338cbf4a530720bbe67942968672a9c969a1
     volumes:
       - notus_data_vol:/mnt
 
