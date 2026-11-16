@@ -1,0 +1,20 @@
+name: Build and Push
+
+on:
+  pull_request:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build-gvm-api:
+    name: Push GVM API Container
+    uses: greenbone/workflows/.github/workflows/container-build-push-2nd-gen.yml@main
+    with:
+      build-docker-file: ./Containerfile
+      build-context: ./
+      image-url: openvas-scan-dev/rust-gvm-api
+      image-labels: |
+        org.opencontainers.image.vendor=Greenbone
+        org.opencontainers.image.documentation=https://greenbone.github.io/docs/
+        org.opencontainers.image.base.name=debian:trixie-slim
+    secrets: inherit
