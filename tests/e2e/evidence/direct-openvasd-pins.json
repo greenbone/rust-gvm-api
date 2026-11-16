@@ -35,7 +35,7 @@
     "pg-gvm": "registry.community.greenbone.net/community/pg-gvm:stable@sha256:a18d9e2f0cbba7839e65547a2331ce8f984500e8c4fbe91d08f9a48036d03fa2",
     "scenario-proxy": "docker.io/library/nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10",
     "e2e-target": "docker.io/library/nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10",
-    "real-openvasd": "registry.community.greenbone.net/community/openvas-scanner:stable@sha256:c9dd880d314ba078d2c1b3609af45c837a2481a60c93c079caf8c818f17ebf13"
+    "real-openvasd": "registry.community.greenbone.net/community/openvas-scanner:stable@sha256:7b9e9714cdca23787570006c418b4c858033bdb53b6b1c01586736468046ccc9"
   },
   "identities": {
     "scannerBackend": "openvasd-backend",
