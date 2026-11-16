@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "emulator": {
     "sourceRepository": "greenbone/gvm-openapi-emulator",
-    "sourceRevision": "1a29de834b0e41aaa8cfd499cb029b6797b5212a",
+    "sourceRevision": "141e9cb57e786572178f4352c995e0b43b463bf5",
     "image": "ghcr.io/greenbone/gvm-openapi-emulator:edge@sha256:296d6ee3a3752071f840995d7df3f260f19d281d5014bd5a604f2dd26871c0c9",
     "openapiRevision": "6b0d7ec7e562aff805c8b2f968a8b0e18b5f63b2",
     "openapiSha256": "c57e15573b66d6fdba29a5378865f2029c6ea5e7a64e4dda640f68f793e0b825",
@@ -20,7 +20,7 @@
       "sample/scans/{id}/status/GET.succeeded.json": "85516bbf374323f17ef36704a2f0090221475eefa35deb40002c495e843b3ded",
       "sample/scans/{id}/status/scenario.json": "96f2b924a46210557aa08cc30c747638ad259269c661fd7f6d88840dab97753f",
       "sample/scans/{id}/status/scenario.time.json": "0bee217a8d656e8b5a4e7e57cdf4cede5f41e025c145072444ad1bd8f7cafb6c",
-      "sample/vts/GET.json": "187437d85c8d10e00c87f4611ab5ec8ffc4ce48fb5f8a646fab0e6d28c44d8ca",
+      "sample/vts/GET.json": "df20ede44ed9538010edd2649bc7aac44f279dedd1f2a20784ec8ff0c9fbbcdd",
       "swagger.json": "c57e15573b66d6fdba29a5378865f2029c6ea5e7a64e4dda640f68f793e0b825"
     }
   },
