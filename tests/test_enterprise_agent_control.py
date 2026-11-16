@@ -265,6 +265,14 @@ class EnterpriseAgentControlTests(unittest.TestCase):
         )
         self.assertNotIn("feat/49-stateful-agent-control-profile", json.dumps(pins))
 
+    def test_enterprise_workflow_fetches_history_for_pinned_api_blob(self) -> None:
+        """The provenance gate needs the pinned historical API blob, not only the tip tree."""
+
+        workflow = (ROOT / ".github/workflows/enterprise-agent-control.yml").read_text()
+        checkout = workflow.split("Check out exact Agent Control emulator source", 1)[1]
+        checkout = checkout.split("Set up pinned Rust", 1)[0]
+        self.assertIn("fetch-depth: 0", checkout)
+
     def test_production_image_excludes_enterprise_e2e_tools(self) -> None:
         """The default image must remain production-only while Compose opts into test tools."""
 

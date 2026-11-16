@@ -53,7 +53,7 @@ jobs:
           repository: greenbone/gvm-openapi-emulator
           ref: 82c03f6cf190942764f99ac799efc539cc57b4ca
           path: .temporary/gvm-openapi-emulator
-          fetch-depth: 1
+          fetch-depth: 0
           persist-credentials: false
       - name: Set up pinned Rust
         uses: greenbone/actions/setup-rust@d6d4c9500cb4e83f8a516ec1d40b04bcc720bd22 # v3
