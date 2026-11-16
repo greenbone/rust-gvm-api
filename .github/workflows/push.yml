@@ -8,7 +8,7 @@ on:
 jobs:
   build-gvm-api:
     name: Push GVM API Container
-    uses: greenbone/workflows/.github/workflows/container-build-push-2nd-gen.yml@main
+    uses: greenbone/workflows/.github/workflows/container-build-push-2nd-gen.yml@0019795e61c543a630eb2c9f2eaa19e986cd1c02
     with:
       build-docker-file: ./Containerfile
       build-context: ./
