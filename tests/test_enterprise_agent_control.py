@@ -244,6 +244,23 @@ class EnterpriseAgentControlTests(unittest.TestCase):
             with self.assertRaises(RESET.ResetError):
                 RESET.reset("http://127.0.0.1:8090", "wrong", "agent-control")
 
+    def test_agent_control_reset_uses_its_profile_specific_endpoint(self) -> None:
+        """The Agent Control profile must not reuse the OpenVASD-only reset route."""
+
+        with patch.object(RESET, "request", return_value=(204, b"")) as request:
+            RESET.reset("http://127.0.0.1:8090", "token", "agent-control")
+        request.assert_called_once_with(
+            "http://127.0.0.1:8090/_emulator/agent-control/reset", "token"
+        )
+
+    def test_contract_runner_publishes_only_complete_reset_evidence(self) -> None:
+        """A failed reset must not leave malformed JSON that masks its primary failure."""
+
+        runner = (ROOT / "scripts/run-enterprise-agent-control-contracts.sh").read_text()
+        self.assertIn('local pending="${output}.pending"', runner)
+        self.assertIn('mv "${pending}" "${output}"', runner)
+        self.assertIn('rm -f "${output}" "${pending}"', runner)
+
     def test_checked_in_enterprise_pin_is_an_exact_commit_not_a_branch(self) -> None:
         """The temporary PR #50 workaround must remain immutable and self-identifying."""
 
