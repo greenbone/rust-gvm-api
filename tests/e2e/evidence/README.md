@@ -71,7 +71,10 @@ test-only fault proxy, real OpenVASD, runner label, and Rust toolchain.
 the full source commit and rejects any hash mismatch.
 Before the shared direct-OpenVASD Compose launcher starts either advisory lane,
 `scripts/validate-direct-openvasd-pins.py` resolves every digest-pinned runtime
-image in this manifest. An unavailable manifest names the exact immutable image
+image used by the selected Compose topology. Emulator-backed community and
+enterprise launches do not depend on the separately pinned real scanner; real
+OpenVASD launches validate their selected scanner image together with every
+shared input. An unavailable required manifest names the exact immutable image
 and stops the launch; no mutable-tag fallback is permitted.
 
 ## Advisory enterprise Agent Control lanes

@@ -27,8 +27,14 @@ def runtime_images(
     path: Path = PINS_PATH,
     temporary_scanner_build_manifest: Path | None = None,
     real_openvasd_image: str | None = None,
+    openvasd_kind: str = "emulator",
 ) -> dict[str, str]:
-    """Load every valid immutable runtime image reference from the pin manifest."""
+    """Load immutable image references used by the selected OpenVASD topology."""
+
+    if openvasd_kind not in {"emulator", "real"}:
+        raise RuntimeImageManifestError(
+            f"unsupported OpenVASD runtime kind: {openvasd_kind!r}"
+        )
 
     try:
         document: Any = json.loads(path.read_text(encoding="utf-8"))
@@ -49,6 +55,8 @@ def runtime_images(
             raise RuntimeImageManifestError("runtime image manifest contains an invalid image entry")
         if name == "emulator":
             raise RuntimeImageManifestError("runtimeImages must not redefine the emulator image")
+        if name == "real-openvasd" and openvasd_kind != "real":
+            continue
         validated[name] = image
 
     for name, image in validated.items():
@@ -57,6 +65,10 @@ def runtime_images(
                 f"runtime image {name!r} is not pinned to an immutable SHA-256 digest: {image!r}"
             )
     if temporary_scanner_build_manifest is not None:
+        if openvasd_kind != "real":
+            raise RuntimeImageManifestError(
+                "a temporary scanner build manifest is valid only for the real OpenVASD runtime"
+            )
         try:
             temporary_build = load_manifest(temporary_scanner_build_manifest)
         except RuntimeError as error:
@@ -137,11 +149,18 @@ def main() -> int:
     parser.add_argument("--pins", type=Path, default=PINS_PATH)
     parser.add_argument("--temporary-scanner-build-manifest", type=Path)
     parser.add_argument("--real-openvasd-image")
+    parser.add_argument(
+        "--openvasd-kind",
+        choices=("emulator", "real"),
+        default="emulator",
+        help="validate only images used by the selected Compose topology",
+    )
     args = parser.parse_args()
     images = runtime_images(
         args.pins,
         args.temporary_scanner_build_manifest,
         args.real_openvasd_image,
+        args.openvasd_kind,
     )
     validate_runtime_images(images)
     print(f"validated {len(images)} immutable direct-OpenVASD runtime image manifests")

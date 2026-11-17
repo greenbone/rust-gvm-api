@@ -22,7 +22,10 @@ fi
 # and cleanup commands remain available if a later registry outage occurs.
 case "$1" in
   up|start|create|run|restart)
-    VALIDATOR_ARGS=()
+    VALIDATOR_ARGS=(
+      --openvasd-kind
+      "${GVM_GATEWAY_E2E_OPENVASD_KIND:-emulator}"
+    )
     if [[ -n "${GVM_GATEWAY_E2E_REAL_OPENVASD_IMAGE:-}" || \
           -n "${GVM_GATEWAY_E2E_TEMPORARY_SCANNER_BUILD_MANIFEST:-}" ]]; then
       VALIDATOR_ARGS+=(
