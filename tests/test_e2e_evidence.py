@@ -36,6 +36,10 @@ def load_script(name: str, relative_path: str):
 TEMPORARY_SCANNER = load_script(
     "build_temporary_openvas_scanner", "scripts/build_temporary_openvas_scanner.py"
 )
+FEED_RESOLUTION = load_script(
+    "direct_openvasd_feed_resolution",
+    "scripts/direct_openvasd_feed_resolution.py",
+)
 CHECKER = load_script("check_e2e_evidence", "scripts/check-e2e-evidence.py")
 LEDGER = sys.modules["shadow_evidence_ledger"]
 COLLECTOR = load_script("collect_e2e_baseline", "scripts/collect-e2e-baseline.py")
@@ -676,6 +680,44 @@ class E2eEvidenceTests(unittest.TestCase):
         self.assertEqual(document["scanner"]["imageDigest"], "sha256:ospd-openvas")
         self.assertTrue(all(item["revision"].startswith("sha256:") for item in document["feedData"]))
 
+    def test_direct_provenance_records_exact_feed_resolution_not_local_image_ids(self) -> None:
+        """Uploaded direct evidence must retain registry digests and the declared channels."""
+
+        def image(service: str) -> dict[str, str]:
+            return {
+                "sourceRevision": f"image-id:sha256:{service}",
+                "image": f"example.invalid/{service}:pinned@sha256:" + "1" * 64,
+                "imageDigest": f"sha256:local-{service}",
+            }
+
+        records = {
+            "gvm-gateway": image("gvm-gateway"),
+            "gvmd": image("gvmd"),
+            "openvasd-backend": image("openvasd-backend"),
+            "e2e-target": image("e2e-target"),
+            **{service: image(service) for service in PROVENANCE.DIRECT_FEED_SERVICES},
+        }
+        resolved = {
+            service: f"registry.example/community/{service}:latest@sha256:" + "a" * 64
+            for service in PROVENANCE.DIRECT_FEED_SERVICES
+        }
+        document = PROVENANCE.build_document(
+            records,
+            "0123456789abcdef",
+            {},
+            scanner_service="openvasd-backend",
+            feed_services=PROVENANCE.DIRECT_FEED_SERVICES,
+            target_service="e2e-target",
+            feed_revisions=resolved,
+        )
+        self.assertEqual(
+            {item["name"]: item["revision"] for item in document["feedData"]},
+            resolved,
+        )
+        self.assertTrue(
+            all("sha256:local-" not in item["revision"] for item in document["feedData"])
+        )
+
     def test_direct_runtime_rejects_conflated_container_identity(self) -> None:
         """Backend and target aliases must never hide one shared container."""
 
@@ -705,7 +747,7 @@ class E2eEvidenceTests(unittest.TestCase):
         )
 
     def test_direct_runtime_provenance_rejects_an_image_pin_mismatch(self) -> None:
-        """A live service cannot substitute a mutable or unexpected image after static checks."""
+        """Live control and feed services cannot drift from pins or the one-run resolution."""
 
         pins = json.loads(
             (ROOT / "tests/e2e/evidence/direct-openvasd-pins.json").read_text(
@@ -715,11 +757,6 @@ class E2eEvidenceTests(unittest.TestCase):
         service_to_pin = {
             "gvmd": "gvmd",
             "configure-direct-openvasd": "gvmd",
-            "vulnerability-tests": "vulnerability-tests",
-            "data-objects": "data-objects",
-            "report-formats": "report-formats",
-            "gpg-data": "gpg-data",
-            "notus-data": "notus-data",
             "pg-gvm-migrator": "pg-gvm-migrator",
             "pg-gvm": "pg-gvm",
             "openvasd-scenario-proxy": "scenario-proxy",
@@ -733,16 +770,41 @@ class E2eEvidenceTests(unittest.TestCase):
             }
             for service, pin in service_to_pin.items()
         }
+        resolved_feeds = {
+            service: f"{pins['feedDataChannels'][service]}@sha256:" + "f" * 64
+            for service in PROVENANCE.DIRECT_FEED_SERVICES
+        }
+        records.update(
+            {
+                service: {
+                    "image": reference,
+                    "sourceRevision": "unused",
+                    "imageDigest": "sha256:runtime",
+                }
+                for service, reference in resolved_feeds.items()
+            }
+        )
         records["openvasd-backend"] = {
             "image": pins["emulator"]["image"],
             "sourceRevision": pins["emulator"]["sourceRevision"],
             "imageDigest": "sha256:emulator",
         }
-        PROVENANCE.assert_pinned_runtime(records, pins, "direct-openvasd")
+        PROVENANCE.assert_pinned_runtime(
+            records, pins, "direct-openvasd", resolved_feeds
+        )
 
         records["e2e-target"]["image"] = "example.invalid/mutable:latest"
         with self.assertRaisesRegex(RuntimeError, "image drifted"):
-            PROVENANCE.assert_pinned_runtime(records, pins, "direct-openvasd")
+            PROVENANCE.assert_pinned_runtime(
+                records, pins, "direct-openvasd", resolved_feeds
+            )
+
+        records["e2e-target"]["image"] = pins["runtimeImages"]["e2e-target"]
+        records["gpg-data"]["image"] = "example.invalid/gpg-data:latest"
+        with self.assertRaisesRegex(RuntimeError, "did not use this run's resolution"):
+            PROVENANCE.assert_pinned_runtime(
+                records, pins, "direct-openvasd", resolved_feeds
+            )
 
     def test_temporary_scanner_manifest_requires_the_exact_commit_and_immutable_image(self) -> None:
         """Issue #695 must never float to another PR revision, registry, or mutable image tag."""
@@ -910,11 +972,6 @@ class E2eEvidenceTests(unittest.TestCase):
         service_to_pin = {
             "gvmd": "gvmd",
             "configure-direct-openvasd": "gvmd",
-            "vulnerability-tests": "vulnerability-tests",
-            "data-objects": "data-objects",
-            "report-formats": "report-formats",
-            "gpg-data": "gpg-data",
-            "notus-data": "notus-data",
             "pg-gvm-migrator": "pg-gvm-migrator",
             "pg-gvm": "pg-gvm",
             "openvasd-scenario-proxy": "scenario-proxy",
@@ -928,17 +985,35 @@ class E2eEvidenceTests(unittest.TestCase):
             }
             for service, pin in service_to_pin.items()
         }
+        resolved_feeds = {
+            service: f"{pins['feedDataChannels'][service]}@sha256:" + "e" * 64
+            for service in PROVENANCE.DIRECT_FEED_SERVICES
+        }
+        records.update(
+            {
+                service: {
+                    "image": reference,
+                    "sourceRevision": "unused",
+                    "imageDigest": f"sha256:{service}",
+                }
+                for service, reference in resolved_feeds.items()
+            }
+        )
         for service in ("configure-openvas", "openvasd-backend"):
             records[service] = {
                 "image": reference,
                 "sourceRevision": TEMPORARY_SCANNER.SOURCE_REVISION,
                 "imageDigest": "sha256:one-built-image",
             }
-        PROVENANCE.assert_pinned_runtime(records, pins, "real-openvasd", manifest)
+        PROVENANCE.assert_pinned_runtime(
+            records, pins, "real-openvasd", resolved_feeds, manifest
+        )
 
         records["openvasd-backend"]["imageDigest"] = "sha256:different-image"
         with self.assertRaisesRegex(RuntimeError, "one identical temporary image"):
-            PROVENANCE.assert_pinned_runtime(records, pins, "real-openvasd", manifest)
+            PROVENANCE.assert_pinned_runtime(
+                records, pins, "real-openvasd", resolved_feeds, manifest
+            )
 
     def test_real_provenance_records_temporary_source_build_inputs_and_repository_digest(self) -> None:
         """Uploaded provenance must link the runtime scanner to every relevant temporary build input."""
@@ -1208,7 +1283,7 @@ class E2eEvidenceTests(unittest.TestCase):
         self.assertEqual(request.call_count, 1)
 
     def test_direct_manifest_rejects_a_missing_runtime_pin(self) -> None:
-        """Every service in the shadow/real topology must retain an immutable image input."""
+        """Every executable/control-plane service must retain an immutable image input."""
 
         pins = json.loads(
             (ROOT / "tests/e2e/evidence/direct-openvasd-pins.json").read_text(
@@ -1218,6 +1293,116 @@ class E2eEvidenceTests(unittest.TestCase):
         del pins["runtimeImages"]["e2e-target"]
         with self.assertRaisesRegex(CHECKER.EvidenceError, "exactly cover"):
             CHECKER.validate_direct_pins(pins)
+
+    def test_direct_manifest_rejects_a_missing_or_digest_pinned_feed_channel(self) -> None:
+        """All five rolling feeds must remain explicit mutable channels, not stale pins."""
+
+        pins = json.loads(
+            (ROOT / "tests/e2e/evidence/direct-openvasd-pins.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        del pins["feedDataChannels"]["notus-data"]
+        with self.assertRaisesRegex(CHECKER.EvidenceError, "exactly cover"):
+            CHECKER.validate_direct_pins(pins)
+
+        pins = json.loads(
+            (ROOT / "tests/e2e/evidence/direct-openvasd-pins.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        pins["feedDataChannels"]["gpg-data"] += "@sha256:" + "a" * 64
+        with self.assertRaisesRegex(CHECKER.EvidenceError, "mutable channel tag"):
+            CHECKER.validate_direct_pins(pins)
+
+    def test_rolling_feed_resolver_queries_each_channel_once_and_records_exact_references(
+        self,
+    ) -> None:
+        """One launch must bind every channel once and retain its exact tag@digest input."""
+
+        channels = FEED_RESOLUTION.load_declared_channels()
+        calls: list[str] = []
+
+        def resolve(channel: str) -> str:
+            calls.append(channel)
+            return "sha256:" + f"{len(calls):064x}"
+
+        document = FEED_RESOLUTION.resolved_document(channels, resolve)
+        images = FEED_RESOLUTION.validate_resolution(document, channels)
+        self.assertEqual(calls, [channels[name] for name in FEED_RESOLUTION.FEED_SERVICES])
+        self.assertEqual(document["status"], "resolved")
+        for name, reference in images.items():
+            self.assertTrue(reference.startswith(f"{channels[name]}@sha256:"))
+
+    def test_rolling_feed_resolution_failure_is_closed_setup_evidence_without_env(
+        self,
+    ) -> None:
+        """A registry failure must record failed input setup and never emit launch values."""
+
+        channels = FEED_RESOLUTION.load_declared_channels()
+        document = FEED_RESOLUTION.failed_document(
+            channels, FEED_RESOLUTION.FeedResolutionError("manifest unknown")
+        )
+        self.assertEqual(document["status"], "failed")
+        self.assertEqual(document["resolvedImages"], {})
+        self.assertEqual(document["failure"], "manifest unknown")
+        with self.assertRaisesRegex(
+            FEED_RESOLUTION.FeedResolutionError, "does not match"
+        ):
+            FEED_RESOLUTION.validate_resolution(document, channels)
+
+    def test_rolling_feed_resolver_failure_writes_evidence_but_no_compose_environment(
+        self,
+    ) -> None:
+        """A failed registry lookup cannot leave stale launch inputs beside its failure record."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "feed-resolution.json"
+            compose_env = root / "feed-resolution.env"
+            compose_env.write_text("stale=true\n", encoding="utf-8")
+            arguments = [
+                "direct_openvasd_feed_resolution.py",
+                "--output",
+                str(output),
+                "--compose-env",
+                str(compose_env),
+            ]
+            with (
+                patch.object(sys, "argv", arguments),
+                patch.object(
+                    FEED_RESOLUTION,
+                    "inspect_channel",
+                    side_effect=FEED_RESOLUTION.FeedResolutionError("manifest unknown"),
+                ),
+                self.assertRaisesRegex(
+                    FEED_RESOLUTION.FeedResolutionError, "manifest unknown"
+                ),
+            ):
+                FEED_RESOLUTION.main()
+            self.assertFalse(compose_env.exists())
+            failure = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(failure["status"], "failed")
+            self.assertEqual(failure["resolvedImages"], {})
+
+    def test_rolling_feed_resolution_rejects_channel_or_digest_drift(self) -> None:
+        """Provenance cannot reuse a resolution for another channel or alter its digest."""
+
+        channels = FEED_RESOLUTION.load_declared_channels()
+        document = FEED_RESOLUTION.resolved_document(
+            channels, lambda _channel: "sha256:" + "a" * 64
+        )
+        changed = copy.deepcopy(document)
+        changed["declaredChannels"]["notus-data"] = "example.invalid/notus:other"
+        with self.assertRaisesRegex(
+            FEED_RESOLUTION.FeedResolutionError, "declared channels"
+        ):
+            FEED_RESOLUTION.validate_resolution(changed, channels)
+
+        changed = copy.deepcopy(document)
+        changed["resolvedImages"]["notus-data"] = "example.invalid/notus:latest"
+        with self.assertRaisesRegex(FEED_RESOLUTION.FeedResolutionError, "not an exact"):
+            FEED_RESOLUTION.validate_resolution(changed, channels)
 
     def test_emulator_runtime_validation_skips_the_unused_real_scanner(self) -> None:
         """Registry retention of the real scanner must not break an emulator-only launch."""
@@ -1281,13 +1466,15 @@ class E2eEvidenceTests(unittest.TestCase):
         )
 
     def test_compose_runtime_images_remain_synchronized_with_the_pin_manifest(self) -> None:
-        """Changing a Compose service independently of its manifest pin must fail closed."""
+        """Compose must require resolver values while control-plane pins stay synchronized."""
 
         pins = json.loads(
             (ROOT / "tests/e2e/evidence/direct-openvasd-pins.json").read_text(encoding="utf-8")
         )
         CHECKER.validate_compose_runtime_images(
-            pins["runtimeImages"], pins["emulator"]["image"]
+            pins["runtimeImages"],
+            pins["feedDataChannels"],
+            pins["emulator"]["image"],
         )
         with tempfile.TemporaryDirectory() as directory:
             direct = Path(directory) / "compose.direct-openvasd.yaml"
@@ -1295,7 +1482,10 @@ class E2eEvidenceTests(unittest.TestCase):
             direct.write_text(
                 (ROOT / "tests/e2e/compose.direct-openvasd.yaml")
                 .read_text(encoding="utf-8")
-                .replace(pins["runtimeImages"]["gpg-data"], "registry.example/gpg:latest@sha256:" + "0" * 64),
+                .replace(
+                    "${GVM_GATEWAY_E2E_GPG_DATA_IMAGE:?resolved-exact-gpg-data-image-required}",
+                    "registry.example/gpg:latest",
+                ),
                 encoding="utf-8",
             )
             real.write_text(
@@ -1304,7 +1494,11 @@ class E2eEvidenceTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(CHECKER.EvidenceError, "direct Compose service 'gpg-data'"):
                 CHECKER.validate_compose_runtime_images(
-                    pins["runtimeImages"], pins["emulator"]["image"], direct, real
+                    pins["runtimeImages"],
+                    pins["feedDataChannels"],
+                    pins["emulator"]["image"],
+                    direct,
+                    real,
                 )
 
     def test_shadow_comparison_covers_every_named_contract_and_fault(self) -> None:
@@ -1364,6 +1558,7 @@ class E2eEvidenceTests(unittest.TestCase):
 
         cases = {
             "Fetch pinned OpenVASD fixtures": "setup",
+            "Start direct-OpenVASD shadow runtime": "setup",
             "Verify direct-OpenVASD readiness and identities": "readiness",
             "Run all named community contracts": "assertion",
             "Tear down direct-OpenVASD shadow runtime": "cleanup",
@@ -1584,7 +1779,7 @@ class E2eEvidenceTests(unittest.TestCase):
         download.assert_not_called()
 
     def test_shadow_observations_require_one_pinned_input_fingerprint(self) -> None:
-        """The elapsed gate cannot combine runs whose lane topology or harness inputs differ."""
+        """The elapsed gate ignores feed refreshes but splits on channels or executable pins."""
 
         digest = "sha256:" + "a" * 64
         provenance = {
@@ -1629,6 +1824,37 @@ class E2eEvidenceTests(unittest.TestCase):
         conflated["fixtures"][2]["revision"] = "openvasd-backend"
         with self.assertRaisesRegex(ValueError, "synthetic-target-identity"):
             OBSERVATIONS.comparison_fingerprint(conflated)
+
+        channel_provenance = copy.deepcopy(provenance)
+        channel_provenance["feedData"] = [
+            {
+                "name": "feed",
+                "revision": "registry.example/community/feed:latest@sha256:" + "a" * 64,
+            }
+        ]
+        channel_fingerprint = OBSERVATIONS.comparison_fingerprint(channel_provenance)
+        refreshed = copy.deepcopy(channel_provenance)
+        refreshed["feedData"][0]["revision"] = (
+            "registry.example/community/feed:latest@sha256:" + "b" * 64
+        )
+        self.assertEqual(
+            channel_fingerprint, OBSERVATIONS.comparison_fingerprint(refreshed)
+        )
+
+        changed_channel = copy.deepcopy(channel_provenance)
+        changed_channel["feedData"][0]["revision"] = (
+            "registry.example/community/feed:stable@sha256:" + "a" * 64
+        )
+        self.assertNotEqual(
+            channel_fingerprint, OBSERVATIONS.comparison_fingerprint(changed_channel)
+        )
+
+        changed_control_plane = copy.deepcopy(channel_provenance)
+        changed_control_plane["gvmd"]["imageDigest"] = "sha256:new-gvmd-pin"
+        self.assertNotEqual(
+            channel_fingerprint,
+            OBSERVATIONS.comparison_fingerprint(changed_control_plane),
+        )
 
     def test_workflows_preserve_osp_gate_and_keep_new_lanes_advisory(self) -> None:
         """Shadow coverage follows OSP triggers without changing required status policy."""
@@ -1730,8 +1956,8 @@ class E2eEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(compose.count(f"image: {expression}"), 2)
 
-    def test_shadow_and_real_lanes_share_manifest_validation_before_compose(self) -> None:
-        """Both advisory lanes must reject unavailable pins before their shared launcher starts Compose."""
+    def test_shadow_and_real_lanes_validate_pins_and_resolve_feeds_before_compose(self) -> None:
+        """Both advisory lanes must bind all image inputs before their shared launcher starts Compose."""
 
         launcher = (ROOT / "scripts/compose-direct-openvasd.sh").read_text(encoding="utf-8")
         validator = 'python3 "${ROOT_DIR}/scripts/validate-direct-openvasd-pins.py"'
@@ -1740,6 +1966,21 @@ class E2eEvidenceTests(unittest.TestCase):
         self.assertIn('"${GVM_GATEWAY_E2E_OPENVASD_KIND:-emulator}"', launcher)
         self.assertIn("up|start|create|run|restart)", launcher)
         self.assertLess(launcher.index(validator), launcher.index("exec docker compose"))
+        resolver = 'python3 "${ROOT_DIR}/scripts/direct_openvasd_feed_resolution.py"'
+        self.assertIn(resolver, launcher)
+        self.assertLess(launcher.index(resolver), launcher.index("exec docker compose"))
+        self.assertIn('"${COMPOSE_COMMAND}" == "up" || ! -f "${FEED_ENV_PATH}"', launcher)
+        self.assertIn("set_cleanup_feed_placeholders", launcher)
+        enterprise_launcher = (
+            ROOT / "scripts/compose-enterprise-agent-control.sh"
+        ).read_text(encoding="utf-8")
+        self.assertIn("up|start|create|run|restart", enterprise_launcher)
+        self.assertIn(resolver, enterprise_launcher)
+        self.assertIn(
+            '"${COMPOSE_COMMAND}" == "up" || ! -f "${FEED_ENV_PATH}"',
+            enterprise_launcher,
+        )
+        self.assertIn("set_cleanup_feed_placeholders", enterprise_launcher)
         for workflow in (
             ROOT / ".github/workflows/nightly-e2e.yml",
             ROOT / ".github/workflows/real-openvasd-compatibility.yml",
@@ -1749,7 +1990,7 @@ class E2eEvidenceTests(unittest.TestCase):
                 self.assertIn("./scripts/compose-direct-openvasd.sh up -d --build", source)
 
     def test_direct_compose_uses_pinned_separate_topology(self) -> None:
-        """The profile must wire a real target beside, never as, its scanner backend."""
+        """The profile separates target/backend and cannot launch unresolved feed tags."""
 
         compose = (ROOT / "tests/e2e/compose.direct-openvasd.yaml").read_text(
             encoding="utf-8"
@@ -1766,8 +2007,16 @@ class E2eEvidenceTests(unittest.TestCase):
             )
         )
         self.assertIn(pins["emulator"]["image"], compose)
+        real_compose = (ROOT / "tests/e2e/compose.real-openvasd.yaml").read_text(
+            encoding="utf-8"
+        )
         for image in pins["runtimeImages"].values():
             self.assertIn("@sha256:", image)
+            self.assertIn(image, compose + real_compose)
+        for service, channel in pins["feedDataChannels"].items():
+            variable = CHECKER.ROLLING_FEED_COMPOSE_VARIABLES[service]
+            self.assertIn(f"${{{variable}:?", compose)
+            self.assertNotIn(channel, compose)
 
     def test_real_openvasd_compose_accepts_the_minimized_vt_fixture(self) -> None:
         """Real OpenVASD must index the exact minimized VT set without requiring release signatures."""

@@ -9,6 +9,10 @@ import re
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from e2e_provenance_fingerprint import (
+    ProvenanceFingerprintError,
+    provenance_fingerprint as shared_provenance_fingerprint,
+)
 
 SCHEMA_VERSION = 1
 ZERO_HASH = "0" * 64
@@ -90,47 +94,12 @@ def json_document(content: bytes, context: str) -> dict[str, Any]:
 
 
 def provenance_fingerprint(provenance: dict[str, Any]) -> str:
-    required = {
-        "schemaVersion",
-        "gvmd",
-        "scanner",
-        "feedData",
-        "fixtures",
-        "apiContract",
-        "composeSha256",
-        "runner",
-    }
-    if provenance.get("schemaVersion") != 1 or not required <= provenance.keys():
-        raise LedgerError("finalized provenance is incomplete")
-    fixtures = provenance.get("fixtures")
-    if not isinstance(fixtures, list):
-        raise LedgerError("finalized provenance fixtures are incomplete")
-    revisions = {
-        item.get("name"): item.get("revision")
-        for item in fixtures
-        if isinstance(item, dict)
-    }
-    identities = {
-        "GVM_GATEWAY_E2E_TARGET_HOST": "e2e-target",
-        "scanner-backend-identity": "openvasd-backend",
-        "synthetic-target-identity": "e2e-target",
-    }
-    for name, expected in identities.items():
-        if revisions.get(name) != expected:
-            raise LedgerError(f"finalized provenance identity {name} is invalid")
-    exact_inputs = {
-        "tests/e2e/compose.direct-openvasd.yaml",
-        "synthetic-target-image",
-        "tests/e2e/evidence/direct-openvasd-pins.json",
-        "gvm-openapi-emulator/examples/openvasd/swagger.json",
-        "gvm-openapi-emulator/examples/openvasd",
-        "tests/e2e-harness",
-    }
-    for name in exact_inputs:
-        if not re.fullmatch(r"sha256:[0-9a-f]{64}", str(revisions.get(name))):
-            raise LedgerError(f"finalized provenance input {name} is not exact")
-    comparable = {name: provenance[name] for name in sorted(required - {"runner"})}
-    return canonical_sha256(comparable)
+    """Translate shared fingerprint validation into the ledger error domain."""
+
+    try:
+        return shared_provenance_fingerprint(provenance)
+    except ProvenanceFingerprintError as error:
+        raise LedgerError(str(error)) from error
 
 
 def validate_finalized_payload(entry: dict[str, Any], files: dict[str, bytes]) -> None:

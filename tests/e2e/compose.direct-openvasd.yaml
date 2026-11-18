@@ -6,14 +6,14 @@ x-direct-profile: &direct-profile
 services:
   vulnerability-tests:
     <<: *direct-profile
-    image: registry.community.greenbone.net/community/vulnerability-tests:latest@sha256:eb3203b9e91e6e6a668167c61032c33635bdf832b3f98c8437eb84b8bc41fea4
+    image: ${GVM_GATEWAY_E2E_VULNERABILITY_TESTS_IMAGE:?resolved-exact-vulnerability-tests-image-required}
     command: /bin/sh -c 'mkdir -p /mnt/24.10/vt-data/nasl/; for f in byte_func.inc global_settings.nasl host_alive_detection.nasl host_details.inc http_func.inc list_array_func.inc mac_prefix.inc misc_func.inc network_func.inc os_func.inc plugin_feed_info.inc revisions-lib.inc smb_nt.inc traversal_func.inc version_func.inc; do cp -- "$${STORAGE_PATH}/24.10/vt-data/nasl/$${f}" "/mnt/"; done'
     volumes:
       - vt_data_vol:/mnt
 
   data-objects:
     <<: *direct-profile
-    image: registry.community.greenbone.net/community/data-objects:latest@sha256:76fa3baec6c2065143708ce5c55749b2b7345117837fc776b422d7ea1e6fa580
+    image: ${GVM_GATEWAY_E2E_DATA_OBJECTS_IMAGE:?resolved-exact-data-objects-image-required}
     environment:
       FEED_RELEASE: "24.10"
       KEEP_ALIVE: "1"
@@ -22,7 +22,7 @@ services:
 
   report-formats:
     <<: *direct-profile
-    image: registry.community.greenbone.net/community/report-formats:latest@sha256:0df141f3a917bf4495e53bb2fda2bacc899b88d44dca0dcef4edb017cd942c7c
+    image: ${GVM_GATEWAY_E2E_REPORT_FORMATS_IMAGE:?resolved-exact-report-formats-image-required}
     environment:
       FEED_RELEASE: "24.10"
       KEEP_ALIVE: "1"
@@ -34,13 +34,13 @@ services:
 
   gpg-data:
     <<: *direct-profile
-    image: registry.community.greenbone.net/community/gpg-data:latest@sha256:b71ef998e19d738ece74c96aaf419efde4071ed8824608553021c60b0d2c8bc7
+    image: ${GVM_GATEWAY_E2E_GPG_DATA_IMAGE:?resolved-exact-gpg-data-image-required}
     volumes:
       - gpg_data_vol:/mnt
 
   notus-data:
     <<: *direct-profile
-    image: registry.community.greenbone.net/community/notus-data:latest@sha256:cf2ad9a1a1dea93c73f3469b09adbeb0821f452f49bcc2cb2a6ba0c31241f0c8
+    image: ${GVM_GATEWAY_E2E_NOTUS_DATA_IMAGE:?resolved-exact-notus-data-image-required}
     volumes:
       - notus_data_vol:/mnt
 

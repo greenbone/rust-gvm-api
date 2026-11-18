@@ -8,12 +8,15 @@ import hashlib
 import io
 import json
 import os
-import re
 import subprocess
 import zipfile
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from e2e_provenance_fingerprint import (
+    ProvenanceFingerprintError,
+    provenance_fingerprint as shared_provenance_fingerprint,
+)
 from shadow_evidence_ledger import (
     JOB,
     REPOSITORY,
@@ -101,40 +104,12 @@ def parse_json(content: bytes, context: str) -> dict[str, Any]:
 
 
 def provenance_fingerprint(provenance: dict[str, Any]) -> str:
-    required = {
-        "schemaVersion", "gvmd", "scanner", "feedData", "fixtures",
-        "apiContract", "composeSha256", "runner",
-    }
-    if provenance.get("schemaVersion") != 1 or not required <= provenance.keys():
-        raise PersistenceError("finalized provenance is incomplete")
-    fixtures = provenance.get("fixtures")
-    if not isinstance(fixtures, list):
-        raise PersistenceError("finalized provenance fixtures are incomplete")
-    revisions = {
-        item.get("name"): item.get("revision") for item in fixtures if isinstance(item, dict)
-    }
-    identities = {
-        "GVM_GATEWAY_E2E_TARGET_HOST": "e2e-target",
-        "scanner-backend-identity": "openvasd-backend",
-        "synthetic-target-identity": "e2e-target",
-    }
-    for name, expected in identities.items():
-        if revisions.get(name) != expected:
-            raise PersistenceError(f"finalized provenance identity {name} is invalid")
-    exact_inputs = {
-        "tests/e2e/compose.direct-openvasd.yaml",
-        "synthetic-target-image",
-        "tests/e2e/evidence/direct-openvasd-pins.json",
-        "gvm-openapi-emulator/examples/openvasd/swagger.json",
-        "gvm-openapi-emulator/examples/openvasd",
-        "tests/e2e-harness",
-    }
-    for name in exact_inputs:
-        if not re.fullmatch(r"sha256:[0-9a-f]{64}", str(revisions.get(name))):
-            raise PersistenceError(f"finalized provenance input {name} is not exact")
-    comparable = {name: provenance[name] for name in sorted(required - {"runner"})}
-    encoded = json.dumps(comparable, sort_keys=True, separators=(",", ":")).encode()
-    return hashlib.sha256(encoded).hexdigest()
+    """Translate shared fingerprint validation into the persistence error domain."""
+
+    try:
+        return shared_provenance_fingerprint(provenance)
+    except ProvenanceFingerprintError as error:
+        raise PersistenceError(str(error)) from error
 
 
 def trusted_environment() -> dict[str, str]:
