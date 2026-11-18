@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "emulator": {
     "sourceRepository": "greenbone/gvm-openapi-emulator",
     "sourceRevision": "141e9cb57e786572178f4352c995e0b43b463bf5",
@@ -24,13 +24,15 @@
       "swagger.json": "c57e15573b66d6fdba29a5378865f2029c6ea5e7a64e4dda640f68f793e0b825"
     }
   },
+  "feedDataChannels": {
+    "vulnerability-tests": "registry.community.greenbone.net/community/vulnerability-tests:latest",
+    "data-objects": "registry.community.greenbone.net/community/data-objects:latest",
+    "report-formats": "registry.community.greenbone.net/community/report-formats:latest",
+    "gpg-data": "registry.community.greenbone.net/community/gpg-data:latest",
+    "notus-data": "registry.community.greenbone.net/community/notus-data:latest"
+  },
   "runtimeImages": {
     "gvmd": "ghcr.io/greenbone/gvmd:all-features-26.43.0@sha256:ad4428c3a6270065a5f7a5a4c189fe2834920fc4b281bda5bfce42fbf7457aee",
-    "vulnerability-tests": "registry.community.greenbone.net/community/vulnerability-tests:latest@sha256:c45e9355e9745ec3f086bcc2704ed6dab9077eb0851d759430cc0a82dcefcab8",
-    "data-objects": "registry.community.greenbone.net/community/data-objects:latest@sha256:c5915a3c730687ab407d39a5eb17b8e62549ff297baf6579dc7e1a0bca022252",
-    "report-formats": "registry.community.greenbone.net/community/report-formats:latest@sha256:cacf4ebe8bc4bcd0bc388b743b6a42a4f3960c28cfe90a1dc13001b3ad5a9102",
-    "gpg-data": "registry.community.greenbone.net/community/gpg-data:latest@sha256:b71ef998e19d738ece74c96aaf419efde4071ed8824608553021c60b0d2c8bc7",
-    "notus-data": "registry.community.greenbone.net/community/notus-data:latest@sha256:ad8b1a7b67138597e46b91c0ed11e56452acd52aa8ae754a1f1fa5d6943c4a3d",
     "pg-gvm-migrator": "registry.community.greenbone.net/community/pg-gvm-migrator:stable@sha256:8fc1cc11cac0481674527e01ec7610a8195110cf117d700bd47fe3af7012b34d",
     "pg-gvm": "registry.community.greenbone.net/community/pg-gvm:stable@sha256:a18d9e2f0cbba7839e65547a2331ce8f984500e8c4fbe91d08f9a48036d03fa2",
     "scenario-proxy": "docker.io/library/nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10",

@@ -12,6 +12,10 @@ import re
 from pathlib import Path
 from typing import Any
 
+from e2e_provenance_fingerprint import (
+    ProvenanceFingerprintError,
+    provenance_fingerprint as shared_provenance_fingerprint,
+)
 from shadow_evidence_ledger import LedgerError, observation_from_ledger, validate_ledger
 
 
@@ -78,50 +82,12 @@ def nearest_rank(values: list[float], percentile: float) -> float | None:
 
 
 def provenance_fingerprint(provenance: dict[str, Any]) -> str:
-    required = {
-        "schemaVersion",
-        "gvmd",
-        "scanner",
-        "feedData",
-        "fixtures",
-        "apiContract",
-        "composeSha256",
-        "runner",
-    }
-    if provenance.get("schemaVersion") != 1 or not required <= provenance.keys():
-        raise EvaluationError("retained provenance is incomplete")
-    fixtures = provenance.get("fixtures")
-    if not isinstance(fixtures, list):
-        raise EvaluationError("retained provenance fixtures must be an array")
-    fixture_revisions = {
-        item.get("name"): item.get("revision")
-        for item in fixtures
-        if isinstance(item, dict)
-    }
-    required_inputs = {
-        "tests/e2e/compose.direct-openvasd.yaml",
-        "synthetic-target-image",
-        "tests/e2e/evidence/direct-openvasd-pins.json",
-        "gvm-openapi-emulator/examples/openvasd/swagger.json",
-        "gvm-openapi-emulator/examples/openvasd",
-        "tests/e2e-harness",
-    }
-    for name in required_inputs:
-        if not re.fullmatch(r"sha256:[0-9a-f]{64}", str(fixture_revisions.get(name))):
-            raise EvaluationError(f"retained provenance input {name!r} is not exact")
-    identities = {
-        "GVM_GATEWAY_E2E_TARGET_HOST": "e2e-target",
-        "scanner-backend-identity": "openvasd-backend",
-        "synthetic-target-identity": "e2e-target",
-    }
-    for name, expected in identities.items():
-        if fixture_revisions.get(name) != expected:
-            raise EvaluationError(f"retained provenance identity {name!r} is invalid")
-    comparable = {
-        name: provenance[name] for name in sorted(required - {"runner"})
-    }
-    encoded = json.dumps(comparable, sort_keys=True, separators=(",", ":")).encode()
-    return hashlib.sha256(encoded).hexdigest()
+    """Translate shared fingerprint validation into the evaluator error domain."""
+
+    try:
+        return shared_provenance_fingerprint(provenance)
+    except ProvenanceFingerprintError as error:
+        raise EvaluationError(str(error)) from error
 
 
 def validate_observation(document: dict[str, Any]) -> list[dict[str, Any]]:

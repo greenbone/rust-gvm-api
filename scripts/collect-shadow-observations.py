@@ -8,12 +8,12 @@ import datetime as dt
 import hashlib
 import io
 import json
-import re
 import subprocess
 import zipfile
 from pathlib import Path
 from typing import Any
 
+from e2e_provenance_fingerprint import provenance_fingerprint
 from shadow_evidence_ledger import LedgerError, observation_from_ledger
 
 
@@ -95,65 +95,9 @@ def artifact_documents(
 
 
 def comparison_fingerprint(provenance: dict[str, Any]) -> str:
-    required = {
-        "schemaVersion",
-        "gvmd",
-        "scanner",
-        "feedData",
-        "fixtures",
-        "apiContract",
-        "composeSha256",
-        "runner",
-    }
-    if not isinstance(provenance, dict):
-        raise ValueError("direct-lane provenance must be an object")
-    if provenance.get("schemaVersion") != 1 or not required <= provenance.keys():
-        raise ValueError("direct-lane provenance is incomplete")
-    fixtures = provenance["fixtures"]
-    if not isinstance(fixtures, list):
-        raise ValueError("direct-lane provenance fixtures must be a list")
-    fixture_revisions = {
-        item.get("name"): item.get("revision")
-        for item in fixtures
-        if isinstance(item, dict)
-    }
-    expected_identities = {
-        "GVM_GATEWAY_E2E_TARGET_HOST": "e2e-target",
-        "scanner-backend-identity": "openvasd-backend",
-        "synthetic-target-identity": "e2e-target",
-    }
-    for name, expected in expected_identities.items():
-        if fixture_revisions.get(name) != expected:
-            raise ValueError(
-                f"direct-lane provenance identity {name!r} must be {expected!r}"
-            )
-    pinned_inputs = {
-        "tests/e2e/compose.direct-openvasd.yaml",
-        "synthetic-target-image",
-        "tests/e2e/evidence/direct-openvasd-pins.json",
-        "gvm-openapi-emulator/examples/openvasd/swagger.json",
-        "gvm-openapi-emulator/examples/openvasd",
-        "tests/e2e-harness",
-    }
-    for name in pinned_inputs:
-        revision = fixture_revisions.get(name)
-        if not isinstance(revision, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", revision):
-            raise ValueError(
-                f"direct-lane provenance input {name!r} must have an exact SHA-256"
-            )
-    # GitHub records the resolved hosted-runner image for triage, but that
-    # image version is not a repository-controlled pin and rotates over time.
-    # The fixture list contains the exact pin-manifest hash, including runner
-    # label and Rust toolchain; compare that stable contract rather than
-    # splitting a 14-day window on hosted image maintenance.
-    comparable_fields = required - {"runner"}
-    comparable_inputs = {
-        name: provenance[name] for name in sorted(comparable_fields)
-    }
-    canonical = json.dumps(
-        comparable_inputs, sort_keys=True, separators=(",", ":")
-    ).encode("utf-8")
-    return hashlib.sha256(canonical).hexdigest()
+    """Expose the shared promotion fingerprint under the collector API."""
+
+    return provenance_fingerprint(provenance)
 
 
 def parse_timestamp(value: str) -> dt.datetime:
