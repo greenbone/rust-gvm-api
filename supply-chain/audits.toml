@@ -7,6 +7,24 @@ criteria = "safe-to-deploy"
 delta = "0.33.0 -> 0.33.1"
 notes = "Reviewed exact 0.33.0 -> 0.33.1 source delta: ContextGuard destruction is deferred outside the thread-local mutable borrow, TraceState accepts W3C optional whitespace, and focused tests cover both fixes. The crate adds no unsafe code, build script, or runtime dependency."
 
+[[audits.opentelemetry-http]]
+who = "b02-agent-035 (AI-assisted source review)"
+criteria = "safe-to-deploy"
+delta = "0.33.0 -> 0.33.1"
+notes = "Reviewed the complete checksum-verified crates.io 0.33.0 -> 0.33.1 delta. All Rust source is byte-identical; changes are release/provenance metadata, package version, packaged lockfile, and the opentelemetry minimum requirement raised to 0.33.1. Features, MSRV, HTTP behavior, unsafe surface, and build settings are unchanged. Resolved dependency coverage is separate and retained."
+
+[[audits.opentelemetry-otlp]]
+who = "b02-agent-035 (AI-assisted source review)"
+criteria = "safe-to-deploy"
+delta = "0.33.0 -> 0.33.1"
+notes = "Reviewed the complete checksum-verified crates.io 0.33.0 -> 0.33.1 delta. No executable Rust change: only stability documentation, release/provenance metadata, package/lockfile versions, and OpenTelemetry dependency minimums raised to 0.33.1. Exporter network/auth/TLS, retries, test logic, feature map, MSRV, and build settings are unchanged; no new unsafe code. Resolved dependencies have separate coverage."
+
+[[audits.opentelemetry-proto]]
+who = "b02-agent-035 (AI-assisted source review)"
+criteria = "safe-to-deploy"
+delta = "0.33.0 -> 0.33.1"
+notes = "Reviewed the complete checksum-verified crates.io 0.33.0 -> 0.33.1 delta. Span grouping moves owned spans using indices inserted only after appending their scope group; scope identity and field conversion are retained. OTLP/JSON fixes add protobuf defaults, flatten exemplar values, and use existing checked i64 string/number codecs. Reviewed contract and JSON boundary tests without executing them. Optional file-descriptors exposes a 19,501-byte static descriptor set; decoded its eleven file envelopes and checked their names against bundled proto sources. No new unsafe or build script; MSRV unchanged. OpenTelemetry minimums rise to separately covered 0.33.1 versions."
+
 [[audits.opentelemetry_sdk]]
 who = "rust-gvm-api security review"
 criteria = "safe-to-deploy"
