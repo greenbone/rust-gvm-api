@@ -15,10 +15,10 @@ const RUST_GVM_COMPONENTS: &[&str] = &[
     "gvm-protocol",
 ];
 // Issues #632 and #634 consume typed GMP server-error and feed-sync support
-// included in rust-gvm v0.10.0. Guard its immutable release commit so all five
+// included in rust-gvm v0.10.0. Guard the selected immutable commit so all five
 // workspace components share one upstream baseline.
 const RUST_GVM_DEPENDENCY_VERSION: &str = "0.10.0";
-const RUST_GVM_DEPENDENCY_REVISION: &str = "75d5c376b106977561c912d97d72776bb801ec67";
+const RUST_GVM_DEPENDENCY_REVISION: &str = "5ef863a36b5e76f56c616a3ff8b186f060add92b";
 // Issue #588 established the reviewed rust-gvm v0.8.0 facade inventory, and
 // issue #620 advanced the accepted baseline to v0.9.0. The v0.10.0 release
 // retains the same 267 public async helpers, so all reviewed dispositions
@@ -307,7 +307,7 @@ fn rust_gvm_components_resolve_to_one_revision() {
         );
         assert_eq!(
             *source, expected_source,
-            "{component} must resolve to rust-gvm release commit {RUST_GVM_DEPENDENCY_REVISION}"
+            "{component} must resolve to rust-gvm commit {RUST_GVM_DEPENDENCY_REVISION}"
         );
     }
 
@@ -320,7 +320,7 @@ fn rust_gvm_components_resolve_to_one_revision() {
             .unwrap_or_else(|| panic!("{component} must be declared in workspace dependencies"));
         assert!(
             dependency.contains(&format!("rev = \"{RUST_GVM_DEPENDENCY_REVISION}\"")),
-            "{component} must pin rust-gvm release commit {RUST_GVM_DEPENDENCY_REVISION} in Cargo.toml: {dependency}"
+            "{component} must pin rust-gvm commit {RUST_GVM_DEPENDENCY_REVISION} in Cargo.toml: {dependency}"
         );
         assert!(
             !dependency.contains("branch =") && !dependency.contains("tag ="),
