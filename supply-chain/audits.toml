@@ -55,6 +55,12 @@ criteria = "safe-to-deploy"
 delta = "1.1.1 -> 1.1.2"
 notes = "Reviewed exact source delta: no Rust source, feature, dependency, unsafe, or build-script change; package metadata, README, license year, and release-template URL only."
 
+[[audits.serde_spanned]]
+who = "b02-agent-035 (AI-assisted source review)"
+criteria = "safe-to-deploy"
+delta = "1.1.2 -> 1.1.3"
+notes = "Reviewed the exact checksum-verified crates.io source delta. The only Rust change adds MapAccess::size_hint by summing three Option::is_some flags (bounded 0..=3) consumed by next_value_seed. No parser, unsafe, dependency, feature, MSRV, or build-script change; the crate continues to forbid unsafe code. Other changes are package version and VCS metadata."
+
 [[audits.sha2]]
 who = "rust-gvm-api security review"
 criteria = "safe-to-deploy"
@@ -85,11 +91,23 @@ criteria = "safe-to-deploy"
 delta = "1.1.6+spec-1.1.0 -> 1.2.0+spec-1.1.0"
 notes = "Reviewed exact parser/serializer delta and manifest: crate continues to forbid unsafe code. It updates the tightly coupled toml family and refactors document serialization to preserve insertion order while reusing allocation; key/value duplicate handling and serialization entry paths are corrected. No new resolved dependency or build script."
 
+[[audits.toml]]
+who = "b02-agent-035 (AI-assisted source review)"
+criteria = "safe-to-deploy"
+delta = "1.2.0+spec-1.1.0 -> 1.2.1+spec-1.1.0"
+notes = "Reviewed the exact checksum-verified crates.io source delta. ArraySeqAccess and TableMapAccess now return their remaining iterator lengths as Serde size hints; counts come from already parsed collections, not unchecked input lengths. Parsing and value consumption are unchanged. Manifest changes only raise serde_spanned and toml_datetime to the separately reviewed 1.1.3 releases. No new unsafe, build script, feature, or MSRV change; unsafe code remains forbidden."
+
 [[audits.toml_datetime]]
 who = "rust-gvm-api security review"
 criteria = "safe-to-deploy"
 delta = "1.1.1+spec-1.1.0 -> 1.1.2+spec-1.1.0"
 notes = "Reviewed exact delta: no Rust source, dependency, feature, unsafe, or build-script change; package metadata and release-template URL only. The crate continues to forbid unsafe code."
+
+[[audits.toml_datetime]]
+who = "b02-agent-035 (AI-assisted source review)"
+criteria = "safe-to-deploy"
+delta = "1.1.2+spec-1.1.0 -> 1.1.3+spec-1.1.0"
+notes = "Reviewed the exact checksum-verified crates.io source delta. The only Rust change adds MapAccess::size_hint as usize::from(self.date.is_some()), bounded to zero or one and tracking the Option consumed by next_value_seed. Date parsing and serialization are unchanged. No unsafe, dependency, feature, MSRV, or build-script change; unsafe code remains forbidden. Other changes are package version and VCS metadata."
 
 [[audits.toml_parser]]
 who = "rust-gvm-api security review"
@@ -109,32 +127,14 @@ criteria = "safe-to-deploy"
 delta = "1.26.1 -> 1.29.0"
 notes = "Reviewed exact source and manifest delta: adds optional UUID Serde adapters, accepts case-insensitive URN prefixes, and fixes v7 timestamp monotonicity. New NonNilUuid constructors call new_unchecked only after UUID constructors set nonzero version bits; no pre-existing formatter unsafe is changed. No dependency/build-script change; rust-version rises 1.85 -> 1.89, equal to workspace MSRV."
 
-[[audits.webpki-root-certs]]
-who = "rust-gvm-api security review"
-criteria = "safe-to-deploy"
-delta = "1.0.8 -> 1.0.10"
-notes = "Reviewed exact 1.0.8 -> 1.0.10 source delta: deterministic generated Mozilla CA data refresh from 118 to 120 root entries; crate remains no_std and forbids unsafe code, with no runtime logic change."
-
-[[audits.serde_spanned]]
-who = "b02-agent-035 (AI-assisted source review)"
-criteria = "safe-to-deploy"
-delta = "1.1.2 -> 1.1.3"
-notes = "Reviewed the exact checksum-verified crates.io source delta. The only Rust change adds MapAccess::size_hint by summing three Option::is_some flags (bounded 0..=3) consumed by next_value_seed. No parser, unsafe, dependency, feature, MSRV, or build-script change; the crate continues to forbid unsafe code. Other changes are package version and VCS metadata."
-
-[[audits.toml]]
-who = "b02-agent-035 (AI-assisted source review)"
-criteria = "safe-to-deploy"
-delta = "1.2.0+spec-1.1.0 -> 1.2.1+spec-1.1.0"
-notes = "Reviewed the exact checksum-verified crates.io source delta. ArraySeqAccess and TableMapAccess now return their remaining iterator lengths as Serde size hints; counts come from already parsed collections, not unchecked input lengths. Parsing and value consumption are unchanged. Manifest changes only raise serde_spanned and toml_datetime to the separately reviewed 1.1.3 releases. No new unsafe, build script, feature, or MSRV change; unsafe code remains forbidden."
-
-[[audits.toml_datetime]]
-who = "b02-agent-035 (AI-assisted source review)"
-criteria = "safe-to-deploy"
-delta = "1.1.2+spec-1.1.0 -> 1.1.3+spec-1.1.0"
-notes = "Reviewed the exact checksum-verified crates.io source delta. The only Rust change adds MapAccess::size_hint as usize::from(self.date.is_some()), bounded to zero or one and tracking the Option consumed by next_value_seed. Date parsing and serialization are unchanged. No unsafe, dependency, feature, MSRV, or build-script change; unsafe code remains forbidden. Other changes are package version and VCS metadata."
-
 [[audits.uuid]]
 who = "b02-agent-035 (AI-assisted source review)"
 criteria = "safe-to-deploy"
 delta = "1.29.0 -> 1.29.2"
 notes = "Reviewed the complete checksum-verified crates.io delta, including timestamp normalization/saturation, V7 precision-counter carry and boundary tests, WASM target-cfg expansion, and manifests. No new unsafe code or build script; UUID byte representation, parsing, formatting, and production V4 construction are unchanged. Optional WASM RNG helper version changes require separate dependency coverage if activated; it is absent from this application lockfile. Found a minor std+js WASM f64 timestamp-rounding regression that can encode Date.now one millisecond early, not affecting native V4 use. Boundary tests were inspected, not executed. MSRV remains 1.89."
+
+[[audits.webpki-root-certs]]
+who = "rust-gvm-api security review"
+criteria = "safe-to-deploy"
+delta = "1.0.8 -> 1.0.10"
+notes = "Reviewed exact 1.0.8 -> 1.0.10 source delta: deterministic generated Mozilla CA data refresh from 118 to 120 root entries; crate remains no_std and forbids unsafe code, with no runtime logic change."
