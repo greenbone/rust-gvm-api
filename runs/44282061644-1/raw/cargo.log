@@ -1,0 +1,260 @@
+[1m[33mwarning[0m[1m: unused workspace dependency `tower-http`[0m
+  [1m[94m--> [0mCargo.toml:44:1
+   [1m[94m|[0m
+[1m[94m44[0m [1m[94m|[0m tower-http = { version = "0.6.11", features = ["trace"] }
+   [1m[94m|[0m [1m[33m^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: `cargo::unused_workspace_dependencies` is set to `warn` by default
+[1m[96mhelp[0m: consider removing the workspace dependency `tower-http`
+[1m[33mwarning[0m: workspace (manifest) generated 1 warning
+[1m[92m   Compiling[0m gvm-gateway-e2e v0.6.0 (/home/runner/work/rust-gvm-api/rust-gvm-api/tests/e2e)
+[1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 10.89s
+[1m[92m     Running[0m unittests src/lib.rs (target/debug/build/gvm-gateway-e2e/64f1597f521a298e/out/gvm_gateway_e2e-64f1597f521a298e)
+
+running 11 tests
+test harness::config_test::shadow_identity_guard_accepts_separate_services_and_the_osp_default ... ok
+test harness::config_test::shadow_identity_guard_rejects_backend_target_conflation ... ok
+test harness::dto_test::credential_store_deserializes_optional_capability_fields ... ok
+test harness::dto_test::epss_deserializes_the_flat_public_selection_contract ... ok
+test harness::dto_test::identity_meta_deserializes_name_only_owner_shape ... ok
+test harness::dto_test::identity_owner_remains_distinct_from_generic_resource_refs ... ok
+test harness::dto_test::report_operating_system_summary_deserializes_the_live_gvmd_shape ... ok
+test harness::dto_test::scan_result_qod_deserializes_complete_partial_and_absent_shapes ... ok
+test harness::dto_test::summary_nvt_reference_rejects_epss ... ok
+test harness::resources::discovery_test::direct_openvasd_prefers_the_populated_exact_discovery_config ... ok
+test harness::resources::discovery_test::osp_selection_preserves_the_host_discovery_preference ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[1m[92m     Running[0m unittests src/bin/agent-control-scenario-proxy.rs (target/debug/build/gvm-gateway-e2e/c4b223cc67435ff4/out/agent_control_scenario_proxy-c4b223cc67435ff4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[1m[92m     Running[0m unittests src/bin/enterprise-feature-preflight.rs (target/debug/build/gvm-gateway-e2e/2d5911c4d47d6930/out/enterprise_feature_preflight-2d5911c4d47d6930)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[1m[92m     Running[0m tests/rest_auth.rs (target/debug/build/gvm-gateway-e2e/f4a08ff190dd8649/out/rest_auth-f4a08ff190dd8649)
+
+running 3 tests
+test rest_auth_contract_rejects_invalid_and_invalidated_sessions ... gateway ready: {"status":"ready"}
+ok
+test rest_request_scoped_basic_auth_lists_targets_without_persistent_session ... gateway ready: {"status":"ready"}
+ok
+test rest_session_lifecycle_exposes_location_and_session_details ... gateway ready: {"status":"ready"}
+ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.41s
+
+[1m[92m     Running[0m tests/rest_automation_resources.rs (target/debug/build/gvm-gateway-e2e/109b12a1730636c0/out/rest_automation_resources-109b12a1730636c0)
+
+running 2 tests
+test rest_automation_alert_lifecycle_creates_reads_lists_and_deletes ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+ok
+test rest_automation_schedule_lifecycle_creates_reads_lists_and_deletes ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.31s
+
+[1m[92m     Running[0m tests/rest_bootstrap.rs (target/debug/build/gvm-gateway-e2e/c594572908d40f61/out/rest_bootstrap-c594572908d40f61)
+
+running 2 tests
+test rest_bootstrap_public_endpoints_report_live_ready_versioned_gateway ... gateway ready: {"status":"ready"}
+ok
+test rest_system_timezones_returns_backend_catalog ... gateway ready: {"status":"ready"}
+ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+
+[1m[92m     Running[0m tests/rest_compliance_audit.rs (target/debug/build/gvm-gateway-e2e/e5bba383ad4313bb/out/rest_compliance_audit-e5bba383ad4313bb)
+
+running 1 test
+test rest_compliance_runs_audit_lifecycle_and_keeps_usage_scoped ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+listed 7 compliance policies
+created audit nightly-compliance-audit-1794997551625879390 (5e5d6c15-3067-42bd-9820-f0fe07888550) from policy 0362e8f6-d7cc-4a12-8768-5f2406713860
+correlated direct OpenVASD scan 747b4e79-a3f1-4dc1-8a0b-0a1284adf8e7 to target e2e-target and scenario success
+started audit 5e5d6c15-3067-42bd-9820-f0fe07888550; report 747b4e79-a3f1-4dc1-8a0b-0a1284adf8e7
+audit 5e5d6c15-3067-42bd-9820-f0fe07888550 status=Requested currentReport=Some("747b4e79-a3f1-4dc1-8a0b-0a1284adf8e7") lastReport=None
+audit 5e5d6c15-3067-42bd-9820-f0fe07888550 status=Done currentReport=None lastReport=Some("747b4e79-a3f1-4dc1-8a0b-0a1284adf8e7")
+compliance report 747b4e79-a3f1-4dc1-8a0b-0a1284adf8e7 scanEnd=Some("2026-11-18T10:25:52Z") resultCount=None
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.55s
+
+[1m[92m     Running[0m tests/rest_cross_cutting.rs (target/debug/build/gvm-gateway-e2e/ac1449f3eb56b841/out/rest_cross_cutting-ac1449f3eb56b841)
+
+running 1 test
+test rest_cross_cutting_headers_are_present_on_success_and_problem_responses ... gateway ready: {"status":"ready"}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+[1m[92m     Running[0m tests/rest_discovery_scan.rs (target/debug/build/gvm-gateway-e2e/6a1c19bb3a78407f/out/rest_discovery_scan-6a1c19bb3a78407f)
+
+running 4 tests
+test rest_discovery_lifecycle_completes_scan_and_links_report ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+selected discovery scan config Discovery (8715c877-47a0-438d-98a3-27c7a6ab2196)
+selected scanner OpenVAS Default (08b69003-5fc2-4037-a479-93b440211c73)
+selected port list All IANA assigned TCP (33d0cd82-57c6-11e1-8ed1-406186ea4fc5)
+created target nightly-discovery-target-1794997562280114051 (9f41843a-62ac-4239-b40d-92b6adc08a62) for host(s) e2e-target
+created task nightly-discovery-task-1794997562295842861 (18b10bf3-2b94-4a18-bcce-91fc1044acb5)
+correlated direct OpenVASD scan 6183186c-9c5d-4e78-a5cb-94c4d8d20fd7 to target e2e-target and scenario success
+started task 18b10bf3-2b94-4a18-bcce-91fc1044acb5; report 6183186c-9c5d-4e78-a5cb-94c4d8d20fd7
+task 18b10bf3-2b94-4a18-bcce-91fc1044acb5 status=Requested currentReport=Some("6183186c-9c5d-4e78-a5cb-94c4d8d20fd7") lastReport=None
+task 18b10bf3-2b94-4a18-bcce-91fc1044acb5 status=Done currentReport=None lastReport=Some("6183186c-9c5d-4e78-a5cb-94c4d8d20fd7")
+report 6183186c-9c5d-4e78-a5cb-94c4d8d20fd7 scanEnd=Some("2026-11-18T10:26:03Z") resultCount=Some(ResultCount { total: Some(7), high: Some(0), medium: Some(0), low: Some(0), log: Some(7), debug: None, false_positive: Some(0) })
+report results page=1 perPage=25 total=7 items=7
+ok
+test rest_discovery_lifecycle_creates_lists_and_deletes_target ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+selected discovery scan config Discovery (8715c877-47a0-438d-98a3-27c7a6ab2196)
+selected scanner OpenVAS Default (08b69003-5fc2-4037-a479-93b440211c73)
+selected port list All IANA assigned TCP (33d0cd82-57c6-11e1-8ed1-406186ea4fc5)
+created target nightly-discovery-target-1794997603058053792 (b1240baa-3e33-4fae-a595-a0d344711d87) for host(s) e2e-target
+ok
+test rest_discovery_lifecycle_creates_lists_and_deletes_task ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+selected discovery scan config Discovery (8715c877-47a0-438d-98a3-27c7a6ab2196)
+selected scanner OpenVAS Default (08b69003-5fc2-4037-a479-93b440211c73)
+selected port list All IANA assigned TCP (33d0cd82-57c6-11e1-8ed1-406186ea4fc5)
+created target nightly-discovery-target-1794997603648757723 (30093c85-4bc3-4d3a-a72d-22e67dd9adf9) for host(s) e2e-target
+created task nightly-discovery-task-1794997603664162080 (b880ff22-e4bf-4b24-bd0c-ef18d899683e)
+ok
+test rest_discovery_task_actions_reject_non_stopped_resume_and_accept_idle_stop ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+selected discovery scan config Discovery (8715c877-47a0-438d-98a3-27c7a6ab2196)
+selected scanner OpenVAS Default (08b69003-5fc2-4037-a479-93b440211c73)
+selected port list All IANA assigned TCP (33d0cd82-57c6-11e1-8ed1-406186ea4fc5)
+created target nightly-discovery-target-1794997604078703382 (b3916526-c88f-4c2f-a7df-b67f227ce4e7) for host(s) e2e-target
+created task nightly-discovery-task-1794997604094247486 (90181389-be98-4ff8-a0f6-ff6ebdb8f35c)
+ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 42.08s
+
+[1m[92m     Running[0m tests/rest_enterprise_agent_control.rs (target/debug/build/gvm-gateway-e2e/23bd80e40aab7d42/out/rest_enterprise_agent_control-23bd80e40aab7d42)
+
+running 1 test
+test rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed ... enterprise Agent Control profile not selected; contract not run
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[1m[92m     Running[0m tests/rest_identity_admin.rs (target/debug/build/gvm-gateway-e2e/4b441fb61222461f/out/rest_identity_admin-4b441fb61222461f)
+
+running 4 tests
+test rest_identity_admin_catalogs_list_and_read_resources ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+ok
+test rest_identity_admin_routes_reject_missing_and_invalid_auth ... gateway ready: {"status":"ready"}
+ok
+test rest_identity_group_lifecycle_creates_reads_lists_and_deletes ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+ok
+test rest_identity_user_settings_list_and_read_current_user_setting ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.26s
+
+[1m[92m     Running[0m tests/rest_live_mutations.rs (target/debug/build/gvm-gateway-e2e/2fbabd1fe57cc1ae/out/rest_live_mutations-2fbabd1fe57cc1ae)
+
+running 6 tests
+test live_mutation_requests_use_public_camel_case_shapes_and_redact_external_references ... ok
+test preference_mutation_name_preserves_nvt_identity ... ok
+test preference_mutation_prefers_alternatives_and_derives_safe_entry_values ... ok
+test rest_credential_store_live_mutations_follow_capability_matrix ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+credential-store capability branch: exact HTTP 501 not_implemented
+ok
+test rest_scan_config_live_mutations_replace_read_back_restore_and_delete ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+ok
+test stable_store_selection_honors_fixture_id_and_rejects_unaddressable_entries ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.86s
+
+[1m[92m     Running[0m tests/rest_negative_contract.rs (target/debug/build/gvm-gateway-e2e/b6edf5b5a00ff85a/out/rest_negative_contract-b6edf5b5a00ff85a)
+
+running 1 test
+test rest_negative_contract_returns_problem_responses ... gateway ready: {"status":"ready"}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+[1m[92m     Running[0m tests/rest_openvasd_fault_mapping.rs (target/debug/build/gvm-gateway-e2e/fd4f6a990a6495db/out/rest_openvasd_fault_mapping-fd4f6a990a6495db)
+
+running 1 test
+test rest_openvasd_faults_have_bounded_gateway_mappings ... fault scenario not selected; explicit shadow fault invocations own this contract
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[1m[92m     Running[0m tests/rest_report_import.rs (target/debug/build/gvm-gateway-e2e/c6a1701647097051/out/rest_report_import-c6a1701647097051)
+
+running 1 test
+test rest_report_import_lifecycle_creates_reads_and_cleans_up ... gateway ready: {"status":"ready"}
+task 46b0642c-b253-41b2-adf2-017f6f0753ed status=Running currentReport=Some("07a9374c-fcea-482e-8bd7-c00229b80c56") lastReport=None
+task 46b0642c-b253-41b2-adf2-017f6f0753ed status=Done currentReport=None lastReport=Some("07a9374c-fcea-482e-8bd7-c00229b80c56")
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.23s
+
+[1m[92m     Running[0m tests/rest_supporting_resources.rs (target/debug/build/gvm-gateway-e2e/9e896687fd2419c3/out/rest_supporting_resources-9e896687fd2419c3)
+
+running 6 tests
+test rest_supporting_catalogs_list_and_read_resources ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+gvmd did not expose credential stores on 2026-08-28; covered documented 501 capability-absence contract instead of a concrete store list
+cve catalog is empty; deepest boundary reached is list/pagination contract
+cpe catalog is empty; deepest boundary reached is list/pagination contract
+cert-bund advisory catalog is empty; deepest boundary reached is list/pagination contract
+dfn-cert advisory catalog is empty; deepest boundary reached is list/pagination contract
+filter catalog is empty; skipping item read assertion
+tag catalog is empty; skipping item read assertion
+note catalog is empty; skipping item read assertion
+override catalog is empty; skipping item read assertion
+operating-system catalog is empty; skipping item read assertion
+ok
+test rest_supporting_credential_lifecycle_creates_reads_lists_and_deletes ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+ok
+test rest_supporting_port_list_lifecycle_creates_reads_lists_and_deletes ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+ok
+test rest_supporting_scan_config_lifecycle_copies_updates_and_deletes ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+ok
+test rest_supporting_triage_resource_lifecycle_mutates_notes_and_overrides ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+correlated direct OpenVASD scan 9855d117-61e5-408f-942d-1b6b1f01cce5 to target e2e-target and scenario success
+task 96421acf-b689-4389-b9e3-5e1bd7de08a9 status=Requested currentReport=Some("9855d117-61e5-408f-942d-1b6b1f01cce5") lastReport=None
+task 96421acf-b689-4389-b9e3-5e1bd7de08a9 status=Done currentReport=None lastReport=Some("9855d117-61e5-408f-942d-1b6b1f01cce5")
+ok
+test rest_supporting_triage_resources_filter_on_completed_scan_context ... gateway ready: {"status":"ready"}
+created session; gmpVersion=22.8 expiresIn=300s
+correlated direct OpenVASD scan 34ae9c4f-bccd-4b2a-8cb9-619dd80c9d78 to target e2e-target and scenario success
+task 465720b2-d089-46c6-a521-c314c3cec0bc status=Requested currentReport=Some("34ae9c4f-bccd-4b2a-8cb9-619dd80c9d78") lastReport=None
+task 465720b2-d089-46c6-a521-c314c3cec0bc status=Done currentReport=None lastReport=Some("34ae9c4f-bccd-4b2a-8cb9-619dd80c9d78")
+host catalog is empty even after a completed discovery scan; skipping item read assertion
+completed scan produced no note resources; deepest boundary reached is filtered list/read contract on task-scoped triage context
+completed scan produced no override resources; deepest boundary reached is filtered list/read contract on task-scoped triage context
+ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.83s
+
+[1m[92m     Running[0m tests/rest_update_resources.rs (target/debug/build/gvm-gateway-e2e/2e04e78e641b5d04/out/rest_update_resources-2e04e78e641b5d04)
+
+running 1 test
+test rest_update_resource_lifecycles_preserve_ids_and_changed_fields ... gateway ready: {"status":"ready"}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s
+
