@@ -2129,7 +2129,7 @@ async fn gvmd_adapter_rejects_empty_agent_group_selection_before_dispatch() {
 #[tokio::test]
 async fn gvmd_adapter_rejects_empty_web_target_exclusions_before_dispatch() {
     // Direct port callers bypass REST validation. Preserve the published
-    // non-empty excludeUrls contract when mapping v0.10.0 collection updates.
+    // non-empty excludeUrls contract when mapping typed collection updates.
     let (adapter, server, token) = create_mock_adapter_v22_8().await;
     server.clear_history();
 
