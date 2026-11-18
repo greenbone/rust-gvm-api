@@ -65,17 +65,34 @@ failure fields to be null.
 
 [`direct-openvasd-pins.json`](direct-openvasd-pins.json) is the fail-closed
 input manifest for the advisory lanes. It pins emulator source/image, its
-OpenAPI and every mounted fixture, gvmd, feed/data images, the target, the
-test-only fault proxy, real OpenVASD, runner label, and Rust toolchain.
+OpenAPI and every mounted fixture, gvmd, PostgreSQL, the target, the test-only
+fault proxy, real OpenVASD, runner label, and Rust toolchain. Those
+executable/control-plane inputs always remain repository-owned digest pins;
+there is no mutable fallback.
 `scripts/fetch-openvasd-emulator-fixtures.py` downloads only listed files from
 the full source commit and rejects any hash mismatch.
-Before the shared direct-OpenVASD Compose launcher starts either advisory lane,
-`scripts/validate-direct-openvasd-pins.py` resolves every digest-pinned runtime
-image used by the selected Compose topology. Emulator-backed community and
-enterprise launches do not depend on the separately pinned real scanner; real
-OpenVASD launches validate their selected scanner image together with every
-shared input. An unavailable required manifest names the exact immutable image
-and stops the launch; no mutable-tag fallback is permitted.
+
+The five community data inputs (`vulnerability-tests`, `data-objects`,
+`report-formats`, `gpg-data`, and `notus-data`) instead declare rolling channel
+tags. At the initial Compose launch,
+`scripts/direct_openvasd_feed_resolution.py` queries each channel exactly once
+and writes `feed-resolution.json` in that lane's uploaded evidence directory.
+Later launch-capable Compose commands in the same E2E run reuse that resolution.
+The generated Compose environment contains only the resulting exact
+`tag@sha256:digest` references, and Compose refuses to start if any is absent.
+A resolver or registry-retention failure stops the named start-runtime step as
+`setup`; it is never reported as an application or REST assertion regression.
+Diagnostic and cleanup invocations reuse a successful resolution or inert
+immutable placeholders, so they remain available after resolution failed
+without pulling a mutable tag.
+
+`scripts/validate-direct-openvasd-pins.py` separately resolves every
+digest-pinned executable/control-plane image used by the selected Compose
+topology. Emulator-backed community and enterprise launches do not depend on
+the separately pinned real scanner; real OpenVASD launches validate their
+selected scanner image together with every shared control-plane input. An
+unavailable required manifest names the exact immutable image and stops the
+launch.
 
 ## Advisory enterprise Agent Control lanes
 
@@ -153,6 +170,16 @@ retry state, artifact completeness, comparisons, faults, and failure class. A
 runtime-health marker separates application from assertion failures; named
 steps distinguish setup, readiness, cleanup, and runner failures.
 
+Runtime provenance loads the successful feed resolution, rejects any feed
+container whose configured image differs, and records all five exact
+`tag@digest` references. Promotion comparison uses the declared channel portion
+of those references, so a digest refresh within `latest` remains comparable;
+changing a declared channel, Compose/harness input, or executable/control-plane
+pin creates a new comparison fingerprint. The live collector, durable ledger,
+and promotion evaluator all call the same fingerprint implementation. Legacy
+ledger rows that recorded only an image ID retain their original calculation
+and remain verifiable.
+
 Local reproduction uses a run-scoped Compose project:
 
 ```bash
@@ -229,9 +256,11 @@ python3 scripts/collect-shadow-observations.py \
 
 Only executed jobs with a non-expired finalized evidence artifact and valid
 direct-lane provenance qualify. The collector fingerprints the pinned
-gvmd/scanner/feed images, Compose, OpenAPI, fixtures, runner, target identity,
-and test-harness input; it counts only runs matching the newest qualifying
-fingerprint. Collection starts from the repository's exact-name finalized
+gvmd/scanner/control-plane images, declared feed channels, Compose, OpenAPI,
+fixtures, target identity, and test-harness input; it counts only runs matching
+the newest qualifying fingerprint. Exact rolling feed digests remain in each
+run's provenance but do not split a window when the channel is unchanged.
+Collection starts from the repository's exact-name finalized
 artifact inventory rather than scanning workflow history from before the
 shadow lane existed. For each counted artifact it resolves the originating
 workflow and exact run attempt, requires every finalizer document, and
@@ -437,9 +466,9 @@ public workflow artifacts.
 - Older runs predate runtime provenance capture; their head SHA and workflow
   evidence are exact, while full resolved component/feed image identity starts
   with runs containing `provenance.json`.
-- The current stack uses mutable community feed/scanner tags. The new manifest
-  records their resolved image IDs but does not turn them into source revisions.
-- The advisory profiles use digest pins; the existing required OSP stack is
-  intentionally unchanged.
+- The advisory profiles resolve rolling community feed channels to exact
+  per-invocation references while keeping executable/control-plane inputs
+  repository-pinned; the existing required OSP stack is intentionally
+  unchanged.
 - The direct shadow 30-run/14-day window begins only after this workflow lands
   and remains outstanding at implementation handoff.

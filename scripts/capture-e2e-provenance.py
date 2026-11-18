@@ -16,6 +16,11 @@ from build_temporary_openvas_scanner import (
     SOURCE_REVISION as TEMPORARY_SCANNER_SOURCE_REVISION,
     load_manifest as load_temporary_scanner_build_manifest,
 )
+from direct_openvasd_feed_resolution import (
+    FeedResolutionError,
+    load_declared_channels,
+    load_resolution,
+)
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -81,17 +86,15 @@ def assert_pinned_runtime(
     records: dict[str, dict[str, str]],
     pins: dict[str, Any],
     lane: str,
+    resolved_feeds: dict[str, str],
     temporary_scanner_build: dict[str, Any] | None = None,
 ) -> None:
+    """Reject runtime drift from both immutable pins and this run's feed resolution."""
+
     runtime_images = pins["runtimeImages"]
     service_pins = {
         "gvmd": runtime_images["gvmd"],
         "configure-direct-openvasd": runtime_images["gvmd"],
-        "vulnerability-tests": runtime_images["vulnerability-tests"],
-        "data-objects": runtime_images["data-objects"],
-        "report-formats": runtime_images["report-formats"],
-        "gpg-data": runtime_images["gpg-data"],
-        "notus-data": runtime_images["notus-data"],
         "pg-gvm-migrator": runtime_images["pg-gvm-migrator"],
         "pg-gvm": runtime_images["pg-gvm"],
         "openvasd-scenario-proxy": runtime_images["scenario-proxy"],
@@ -114,6 +117,14 @@ def assert_pinned_runtime(
             raise RuntimeError(
                 f"compose service {service!r} image drifted: expected {expected_image}, "
                 f"got {actual_image}"
+            )
+    for service in DIRECT_FEED_SERVICES:
+        expected_image = resolved_feeds[service]
+        actual_image = require_service(records, service)["image"]
+        if actual_image != expected_image:
+            raise RuntimeError(
+                f"compose feed service {service!r} did not use this run's resolution: "
+                f"expected {expected_image}, got {actual_image}"
             )
     if lane == "direct-openvasd":
         source_revision = records["openvasd-backend"]["sourceRevision"]
@@ -220,6 +231,7 @@ def build_document(
     fixture_root: Path | None = None,
     temporary_scanner_build_path: Path | None = None,
     temporary_scanner_build: dict[str, Any] | None = None,
+    feed_revisions: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     gateway = dict(require_service(records, "gvm-gateway"))
     gateway["sourceRevision"] = repository_revision
@@ -309,7 +321,14 @@ def build_document(
         "gvmd": require_service(records, "gvmd"),
         "scanner": require_service(records, scanner_service),
         "feedData": [
-            {"name": service, "revision": require_service(records, service)["imageDigest"]}
+            {
+                "name": service,
+                "revision": (
+                    feed_revisions[service]
+                    if feed_revisions is not None
+                    else require_service(records, service)["imageDigest"]
+                ),
+            }
             for service in feed_services
         ],
         "fixtures": fixtures,
@@ -356,6 +375,11 @@ def main() -> int:
             else None
         ),
     )
+    parser.add_argument(
+        "--feed-resolution",
+        type=Path,
+        help="successful rolling-feed resolution written by the Compose launcher",
+    )
     args = parser.parse_args()
     if args.temporary_scanner_build_manifest is not None and args.lane != "real-openvasd":
         raise RuntimeError(
@@ -388,9 +412,30 @@ def main() -> int:
         temporary_scanner_build = load_temporary_scanner_build_manifest(
             args.temporary_scanner_build_manifest
         )
+    resolved_feeds = None
     if args.lane != "osp":
         pins = json.loads(PINS_PATH.read_text(encoding="utf-8"))
-        assert_pinned_runtime(records, pins, args.lane, temporary_scanner_build)
+        resolution_path = args.feed_resolution
+        if resolution_path is None:
+            configured_path = os.environ.get("GVM_GATEWAY_E2E_FEED_RESOLUTION_PATH")
+            resolution_path = (
+                Path(configured_path)
+                if configured_path
+                else args.output.parent / "feed-resolution.json"
+            )
+        try:
+            resolved_feeds = load_resolution(
+                resolution_path, load_declared_channels(PINS_PATH)
+            )
+        except FeedResolutionError as error:
+            raise RuntimeError(str(error)) from error
+        assert_pinned_runtime(
+            records,
+            pins,
+            args.lane,
+            resolved_feeds,
+            temporary_scanner_build,
+        )
     revision = command_output(["git", "rev-parse", "HEAD"]).strip()
     document = build_document(
         records,
@@ -403,6 +448,7 @@ def main() -> int:
         fixture_root=fixture_root,
         temporary_scanner_build_path=args.temporary_scanner_build_manifest,
         temporary_scanner_build=temporary_scanner_build,
+        feed_revisions=resolved_feeds,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")

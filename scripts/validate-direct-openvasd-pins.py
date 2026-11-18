@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from build_temporary_openvas_scanner import load_manifest
+from direct_openvasd_feed_resolution import FeedResolutionError, load_declared_channels
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -40,7 +41,13 @@ def runtime_images(
         document: Any = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
         raise RuntimeImageManifestError(f"cannot load runtime image manifest {path}: {error}") from error
-    images = document.get("runtimeImages") if isinstance(document, dict) else None
+    if not isinstance(document, dict) or document.get("schemaVersion") != 2:
+        raise RuntimeImageManifestError("runtime image manifest must use schemaVersion 2")
+    try:
+        load_declared_channels(path)
+    except FeedResolutionError as error:
+        raise RuntimeImageManifestError(str(error)) from error
+    images = document.get("runtimeImages")
     if not isinstance(images, dict) or not images:
         raise RuntimeImageManifestError("runtime image manifest must contain a non-empty runtimeImages object")
 
@@ -58,6 +65,19 @@ def runtime_images(
         if name == "real-openvasd" and openvasd_kind != "real":
             continue
         validated[name] = image
+
+    expected = {
+        "gvmd",
+        "pg-gvm-migrator",
+        "pg-gvm",
+        "scenario-proxy",
+        "e2e-target",
+        "real-openvasd",
+    }
+    if set(images) != expected:
+        raise RuntimeImageManifestError(
+            "runtimeImages must exactly cover immutable executable/control-plane inputs"
+        )
 
     for name, image in validated.items():
         if not IMAGE_DIGEST_PATTERN.fullmatch(image):
