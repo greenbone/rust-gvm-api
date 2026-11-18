@@ -883,6 +883,7 @@ class E2eEvidenceTests(unittest.TestCase):
             images = PINS_VALIDATOR.runtime_images(
                 temporary_scanner_build_manifest=manifest_path,
                 real_openvasd_image=reference,
+                openvasd_kind="real",
             )
             self.assertEqual(images["real-openvasd"], reference)
             with self.assertRaisesRegex(
@@ -893,6 +894,7 @@ class E2eEvidenceTests(unittest.TestCase):
                     real_openvasd_image=(
                         TEMPORARY_SCANNER.IMAGE_REPOSITORY + "@sha256:" + "d" * 64
                     ),
+                    openvasd_kind="real",
                 )
 
     def test_real_runtime_provenance_requires_one_exact_temporary_scanner_identity(self) -> None:
@@ -1217,16 +1219,33 @@ class E2eEvidenceTests(unittest.TestCase):
         with self.assertRaisesRegex(CHECKER.EvidenceError, "exactly cover"):
             CHECKER.validate_direct_pins(pins)
 
-    def test_runtime_image_manifest_validator_checks_every_pinned_runtime_image(self) -> None:
-        """Pre-start validation must query the emulator and every runtime input before Compose can run."""
+    def test_emulator_runtime_validation_skips_the_unused_real_scanner(self) -> None:
+        """Registry retention of the real scanner must not break an emulator-only launch."""
 
-        images = PINS_VALIDATOR.runtime_images()
+        images = PINS_VALIDATOR.runtime_images(openvasd_kind="emulator")
         pins = json.loads(
             (ROOT / "tests/e2e/evidence/direct-openvasd-pins.json").read_text(encoding="utf-8")
         )
         inspected: list[str] = []
         PINS_VALIDATOR.validate_runtime_images(images, inspected.append)
         self.assertEqual(images["emulator"], pins["emulator"]["image"])
+        self.assertEqual(
+            set(images) - {"emulator"},
+            set(pins["runtimeImages"]) - {"real-openvasd"},
+        )
+        self.assertNotIn("real-openvasd", images)
+        self.assertEqual(inspected, [images[name] for name in sorted(images)])
+
+    def test_real_runtime_validation_checks_the_selected_scanner(self) -> None:
+        """A real-scanner launch must still fail closed on its exact scanner image."""
+
+        images = PINS_VALIDATOR.runtime_images(openvasd_kind="real")
+        pins = json.loads(
+            (ROOT / "tests/e2e/evidence/direct-openvasd-pins.json").read_text(encoding="utf-8")
+        )
+        inspected: list[str] = []
+        PINS_VALIDATOR.validate_runtime_images(images, inspected.append)
+        self.assertEqual(images["real-openvasd"], pins["runtimeImages"]["real-openvasd"])
         self.assertEqual(set(images) - {"emulator"}, set(pins["runtimeImages"]))
         self.assertEqual(inspected, [images[name] for name in sorted(images)])
 
@@ -1717,6 +1736,8 @@ class E2eEvidenceTests(unittest.TestCase):
         launcher = (ROOT / "scripts/compose-direct-openvasd.sh").read_text(encoding="utf-8")
         validator = 'python3 "${ROOT_DIR}/scripts/validate-direct-openvasd-pins.py"'
         self.assertIn(validator, launcher)
+        self.assertIn("--openvasd-kind", launcher)
+        self.assertIn('"${GVM_GATEWAY_E2E_OPENVASD_KIND:-emulator}"', launcher)
         self.assertIn("up|start|create|run|restart)", launcher)
         self.assertLess(launcher.index(validator), launcher.index("exec docker compose"))
         for workflow in (

@@ -17,4 +17,5 @@ jobs:
         org.opencontainers.image.vendor=Greenbone
         org.opencontainers.image.documentation=https://greenbone.github.io/docs/
         org.opencontainers.image.base.name=debian:trixie-slim
+      service: openvas-gvm-api
     secrets: inherit
