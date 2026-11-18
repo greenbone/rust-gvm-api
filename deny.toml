@@ -35,5 +35,4 @@ highlight = "all"
 unknown-registry = "deny"
 unknown-git = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
-allow-git = ["https://github.com/greenbone-hive/rust-gvm"]
-allow-org = { github = ["greenbone-hive"] }
+allow-git = ["https://github.com/greenbone/rust-gvm"]

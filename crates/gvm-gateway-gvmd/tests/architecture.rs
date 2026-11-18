@@ -14,20 +14,22 @@ const RUST_GVM_COMPONENTS: &[&str] = &[
     "gvm-mock-server",
     "gvm-protocol",
 ];
-// Issues #632 and #634 consume typed GMP server-error and feed-sync support
-// included in rust-gvm v0.10.0. Guard the selected immutable commit so all five
+// Issue #723 advances the workspace to the published rust-gvm v0.11.0 release.
+// Guard the canonical repository URL and immutable release commit so all five
 // workspace components share one upstream baseline.
-const RUST_GVM_DEPENDENCY_VERSION: &str = "0.10.0";
-const RUST_GVM_DEPENDENCY_REVISION: &str = "5ef863a36b5e76f56c616a3ff8b186f060add92b";
+const RUST_GVM_DEPENDENCY_URL: &str = "https://github.com/greenbone/rust-gvm";
+const RUST_GVM_DEPENDENCY_VERSION: &str = "0.11.0";
+const RUST_GVM_DEPENDENCY_REVISION: &str = "bee36e69c2bfe9e4bc169a346600fcc9cebc2283";
 // Issue #588 established the reviewed rust-gvm v0.8.0 facade inventory, and
-// issue #620 advanced the accepted baseline to v0.9.0. The v0.10.0 release
-// retains the same 267 public async helpers, so all reviewed dispositions
-// remain valid while the release metadata advances atomically.
+// issues #620 and #634 advanced the accepted baseline through v0.10.0. Direct
+// comparison of the v0.10.0 and v0.11.0 typed-facade trees shows the same 267
+// public async helpers, so all reviewed dispositions remain valid while the
+// release metadata advances atomically.
 const RUST_GVM_PIN_REFERENCE: &str = "release-tag";
-const RUST_GVM_FACADE_TAG: &str = "v0.10.0";
-const RUST_GVM_FACADE_REVISION: &str = "75d5c376b106977561c912d97d72776bb801ec67";
+const RUST_GVM_FACADE_TAG: &str = "v0.11.0";
+const RUST_GVM_FACADE_REVISION: &str = "bee36e69c2bfe9e4bc169a346600fcc9cebc2283";
 const RUST_GVM_TYPED_FACADE_METHOD_COUNT: usize = 267;
-const RUST_GVM_TYPED_FACADE_SNAPSHOT: &str = "tests/fixtures/rust-gvm-v0.10.0-typed-facade.tsv";
+const RUST_GVM_TYPED_FACADE_SNAPSHOT: &str = "tests/fixtures/rust-gvm-v0.11.0-typed-facade.tsv";
 const RUST_GVM_DISPOSITION_LEDGER: &str = "../../docs/upstream-surface-dispositions.tsv";
 const ALLOWED_DISPOSITIONS: &[&str] = &[
     "exposed", "mapped", "internal", "blocked", "deferred", "omitted",
@@ -298,7 +300,7 @@ fn rust_gvm_components_resolve_to_one_revision() {
         "all five rust-gvm components must be present in Cargo.lock"
     );
     let expected_source = format!(
-        "git+https://github.com/greenbone-hive/rust-gvm?rev={RUST_GVM_DEPENDENCY_REVISION}#{RUST_GVM_DEPENDENCY_REVISION}"
+        "git+{RUST_GVM_DEPENDENCY_URL}?rev={RUST_GVM_DEPENDENCY_REVISION}#{RUST_GVM_DEPENDENCY_REVISION}"
     );
     for (component, (version, source)) in &releases {
         assert_eq!(
@@ -321,6 +323,10 @@ fn rust_gvm_components_resolve_to_one_revision() {
         assert!(
             dependency.contains(&format!("rev = \"{RUST_GVM_DEPENDENCY_REVISION}\"")),
             "{component} must pin rust-gvm commit {RUST_GVM_DEPENDENCY_REVISION} in Cargo.toml: {dependency}"
+        );
+        assert!(
+            dependency.contains(&format!("git = \"{RUST_GVM_DEPENDENCY_URL}\"")),
+            "{component} must use the canonical rust-gvm repository {RUST_GVM_DEPENDENCY_URL} in Cargo.toml: {dependency}"
         );
         assert!(
             !dependency.contains("branch =") && !dependency.contains("tag ="),
