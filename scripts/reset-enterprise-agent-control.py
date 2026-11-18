@@ -13,6 +13,12 @@ class ResetError(RuntimeError):
     """The deterministic enterprise reset contract failed."""
 
 
+RESET_PATHS = {
+    "agent-control": "/_emulator/agent-control/reset",
+    "openvasd": "/_emulator/reset",
+}
+
+
 def validated_http_url(url: str) -> str:
     """Reject local-file schemes and ambiguous credential-bearing reset URLs."""
 
@@ -75,7 +81,11 @@ def http_request(
 
 
 def reset(base_url: str, token: str, name: str) -> dict[str, object]:
-    status, body = request(f"{base_url.rstrip('/')}/_emulator/reset", token)
+    try:
+        reset_path = RESET_PATHS[name]
+    except KeyError as error:
+        raise ResetError(f"unsupported reset service: {name}") from error
+    status, body = request(f"{base_url.rstrip('/')}{reset_path}", token)
     if status not in {200, 204}:
         raise ResetError(f"{name} reset returned HTTP {status}: {body[:512]!r}")
     return {"service": name, "status": status}

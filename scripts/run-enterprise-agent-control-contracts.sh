@@ -6,8 +6,15 @@ EVIDENCE_DIR="${GVM_GATEWAY_E2E_ENTERPRISE_EVIDENCE_DIR:-${ROOT_DIR}/dist/e2e-en
 mkdir -p "${EVIDENCE_DIR}"
 
 reset() {
-  python3 "${ROOT_DIR}/scripts/reset-enterprise-agent-control.py" \
-    >"${EVIDENCE_DIR}/reset-last.json"
+  local output="${EVIDENCE_DIR}/reset-last.json"
+  local pending="${output}.pending"
+  rm -f "${output}" "${pending}"
+  if python3 "${ROOT_DIR}/scripts/reset-enterprise-agent-control.py" >"${pending}"; then
+    mv "${pending}" "${output}"
+  else
+    rm -f "${pending}"
+    return 1
+  fi
 }
 trap 'reset || true' EXIT
 

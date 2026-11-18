@@ -6,14 +6,14 @@ x-direct-profile: &direct-profile
 services:
   vulnerability-tests:
     <<: *direct-profile
-    image: registry.community.greenbone.net/community/vulnerability-tests:latest@sha256:851983199d390aeb04d3c03eacdd1334ea351ebaf44e3c69791e6056efd5b31a
+    image: registry.community.greenbone.net/community/vulnerability-tests:latest@sha256:eb3203b9e91e6e6a668167c61032c33635bdf832b3f98c8437eb84b8bc41fea4
     command: /bin/sh -c 'mkdir -p /mnt/24.10/vt-data/nasl/; for f in byte_func.inc global_settings.nasl host_alive_detection.nasl host_details.inc http_func.inc list_array_func.inc mac_prefix.inc misc_func.inc network_func.inc os_func.inc plugin_feed_info.inc revisions-lib.inc smb_nt.inc traversal_func.inc version_func.inc; do cp -- "$${STORAGE_PATH}/24.10/vt-data/nasl/$${f}" "/mnt/"; done'
     volumes:
       - vt_data_vol:/mnt
 
   data-objects:
     <<: *direct-profile
-    image: registry.community.greenbone.net/community/data-objects:latest@sha256:4242afe024ae1e361339eceb3900f93917aae769610b67a17642f81bf40194ae
+    image: registry.community.greenbone.net/community/data-objects:latest@sha256:76fa3baec6c2065143708ce5c55749b2b7345117837fc776b422d7ea1e6fa580
     environment:
       FEED_RELEASE: "24.10"
       KEEP_ALIVE: "1"
@@ -22,7 +22,7 @@ services:
 
   report-formats:
     <<: *direct-profile
-    image: registry.community.greenbone.net/community/report-formats:latest@sha256:7ad0fee3214ee1b309cc8990d2edcd1af68ef1e0f40b9bb349adca9a5af6d32c
+    image: registry.community.greenbone.net/community/report-formats:latest@sha256:0df141f3a917bf4495e53bb2fda2bacc899b88d44dca0dcef4edb017cd942c7c
     environment:
       FEED_RELEASE: "24.10"
       KEEP_ALIVE: "1"
@@ -40,7 +40,7 @@ services:
 
   notus-data:
     <<: *direct-profile
-    image: registry.community.greenbone.net/community/notus-data:latest@sha256:2468dc7997b50482a7abc5761b6b338cbf4a530720bbe67942968672a9c969a1
+    image: registry.community.greenbone.net/community/notus-data:latest@sha256:cf2ad9a1a1dea93c73f3469b09adbeb0821f452f49bcc2cb2a6ba0c31241f0c8
     volumes:
       - notus_data_vol:/mnt
 
@@ -63,7 +63,7 @@ services:
 
   openvasd-backend:
     <<: *direct-profile
-    image: ghcr.io/greenbone/gvm-openapi-emulator:edge@sha256:8249f4ec474a350b19aa7f530785e78ea0fb342f8dbe88b012270b538cd9412c
+    image: ghcr.io/greenbone/gvm-openapi-emulator:edge@sha256:296d6ee3a3752071f840995d7df3f260f19d281d5014bd5a604f2dd26871c0c9
     environment:
       SERVER_PORT: "8086"
       SPEC_PATH: /work/swagger.json
