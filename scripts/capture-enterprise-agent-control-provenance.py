@@ -11,6 +11,11 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from direct_openvasd_feed_resolution import (
+    FeedResolutionError,
+    load_declared_channels,
+    load_resolution,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 DIRECT_PINS = ROOT / "tests/e2e/evidence/direct-openvasd-pins.json"
@@ -106,12 +111,38 @@ def main() -> int:
     parser.add_argument("--build-manifest", type=Path, required=True)
     parser.add_argument("--agent-control-source", type=Path, required=True)
     parser.add_argument("--compose", type=Path, default=ROOT / "scripts/compose-enterprise-agent-control.sh")
+    parser.add_argument(
+        "--feed-resolution",
+        type=Path,
+        help="successful rolling-feed resolution written by the Compose launcher",
+    )
     args = parser.parse_args()
 
     direct = json.loads(DIRECT_PINS.read_text())
     enterprise = json.loads(ENTERPRISE_PINS.read_text())
     build = json.loads(args.build_manifest.read_text())
     records = runtime_records(args.compose.resolve())
+    resolution_path = args.feed_resolution
+    if resolution_path is None:
+        configured_path = os.environ.get("GVM_GATEWAY_E2E_FEED_RESOLUTION_PATH")
+        resolution_path = (
+            Path(configured_path)
+            if configured_path
+            else args.output.parent / "feed-resolution.json"
+        )
+    try:
+        resolved_feeds = load_resolution(
+            resolution_path, load_declared_channels(DIRECT_PINS)
+        )
+    except FeedResolutionError as error:
+        raise ProvenanceError(str(error)) from error
+    for service in FEEDS:
+        actual = require(records, service)["image"]
+        if actual != resolved_feeds[service]:
+            raise ProvenanceError(
+                f"rolling feed {service!r} did not use this run's resolution: "
+                f"expected {resolved_feeds[service]}, got {actual}"
+            )
     source_revision = output(["git", "-C", str(args.agent_control_source), "rev-parse", "HEAD"])
     source_git_tree = output(
         ["git", "-C", str(args.agent_control_source), "rev-parse", "HEAD^{tree}"]
@@ -195,7 +226,7 @@ def main() -> int:
             for service in ("pg-gvm-migrator", "pg-gvm")
         ],
         "feedData": [
-            {"name": service, "revision": require(records, service)["imageDigest"]}
+            {"name": service, "revision": resolved_feeds[service]}
             for service in FEEDS
         ],
         "composeHarness": {

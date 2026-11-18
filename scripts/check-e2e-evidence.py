@@ -64,11 +64,6 @@ ISOLATION_KINDS = {
 CLEANUP_KINDS = {"none", "session", "reverse-delete", "best-effort-reverse-delete"}
 DIRECT_RUNTIME_IMAGE_SERVICES = {
     "gvmd": ("gvmd", "configure-direct-openvasd"),
-    "vulnerability-tests": ("vulnerability-tests",),
-    "data-objects": ("data-objects",),
-    "report-formats": ("report-formats",),
-    "gpg-data": ("gpg-data",),
-    "notus-data": ("notus-data",),
     "pg-gvm-migrator": ("pg-gvm-migrator",),
     "pg-gvm": ("pg-gvm",),
     "scenario-proxy": ("openvasd-scenario-proxy",),
@@ -76,6 +71,13 @@ DIRECT_RUNTIME_IMAGE_SERVICES = {
 }
 REAL_RUNTIME_IMAGE_SERVICES = {
     "real-openvasd": ("configure-openvas", "openvasd-backend"),
+}
+ROLLING_FEED_COMPOSE_VARIABLES = {
+    "vulnerability-tests": "GVM_GATEWAY_E2E_VULNERABILITY_TESTS_IMAGE",
+    "data-objects": "GVM_GATEWAY_E2E_DATA_OBJECTS_IMAGE",
+    "report-formats": "GVM_GATEWAY_E2E_REPORT_FORMATS_IMAGE",
+    "gpg-data": "GVM_GATEWAY_E2E_GPG_DATA_IMAGE",
+    "notus-data": "GVM_GATEWAY_E2E_NOTUS_DATA_IMAGE",
 }
 
 
@@ -152,11 +154,12 @@ def compose_service_images(path: Path) -> dict[str, str]:
 
 def validate_compose_runtime_images(
     runtime_images: dict[str, str],
+    feed_channels: dict[str, str],
     emulator_image: str,
     direct_compose_path: Path = REPOSITORY_ROOT / "tests" / "e2e" / "compose.direct-openvasd.yaml",
     real_compose_path: Path = REPOSITORY_ROOT / "tests" / "e2e" / "compose.real-openvasd.yaml",
 ) -> None:
-    """Keep every runtime service's immutable Compose reference equal to its manifest pin."""
+    """Keep immutable pins exact and require resolved inputs for rolling feeds."""
 
     direct_images = compose_service_images(direct_compose_path)
     real_images = compose_service_images(real_compose_path)
@@ -165,6 +168,15 @@ def validate_compose_runtime_images(
             service: runtime_images[name]
             for name, services in DIRECT_RUNTIME_IMAGE_SERVICES.items()
             for service in services
+        },
+        **{
+            service: (
+                "${"
+                f"{ROLLING_FEED_COMPOSE_VARIABLES[service]}"
+                f":?resolved-exact-{service}-image-required"
+                "}"
+            )
+            for service in feed_channels
         },
         "openvasd-backend": emulator_image,
     }
@@ -555,9 +567,20 @@ def validate_fault_mappings(document: Any, require_complete: bool = True) -> Non
 
 def validate_direct_pins(document: Any) -> None:
     root = expect_object(document, "direct OpenVASD pins")
-    expect_keys(root, {"schemaVersion", "emulator", "runtimeImages", "identities", "runner"}, "direct OpenVASD pins")
-    if root["schemaVersion"] != 1:
-        raise EvidenceError("direct OpenVASD pins.schemaVersion must equal 1")
+    expect_keys(
+        root,
+        {
+            "schemaVersion",
+            "emulator",
+            "feedDataChannels",
+            "runtimeImages",
+            "identities",
+            "runner",
+        },
+        "direct OpenVASD pins",
+    )
+    if root["schemaVersion"] != 2:
+        raise EvidenceError("direct OpenVASD pins.schemaVersion must equal 2")
     emulator = expect_object(root["emulator"], "direct OpenVASD pins.emulator")
     expect_keys(
         emulator,
@@ -611,14 +634,27 @@ def validate_direct_pins(document: Any) -> None:
         if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
             raise EvidenceError(f"emulator fixture {name} must have an exact SHA-256")
 
+    feed_channels = expect_object(
+        root["feedDataChannels"], "direct OpenVASD pins.feedDataChannels"
+    )
+    if set(feed_channels) != set(ROLLING_FEED_COMPOSE_VARIABLES):
+        raise EvidenceError(
+            "direct OpenVASD feedDataChannels must exactly cover the rolling feed topology"
+        )
+    for name, channel in feed_channels.items():
+        expect_string(name, "direct OpenVASD feedDataChannels key")
+        if (
+            not isinstance(channel, str)
+            or "@" in channel
+            or channel.rfind(":") <= channel.rfind("/")
+        ):
+            raise EvidenceError(
+                f"rolling feed {name} must declare an explicit mutable channel tag"
+            )
+
     runtime_images = expect_object(root["runtimeImages"], "direct OpenVASD pins.runtimeImages")
     expected_images = {
         "gvmd",
-        "vulnerability-tests",
-        "data-objects",
-        "report-formats",
-        "gpg-data",
-        "notus-data",
         "pg-gvm-migrator",
         "pg-gvm",
         "scenario-proxy",
@@ -644,7 +680,7 @@ def validate_direct_pins(document: Any) -> None:
     expect_string(runner["rust"], "direct OpenVASD pins.runner.rust")
 
     compose_text = (REPOSITORY_ROOT / "tests" / "e2e" / "compose.direct-openvasd.yaml").read_text(encoding="utf-8")
-    validate_compose_runtime_images(runtime_images, emulator["image"])
+    validate_compose_runtime_images(runtime_images, feed_channels, emulator["image"])
     for identity in (backend, target):
         if f"  {identity}:" not in compose_text:
             raise EvidenceError(f"pinned identity {identity} is not a Compose service")
