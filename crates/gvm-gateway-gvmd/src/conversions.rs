@@ -1143,7 +1143,7 @@ fn nvt_ref_from_gmp(nvt: gvm_gmp::responses::common::NvtReference) -> NvtRef {
     NvtRef {
         oid: Some(nvt.oid),
         name: nvt.name,
-        family: None,
+        family: nvt.type_.clone(),
         type_: nvt.type_,
         cvss_base: None,
         cves: vec![],

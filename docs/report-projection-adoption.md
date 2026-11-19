@@ -6,4 +6,4 @@ GET /reports/{id}/applications preserves optional hostsCount, occurrences and op
 
 ## #735 NVT type
 
-JSON type is an optional open string. Ordinary results (including report embedded results) map typed NvtRef.type_; notes/overrides map typed NvtReference.type_, correcting the former misprojection as family. Aggregate vulnerability and closed-CVE sources lack a typed discriminator and keep it absent. Metadata is unchanged; missing NVTs remain missing.
+JSON type is an optional open string. Ordinary results (including report embedded results) map typed NvtRef.type_; notes/overrides map typed NvtReference.type_, retaining the legacy family alias for backward compatibility. Aggregate vulnerability and closed-CVE sources lack a typed discriminator and keep it absent. Metadata is unchanged; missing NVTs remain missing.
