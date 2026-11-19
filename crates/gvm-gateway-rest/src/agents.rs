@@ -146,6 +146,57 @@ impl From<gvm_gateway_domain::AgentControlConfig> for AgentControlConfigResponse
     }
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
+#[schemars(rename = "AgentSchedule")]
+struct AgentScheduleResponse {
+    cron: String,
+    #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 0, max = 2147483647))]
+    max_delay_seconds: Option<u32>,
+}
+
+impl From<gvm_gateway_domain::AgentSchedule> for AgentScheduleResponse {
+    fn from(value: gvm_gateway_domain::AgentSchedule) -> Self {
+        Self {
+            cron: value.cron,
+            max_delay_seconds: value.max_delay_seconds,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, JsonSchema)]
+#[serde(untagged)]
+enum AgentScheduleRequest {
+    Legacy(String),
+    Structured(AgentScheduleResponse),
+}
+
+impl AgentScheduleRequest {
+    fn validate_into(self) -> Result<gvm_gateway_domain::AgentSchedule, GatewayError> {
+        let entry = match self {
+            Self::Legacy(cron) => AgentScheduleResponse {
+                cron,
+                max_delay_seconds: None,
+            },
+            Self::Structured(entry) => entry,
+        };
+        validate_delay(entry.max_delay_seconds)?;
+        Ok(gvm_gateway_domain::AgentSchedule {
+            cron: required_trimmed("cron", Some(entry.cron))?,
+            max_delay_seconds: entry.max_delay_seconds,
+        })
+    }
+}
+
+fn validate_delay(value: Option<u32>) -> Result<(), GatewayError> {
+    if value.is_some_and(|value| value > i32::MAX as u32) {
+        return Err(GatewayError::InvalidInput(
+            "maxDelaySeconds must be between 0 and 2147483647".into(),
+        ));
+    }
+    Ok(())
+}
+
 #[derive(Clone, Debug, Serialize, JsonSchema)]
 #[schemars(rename = "AgentScriptExecutorConfig")]
 struct AgentScriptExecutorConfigResponse {
@@ -163,7 +214,7 @@ struct AgentScriptExecutorConfigResponse {
         default,
         skip_serializing_if = "Vec::is_empty"
     )]
-    scheduler_cron_time: Vec<String>,
+    scheduler_cron_time: Vec<AgentScheduleResponse>,
 }
 
 impl From<gvm_gateway_domain::AgentScriptExecutorConfig> for AgentScriptExecutorConfigResponse {
@@ -172,7 +223,11 @@ impl From<gvm_gateway_domain::AgentScriptExecutorConfig> for AgentScriptExecutor
             bulk_size: value.bulk_size,
             bulk_throttle_time_in_ms: value.bulk_throttle_time_in_ms,
             indexer_dir_depth: value.indexer_dir_depth,
-            scheduler_cron_time: value.scheduler_cron_time,
+            scheduler_cron_time: value
+                .scheduler_cron_time
+                .into_iter()
+                .map(Into::into)
+                .collect(),
         }
     }
 }
@@ -383,17 +438,20 @@ struct AgentScriptExecutorConfigRequest {
     #[serde(rename = "indexerDirDepth")]
     indexer_dir_depth: Option<u32>,
     #[serde(rename = "schedulerCronTime", default)]
-    scheduler_cron_time: Vec<String>,
+    scheduler_cron_time: Vec<AgentScheduleRequest>,
 }
 
 impl ValidateInto<AgentScriptExecutorConfig> for AgentScriptExecutorConfigRequest {
     fn validate_into(self) -> Result<AgentScriptExecutorConfig, GatewayError> {
-        validate_cron_items("schedulerCronTime", &self.scheduler_cron_time)?;
         Ok(AgentScriptExecutorConfig {
             bulk_size: self.bulk_size,
             bulk_throttle_time_in_ms: self.bulk_throttle_time_in_ms,
             indexer_dir_depth: self.indexer_dir_depth,
-            scheduler_cron_time: self.scheduler_cron_time,
+            scheduler_cron_time: self
+                .scheduler_cron_time
+                .into_iter()
+                .map(AgentScheduleRequest::validate_into)
+                .collect::<Result<_, _>>()?,
         })
     }
 }
@@ -469,6 +527,9 @@ struct AgentGroupResponse {
     in_use: bool,
     #[serde(rename = "schedulerCronTime", skip_serializing_if = "Option::is_none")]
     scheduler_cron_time: Option<String>,
+    #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 0, max = 2147483647))]
+    max_delay_seconds: Option<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     agents: Vec<ResourceRefResponse>,
 }
@@ -484,6 +545,7 @@ impl From<gvm_gateway_domain::AgentGroup> for AgentGroupResponse {
             writable: value.meta.writable,
             in_use: value.meta.in_use,
             scheduler_cron_time: value.scheduler_cron_time,
+            max_delay_seconds: value.max_delay_seconds,
             agents: value.agents.into_iter().map(Into::into).collect(),
         }
     }
@@ -513,6 +575,9 @@ struct CreateAgentGroupRequest {
     #[serde(rename = "schedulerCronTime")]
     #[schemars(required)]
     scheduler_cron_time: Option<String>,
+    #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 0, max = 2147483647))]
+    max_delay_seconds: Option<u32>,
     comment: Option<String>,
     #[serde(rename = "agentIds", default)]
     agent_ids: Vec<Uuid>,
@@ -520,9 +585,11 @@ struct CreateAgentGroupRequest {
 
 impl ValidateInto<CreateAgentGroupInput> for CreateAgentGroupRequest {
     fn validate_into(self) -> Result<CreateAgentGroupInput, GatewayError> {
+        validate_delay(self.max_delay_seconds)?;
         Ok(CreateAgentGroupInput {
             name: required_trimmed("name", self.name)?,
             scheduler_cron_time: required_trimmed("schedulerCronTime", self.scheduler_cron_time)?,
+            max_delay_seconds: self.max_delay_seconds,
             comment: self.comment,
             agent_ids: self
                 .agent_ids
@@ -539,6 +606,9 @@ struct ModifyAgentGroupRequest {
     #[serde(rename = "schedulerCronTime")]
     #[schemars(required)]
     scheduler_cron_time: Option<String>,
+    #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 0, max = 2147483647))]
+    max_delay_seconds: Option<u32>,
     name: Option<String>,
     comment: Option<String>,
     #[serde(rename = "agentIds")]
@@ -550,6 +620,7 @@ struct ModifyAgentGroupRequest {
 
 impl ValidateInto<ModifyAgentGroupInput> for ModifyAgentGroupRequest {
     fn validate_into(self) -> Result<ModifyAgentGroupInput, GatewayError> {
+        validate_delay(self.max_delay_seconds)?;
         if self.agent_ids.as_ref().is_some_and(Vec::is_empty) {
             return Err(GatewayError::InvalidInput(
                 "agentIds must contain at least one entry; clearing the agent selection is unsupported until rust-gvm issue #812"
@@ -558,6 +629,7 @@ impl ValidateInto<ModifyAgentGroupInput> for ModifyAgentGroupRequest {
         }
         Ok(ModifyAgentGroupInput {
             scheduler_cron_time: required_trimmed("schedulerCronTime", self.scheduler_cron_time)?,
+            max_delay_seconds: self.max_delay_seconds,
             name: self.name,
             comment: self.comment,
             agent_ids: self
@@ -658,15 +730,6 @@ fn required_trimmed(field: &str, value: Option<String>) -> Result<String, Gatewa
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty())
         .ok_or_else(|| GatewayError::InvalidInput(format!("{field} is required")))
-}
-
-fn validate_cron_items(field: &str, values: &[String]) -> Result<(), GatewayError> {
-    if values.iter().any(|value| value.trim().is_empty()) {
-        return Err(GatewayError::InvalidInput(format!(
-            "{field} cannot contain empty entries"
-        )));
-    }
-    Ok(())
 }
 
 fn safe_attachment_filename(value: &str) -> String {

@@ -297,6 +297,7 @@ impl AgentPort for GvmdAdapter {
         let agent_ids = parse_entity_ids(&input.agent_ids)?;
         let mut request =
             CreateAgentGroupRequest::new(input.name, agent_ids, input.scheduler_cron_time);
+        request.max_delay_seconds = input.max_delay_seconds;
         request.comment = input.comment;
         let parsed = self
             .execute_with_session(session_token, "agent_groups.create", request)
@@ -342,6 +343,7 @@ impl AgentPort for GvmdAdapter {
         };
         let mut request =
             ModifyAgentGroupRequest::new(parse_entity_id(id)?, name, input.scheduler_cron_time);
+        request.max_delay_seconds = input.max_delay_seconds;
         request.comment = input.comment;
         request.agent_ids = input
             .agent_ids
@@ -457,7 +459,10 @@ fn agent_script_executor_config_opts_from_domain(
         scheduler_cron_time: input
             .scheduler_cron_time
             .into_iter()
-            .map(Into::into)
+            .map(|entry| gvm_gmp::AgentSchedule {
+                cron: entry.cron,
+                max_delay_seconds: entry.max_delay_seconds,
+            })
             .collect(),
     }
 }

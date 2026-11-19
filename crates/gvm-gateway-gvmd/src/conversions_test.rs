@@ -469,7 +469,10 @@ fn agent_from_gmp_maps_nested_runtime_configuration() {
             .agent_script_executor
             .as_ref()
             .map(|executor| executor.scheduler_cron_time.clone()),
-        Some(vec!["0 */5 * * *".to_string(), "15 */5 * * *".to_string()])
+        Some(vec![
+            "0 */5 * * *".to_string().into(),
+            "15 */5 * * *".to_string().into()
+        ])
     );
     assert_eq!(
         config

@@ -221,7 +221,7 @@ retains it, explicit `manual`, invalid empty/unknown writes, older payload
 omission, future source on reads, source filter forwarding and no synthesized
 provenance.
 
-## 6. Structured schedules and scheduler delay — #730
+## 6. Structured schedules and scheduler delay — #730 (implemented)
 
 The current REST `config.agentScriptExecutor.schedulerCronTime` is an array of
 strings. Planned entries are `{ "cron": "0 */6 * * *", "maxDelaySeconds": 30 }`,
@@ -234,12 +234,10 @@ add optional top-level `maxDelaySeconds` to create/modify/read with the same
 range and omission rules. Do not conflate group synchronization and agent
 executor schedules.
 
-Migration proposal: accept legacy string entries on writes as `{cron: value}`
+Implemented Tech Preview migration: accept legacy string entries on writes as `{cron: value}`
 with omitted delay (as supported by upstream deserialization), while publishing
 structured response entries. This response-type change is **not additive** for
-existing clients. #730 must choose a versioned contract or negotiated migration
-before shipment; do not silently switch the current v1 output. Document that
-choice and client conversion examples in the implementation release. An empty
+existing clients. #730 deliberately adopts an explicit Tech Preview breaking v1 response change, documented in docs/user/migration.md. No negotiation or version endpoint is invented. An empty
 schedule array currently emits no scheduler subtree upstream; do not promise
 that it clears schedules without separate typed backend support.
 

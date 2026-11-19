@@ -346,3 +346,6 @@ cargo test --workspace --features e2e-tests
 ```
 
 Coverage target: **80%** line coverage for route handlers and service layer.
+
+### Implemented agent schedules (#730)
+Legacy and structured writes, structured-only responses, delay omission/zero/maximum and rejection of negative/fractional/overflow values are deterministic contract tests. Group cron stays string-shaped and optional names preserve backend state. Live qualification remains separate.

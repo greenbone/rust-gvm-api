@@ -31,3 +31,5 @@
 - Updated `url` to 2.5.9 and its `form_urlencoded` dependency to 1.2.3, with matching minimal Cargo Vet exemptions. The exact Cargo Audit command, Cargo Deny, Cargo Vet, formatting, diff hygiene, strict workspace/all-target/all-feature Clippy, and the complete all-feature workspace test suite pass. Signed publication and merge-queue rerun remain.
 
 - Adopted upstream immutable feature stack b6f33da; reviewed 270-method typed facade (three newly blocked REST adopters). Building isolated target; native compiler provisioned inside workspace only.
+- Prerequisite commit b6b901b compiles all workspace features; SHA also recorded in /workspace/api-agent-baseline.txt for parent coordination (no sessions-send tool available).
+- #730 runtime maps structured schedules/delays with legacy writes and explicit documented Tech Preview response break.

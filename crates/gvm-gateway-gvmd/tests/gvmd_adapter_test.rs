@@ -2108,6 +2108,7 @@ async fn gvmd_adapter_rejects_empty_agent_group_selection_before_dispatch() {
             "123e4567-e89b-12d3-a456-426614174000",
             ModifyAgentGroupInput {
                 scheduler_cron_time: "0 */15 * * *".to_string(),
+                max_delay_seconds: None,
                 name: None,
                 comment: None,
                 agent_ids: Some(vec![]),
