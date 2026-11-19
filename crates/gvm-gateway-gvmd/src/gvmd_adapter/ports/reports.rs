@@ -142,6 +142,7 @@ impl ReportPort for GvmdAdapter {
                 },
             )
             .await?;
+        ensure_report_result_scope(&results_parsed.items, id)?;
         report.results = results_parsed
             .items
             .into_iter()
@@ -321,6 +322,7 @@ impl ReportPort for GvmdAdapter {
                 },
             )
             .await?;
+        ensure_report_result_scope(&parsed.items, report_id)?;
         let items = parsed
             .items
             .into_iter()
@@ -708,4 +710,24 @@ fn unsupported_typed_report_detail_error(command: &str, resource: &str) -> Gatew
     GatewayError::NotImplemented(format!(
         "{resource} are not available because gvmd does not implement `{command}` on this backend version; the proxy does not emulate unsupported GMP commands"
     ))
+}
+
+// An endpoint-owned report identity must never be weakened by backend filtering.
+// Fail the entire response rather than returning a cross-report page or quietly
+// dropping rows and making pagination counts untrustworthy.
+fn ensure_report_result_scope(
+    results: &[gvm_gmp::responses::ScanResult],
+    report_id: &str,
+) -> Result<(), GatewayError> {
+    if results.iter().any(|result| {
+        result
+            .report
+            .as_ref()
+            .is_some_and(|report| !report.id.as_str().eq_ignore_ascii_case(report_id))
+    }) {
+        return Err(GatewayError::BackendUnavailable(
+            "backend returned results outside the requested report".into(),
+        ));
+    }
+    Ok(())
 }

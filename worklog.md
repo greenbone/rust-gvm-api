@@ -87,3 +87,10 @@
 - #742 independent review repeated immutable gvmd source/schema and typed-model search: refs/EPSS producers present, no KEV contract found. Corrected producer source anchors. Following explicit parent authorization and fresh authenticated all-state duplicate searches (KEV and “known exploited”), filed gvmd #3254 and rust-gvm #873, and cross-linked API #742 comment 7018718816. No runtime branch publication. Expanded raw refs regression to diverse feed types, escaped URL, CVE compatibility and duplicate/order retention.
 - #742 focused typed/REST collection regressions pass; required full-workspace Clippy, formatting and docs validation pass. Full workspace rerun pending final result.
 - Independent read-only review of parent b02/732-agent-os-metadata (dcd4706; #730–732) against issue acceptance and specs found no concrete blocker in scheduler compatibility/range mapping, inventory-token authentication/capabilities/status/confidentiality/cache, or OS omission/open-string mapping. Parent worktree and branches were not changed.
+
+# API #741 report result isolation
+
+- 2026-11-19: Rooted at PR740 head9a5664f. Read contract/code and pinned local gvmd producer.
+- Identified protected `_and_report_id` control in gvmd source; filed rust-gvm#871 for typed composition and strict comparator validation, rather than parsing GMP in gateway.
+- Adding defense-in-depth response scope invariant: backend cross-report rows fail the whole page with sanitized502; UUID case-equivalent identities remain accepted.
+- Waiting on upstream helper plus shared immutable dependency adoption before final adapter integration/testing/publication.

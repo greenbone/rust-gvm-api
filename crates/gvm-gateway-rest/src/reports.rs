@@ -1338,13 +1338,18 @@ pub(crate) fn get_report_results_docs(op: TransformOperation<'_>) -> TransformOp
         .id("getReportResults")
         .tag("Reports")
         .summary("Get paginated results for a report")
-        .description("Returns a paginated list of results for a specific report.")
+        .description("Returns results and counts scoped to the report in the path, including boolean filters. Reserved report/pagination controls and unsupported inclusive comparisons such as severity>=7 return 400. Cross-report backend rows fail as 502 rather than being returned or silently discarded.")
         .security_requirement("bearerAuth")
         .input::<(Path<ResourceIdPathDoc>, Query<ReportResultsQueryDoc>)>()
         .response_with::<200, Json<ResultListResponse>, _>(ok_json("Paginated list of results"));
 
+    let op = problem_response::<400>(op, "Invalid filter or request");
     let op = problem_response::<401>(op, "Authentication required or session expired");
-    problem_response::<404>(op, "Resource not found")
+    let op = problem_response::<404>(op, "Resource not found");
+    problem_response::<502>(
+        op,
+        "Backend response violates report scope or is unavailable",
+    )
 }
 
 /// OpenAPI transform for `GET /api/v1/reports/{id}/vulnerabilities`.
