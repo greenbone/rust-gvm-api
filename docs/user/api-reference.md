@@ -9,7 +9,7 @@ The normative contract is
 [`spec/rest-api`](https://github.com/greenbone-hive/rust-gvm-api/tree/main/spec/rest-api)
 in the source repository and `api/rest/openapi.yaml` in the release docs
 archive. The curated contract and runtime-generated contract are tested for
-alignment. The current contract contains 124 paths and 202 operations.
+alignment. The current contract contains 125 paths and 203 operations.
 
 ## Base paths and documentation
 
@@ -267,6 +267,7 @@ completion.
 | `GET`, `PUT`, `DELETE` | `/credentials/{id}` | Read, update, or delete a credential |
 | `POST` | `/credentials/{id}/actions/verify-active-directory` | Verify a saved Active Directory credential without persisting changes |
 | `POST` | `/active-directory/credential-verifications` | Verify inline Active Directory credentials without saving a credential |
+| `POST` | `/active-directory/object-searches` | Search a bounded live directory subset using a saved AD credential |
 | `GET`, `POST` | `/port-lists` | List or create port lists |
 | `GET`, `PUT`, `DELETE` | `/port-lists/{id}` | Read, update, or delete a port list |
 
@@ -276,6 +277,15 @@ updates preserve omitted fields. The bind password is write-only. Both saved
 and inline verification return `204 No Content` on success, without creating a
 resource or returning a `Location` header. Verification is backend-capability
 dependent; unsupported backends return `501`, not a simulated bind result.
+
+Active Directory object search accepts JSON selectors, not DN query parameters,
+and never persists a search, target, or task. Responses use `Cache-Control:
+no-store` and return a bounded fetched subset, not REST pagination or global
+directory totals. Preserve the optional `objects` envelope and optional nested
+expansions; inspect `truncated` and fetched-subset `counts` when present. Omitted
+options retain backend defaults. Search requires backend capability discovery;
+unsupported or failed searches never become an empty successful result. Scripted
+tests do not establish live AD/TLS interoperability.
 
 ### Identity and current-user settings
 

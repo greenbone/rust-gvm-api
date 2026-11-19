@@ -54,3 +54,6 @@
 - Native compiler inherited from /workspace/api-agent-env; target /workspace/.cache/api-ad-target. Initial compile exposed REST DTO omissions, fixed; focused test build underway.
 - #727 includes credential read/write AD metadata, validation, saved/inline verification, sanitized typed failures and discovery. Credential REST tests: 15 passed. Typed verification fixture: passed (scripted only, not LDAP). OpenAPI enum-inventory assertions were updated after initial failures.
 - #728 bounded read-only search implemented with optional envelope/count/expansion preservation and no-store; no write fallback. Shared strict all-target/all-feature clippy passed; complete REST suite and HTTP AD credential fixtures are running after final tests/schema refinements.
+
+- #729 target provenance implemented with closed writes, open optional reads, omission/default preservation and server-owned cloning/filtering. Independent focused tests passed: HTTP 2, REST 10, typed conversion 1.
+- Parent integration follow-up: added missing human API-reference rows and behavior notes in issue-specific #727/#728 docs corrections. AD worktree curated contract has 124 paths/202 operations; combined parent stack has an additional non-AD route (125/203), so preserve the parent inventory increment while cherry-picking these docs corrections.
