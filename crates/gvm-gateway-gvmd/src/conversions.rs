@@ -59,6 +59,11 @@ pub(crate) fn agent_from_gmp(agent: gvm_gmp::responses::Agent) -> Agent {
         update_to_latest: agent.update_to_latest,
         status: agent.status,
         version: agent.version,
+        operating_system: agent.operating_system,
+        architecture: agent.architecture,
+        os_cpe: agent.os_cpe,
+        os_status: agent.os_status,
+
         last_update_time: agent.last_update_time,
         last_contact_time: agent.last_contact_time,
         scanner: agent.scanner.map(resource_ref_from_named_entity),

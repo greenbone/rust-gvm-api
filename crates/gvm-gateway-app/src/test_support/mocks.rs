@@ -1262,6 +1262,10 @@ impl AgentPort for MockAgentPort {
             update_to_latest: Some(false),
             status: Some("online".to_string()),
             version: Some("1.0.0".to_string()),
+            operating_system: None,
+            architecture: None,
+            os_cpe: None,
+            os_status: None,
             last_update_time: None,
             last_contact_time: None,
             scanner: Some(ResourceRef {

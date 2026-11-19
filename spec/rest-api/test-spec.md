@@ -352,3 +352,6 @@ Legacy and structured writes, structured-only responses, delay omission/zero/max
 
 ### Implemented inventory token (#731)
 Typed no-argument issuance, positive discovery, missing payload, 400 permission denial, 500 generation failure and 503 temporary issuance have focused adapter coverage. Token Debug/log capture is redacted; HTTP issuance is authenticated and no-store.
+
+### Implemented OS projections (#732)
+Typed parser fixtures exercise populated, empty, independently absent and unknown future OS strings. List/detail use an identical projection; read metadata cannot be written through update models.

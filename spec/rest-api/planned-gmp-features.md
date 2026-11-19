@@ -265,7 +265,7 @@ temporarily unavailable issuance (source 503 => HTTP 503), generation failure
 redaction of tokens in all logs/traces/errors. Deterministic mock tokens are
 nonfunctional fixtures, not evidence of working inventory authentication.
 
-## 8. Agent operating-system metadata — #732
+## 8. Agent operating-system metadata — #732 (implemented)
 
 Add read-only optional open strings `operatingSystem`, `architecture`, `osCpe`,
 `osStatus` on existing Agent list/detail responses. Map the four typed Agent

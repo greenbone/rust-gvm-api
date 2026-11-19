@@ -336,3 +336,5 @@ For the complete method-level upstream disposition, see the repository's
 [`upstream-surface-dispositions.tsv`](https://github.com/greenbone-hive/rust-gvm-api/blob/main/docs/upstream-surface-dispositions.tsv).
 
 Inventory tokens are opaque backend-issued confidential credentials, not sessions. The endpoint requires GMP 22.8, positive help discovery and `get_agents` permission. Unsupported capability returns 501, temporary issuance 503, internal generation 500, and malformed successful payload 502. Mock tokens are nonfunctional test fixtures, not live agent authentication qualification.
+
+Agent list/detail responses preserve optional read-only operatingSystem, architecture, osCpe, and osStatus as open backend strings. Missing or empty upstream fields are omitted; unknown future values are preserved. No OS update or administration surface is added (#732).

@@ -1571,3 +1571,27 @@ fn task_from_gmp_preserves_typed_detail_fields() {
     assert!(task.in_use);
     assert!(task.writable);
 }
+
+#[test]
+fn agent_os_metadata_preserves_open_strings_and_independent_absence() {
+    // Upstream parsing owns empty normalization; the adapter must not infer metadata.
+    for body in [
+        "<operating_system>Future OS</operating_system><architecture>future64</architecture><os_cpe>cpe:/o:future</os_cpe><os_status>new-status</os_status>",
+        "<operating_system/><architecture/><os_cpe/><os_status/>", "",
+        "<architecture>future64</architecture>",
+    ] {
+        let xml = format!(r#"<get_agents_response status="200" status_text="OK"><agent id="550e8400-e29b-41d4-a716-446655440000"><name>Agent</name>{body}</agent></get_agents_response>"#);
+        let parsed = GetAgentsResponse::from_response(&GmpResponse::from(xml.as_str())).unwrap();
+        let agent = agent_from_gmp(parsed.items.into_iter().next().unwrap());
+        if body.contains("Future OS") {
+            assert_eq!(agent.operating_system.as_deref(), Some("Future OS"));
+            assert_eq!(agent.os_cpe.as_deref(), Some("cpe:/o:future"));
+            assert_eq!(agent.os_status.as_deref(), Some("new-status"));
+        } else {
+            assert_eq!(agent.operating_system, None);
+            assert_eq!(agent.os_cpe, None);
+            assert_eq!(agent.os_status, None);
+        }
+        assert_eq!(agent.architecture.as_deref(), body.contains("future64").then_some("future64"));
+    }
+}

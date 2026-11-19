@@ -296,6 +296,18 @@ struct AgentResponse {
     status: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     version: Option<String>,
+    /// Backend-reported operatingSystem; open read-only metadata.
+    #[serde(rename = "operatingSystem", skip_serializing_if = "Option::is_none")]
+    operating_system: Option<String>,
+    /// Backend-reported architecture; open read-only metadata.
+    #[serde(rename = "architecture", skip_serializing_if = "Option::is_none")]
+    architecture: Option<String>,
+    /// Backend-reported osCpe; open read-only metadata.
+    #[serde(rename = "osCpe", skip_serializing_if = "Option::is_none")]
+    os_cpe: Option<String>,
+    /// Backend-reported osStatus; open read-only metadata.
+    #[serde(rename = "osStatus", skip_serializing_if = "Option::is_none")]
+    os_status: Option<String>,
     #[serde(rename = "lastUpdateTime", skip_serializing_if = "Option::is_none")]
     last_update_time: Option<String>,
     #[serde(rename = "lastContactTime", skip_serializing_if = "Option::is_none")]
@@ -320,6 +332,11 @@ impl From<gvm_gateway_domain::Agent> for AgentResponse {
             update_to_latest: value.update_to_latest,
             status: value.status,
             version: value.version,
+            operating_system: value.operating_system,
+            architecture: value.architecture,
+            os_cpe: value.os_cpe,
+            os_status: value.os_status,
+
             last_update_time: value.last_update_time,
             last_contact_time: value.last_contact_time,
             scanner: value.scanner.map(Into::into),
