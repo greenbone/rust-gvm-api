@@ -1627,3 +1627,57 @@ fn target_source_conversion_preserves_upstream_optional_and_open_values() {
         assert_eq!(target.source.as_deref(), expected);
     }
 }
+
+#[test]
+fn typed_result_and_nested_reference_types_remain_open_and_optional() {
+    // Intent (#735): test typed conversion, not just DTO construction; classic,
+    // nonclassic, future and parser-normalized empty values must agree across
+    // result, note and override sources, without fabricating a missing NVT.
+    for (element, expected) in [
+        ("<type>nvt</type>", Some("nvt")),
+        ("<type>package</type>", Some("package")),
+        ("<type>future-source</type>", Some("future-source")),
+        ("<type/>", None),
+        ("", None),
+    ] {
+        let nvt =
+            format!(r#"<nvt oid="1.2.3">{element}<type_metadata>opaque</type_metadata></nvt>"#);
+        let xml = format!(
+            r#"<get_results_response status="200" status_text="OK"><result id="11111111-1111-1111-1111-111111111111"><name>Result</name>{nvt}</result></get_results_response>"#
+        );
+        let parsed = GetResultsResponse::from_response(&GmpResponse::from(xml.as_str())).unwrap();
+        let result = result_from_gmp(parsed.items.into_iter().next().unwrap()).unwrap();
+        let mapped = result.nvt.unwrap();
+        assert_eq!(mapped.type_.as_deref(), expected);
+        assert_eq!(mapped.type_metadata.as_deref(), Some("opaque"));
+        let xml = format!(
+            r#"<get_notes_response status="200" status_text="OK"><note id="note-1"><name>Note</name>{nvt}</note></get_notes_response>"#
+        );
+        let parsed = GetNotesResponse::from_response(&GmpResponse::from(xml.as_str())).unwrap();
+        assert_eq!(
+            note_from_gmp(parsed.items.into_iter().next().unwrap())
+                .nvt
+                .unwrap()
+                .type_
+                .as_deref(),
+            expected
+        );
+        let xml = format!(
+            r#"<get_overrides_response status="200" status_text="OK"><override id="override-1"><name>Override</name>{nvt}</override></get_overrides_response>"#
+        );
+        let parsed = GetOverridesResponse::from_response(&GmpResponse::from(xml.as_str())).unwrap();
+        assert_eq!(
+            override_from_gmp(parsed.items.into_iter().next().unwrap())
+                .nvt
+                .unwrap()
+                .type_
+                .as_deref(),
+            expected
+        );
+    }
+    let parsed = GetResultsResponse::from_response(&GmpResponse::from(r#"<get_results_response status="200" status_text="OK"><result id="11111111-1111-1111-1111-111111111111"><name>No NVT</name></result></get_results_response>"#)).unwrap();
+    assert!(result_from_gmp(parsed.items.into_iter().next().unwrap())
+        .unwrap()
+        .nvt
+        .is_none());
+}

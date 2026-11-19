@@ -81,10 +81,10 @@ pub struct NvtRef {
     /// NVT tags.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tags: Option<String>,
-    /// Source-shaped NVT type metadata supplied by gvmd.
     /// Open discriminator supplied by the typed NVT source.
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub type_: Option<String>,
+    /// Source-shaped NVT type metadata supplied by gvmd.
     #[serde(rename = "typeMetadata", skip_serializing_if = "Option::is_none")]
     pub type_metadata: Option<String>,
     /// EPSS selections supplied by gvmd for this NVT.
