@@ -62,3 +62,5 @@
 
 - Read repository rules, curated report/result contracts and #734–736/#742. Rooted at PR740 9a5664f.
 - #734: preserve typed optional counts/threat and server severity. Dependency baseline pending.
+
+- #734 slice-boundary correction: explicit u32 schema bounds now live with application counts, not the later reference slice. Added generated schema regression; preserved curated limits.

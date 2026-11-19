@@ -287,9 +287,11 @@ pub(crate) struct ReportApplicationResponse {
     severity: Option<String>,
     /// Server-provided hosts count.
     #[serde(rename = "hostsCount", skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 0, max = 4294967295u64))]
     hosts_count: Option<u32>,
     /// Server-provided occurrences.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 0, max = 4294967295u64))]
     occurrences: Option<u32>,
     /// Server-provided threat.
     #[serde(skip_serializing_if = "Option::is_none")]
