@@ -641,8 +641,8 @@ dependencies = [
 
 [[package]]
 name = "gvm-client"
-version = "0.11.0"
-source = "git+https://github.com/greenbone/rust-gvm?rev=bee36e69c2bfe9e4bc169a346600fcc9cebc2283#bee36e69c2bfe9e4bc169a346600fcc9cebc2283"
+version = "0.11.1"
+source = "git+https://github.com/greenbone/rust-gvm?rev=b6f33da1224aa4950f39dc3db0e6d5607e0e0f89#b6f33da1224aa4950f39dc3db0e6d5607e0e0f89"
 dependencies = [
  "async-trait",
  "gvm-connection",
@@ -655,8 +655,8 @@ dependencies = [
 
 [[package]]
 name = "gvm-connection"
-version = "0.11.0"
-source = "git+https://github.com/greenbone/rust-gvm?rev=bee36e69c2bfe9e4bc169a346600fcc9cebc2283#bee36e69c2bfe9e4bc169a346600fcc9cebc2283"
+version = "0.11.1"
+source = "git+https://github.com/greenbone/rust-gvm?rev=b6f33da1224aa4950f39dc3db0e6d5607e0e0f89#b6f33da1224aa4950f39dc3db0e6d5607e0e0f89"
 dependencies = [
  "async-trait",
  "gvm-protocol",
@@ -798,8 +798,8 @@ dependencies = [
 
 [[package]]
 name = "gvm-gmp"
-version = "0.11.0"
-source = "git+https://github.com/greenbone/rust-gvm?rev=bee36e69c2bfe9e4bc169a346600fcc9cebc2283#bee36e69c2bfe9e4bc169a346600fcc9cebc2283"
+version = "0.11.1"
+source = "git+https://github.com/greenbone/rust-gvm?rev=b6f33da1224aa4950f39dc3db0e6d5607e0e0f89#b6f33da1224aa4950f39dc3db0e6d5607e0e0f89"
 dependencies = [
  "base64 0.23.1",
  "gvm-protocol",
@@ -812,8 +812,8 @@ dependencies = [
 
 [[package]]
 name = "gvm-mock-server"
-version = "0.11.0"
-source = "git+https://github.com/greenbone/rust-gvm?rev=bee36e69c2bfe9e4bc169a346600fcc9cebc2283#bee36e69c2bfe9e4bc169a346600fcc9cebc2283"
+version = "0.11.1"
+source = "git+https://github.com/greenbone/rust-gvm?rev=b6f33da1224aa4950f39dc3db0e6d5607e0e0f89#b6f33da1224aa4950f39dc3db0e6d5607e0e0f89"
 dependencies = [
  "base64 0.23.1",
  "clap",
@@ -832,8 +832,8 @@ dependencies = [
 
 [[package]]
 name = "gvm-protocol"
-version = "0.11.0"
-source = "git+https://github.com/greenbone/rust-gvm?rev=bee36e69c2bfe9e4bc169a346600fcc9cebc2283#bee36e69c2bfe9e4bc169a346600fcc9cebc2283"
+version = "0.11.1"
+source = "git+https://github.com/greenbone/rust-gvm?rev=b6f33da1224aa4950f39dc3db0e6d5607e0e0f89#b6f33da1224aa4950f39dc3db0e6d5607e0e0f89"
 dependencies = [
  "quick-xml",
  "thiserror",

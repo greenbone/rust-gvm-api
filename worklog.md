@@ -1,4 +1,4 @@
-# GMP feature specification worklog
+# Agent API implementation stack
 
 ## 2026-11-19
 
@@ -25,8 +25,9 @@
 - Add shared three-attempt recovery only for explicit HTTP 502/503/504, with 2/4-second backoff and immediate permanent-error failure. Manifest checks keep identical digest-only argv and 60-second per-attempt timeout. REST pulls run separately with a 600-second per-attempt timeout before a single startup with --pull never (including pull_policy: always services).
 - Verification passed: four new registry regression tests (including actual CI Bash + fake Docker transient/permanent/exhaustion/startup-failure scenarios); 70 existing E2E evidence tests; 23 enterprise evidence tests; evidence validator (45 inventoried Rust tests); docs checker (121 paths / 199 operations); Bash syntax; cargo fmt --all -- --check; git diff --check. New regressions are wired into e2e-evidence-check. `make` is unavailable locally, so its Python commands ran directly.
 - Initial clippy attempt failed before crate checks because linker `cc` was missing. Follow-up verification using `/workspace/api-agent-env` and isolated `/workspace/.cache/api-740-target` passed strict `cargo clippy --workspace --all-targets --all-features -- -D warnings` (exit 0); fmt check, full `make e2e-evidence-check` and docs checker also passed. No Rust changes. Parent authorized pushing the existing PR740 branch and observing exact-head CI/E2E; no merge or separate PR.
-
 ## PR #740 merge-queue Cargo Audit repair
 
 - Merge-group Security run 45183874225 failed because the stack-base lockfile still selected `url` 2.5.8 after RUSTSEC-2026-0592 was published; the patched 2.5.9 update existed only on child PR #743.
 - Updated `url` to 2.5.9 and its `form_urlencoded` dependency to 1.2.3, with matching minimal Cargo Vet exemptions. The exact Cargo Audit command, Cargo Deny, Cargo Vet, formatting, diff hygiene, strict workspace/all-target/all-feature Clippy, and the complete all-feature workspace test suite pass. Signed publication and merge-queue rerun remain.
+
+- Adopted upstream immutable feature stack b6f33da; reviewed 270-method typed facade (three newly blocked REST adopters). Building isolated target; native compiler provisioned inside workspace only.

@@ -1,3 +1,7 @@
+# Adopted feature-stack baseline
+
+All five workspace components now pin immutable rust-gvm `b6f33da1224aa4950f39dc3db0e6d5607e0e0f89` (0.11.1 development stack). The reviewed facade now has 270 helpers. AD verification/discovery and inventory-token helpers are explicitly blocked until their downstream slices implement them. Other dispositions remain unchanged. Historical release notes below describe the prior baseline.
+
 # rust-gvm upstream surface dispositions
 
 This document records the deliberate product-surface decisions completed while

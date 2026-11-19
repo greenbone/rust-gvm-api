@@ -1,6 +1,6 @@
-# rust-gvm-reference	release-tag
-# rust-gvm-tag	v0.11.0
-# rust-gvm-revision	bee36e69c2bfe9e4bc169a346600fcc9cebc2283
+# rust-gvm-reference	stack-commit
+# rust-gvm-tag	gmp-feature-stack
+# rust-gvm-revision	b6f33da1224aa4950f39dc3db0e6d5607e0e0f89
 method	disposition	rationale	evidence
 authenticate	internal	Authentication establishes gateway execution contexts and is not exposed as a raw GMP operation.	spec/rest-api/sessions.yaml; crates/gvm-gateway-gvmd/src/gvmd_adapter/session.rs
 cancel_report_export	mapped	The typed lifecycle operation is used internally for race-safe cancellation of active backend exports; terminal exports remain subject to gvmd retention.	spec/rest-api/report-exports.yaml DELETE /jobs/{id}; crates/gvm-gateway-app/src/jobs.rs; crates/gvm-gateway-gvmd/src/gvmd_adapter/ports/reports.rs
@@ -269,3 +269,6 @@ trigger_alert	omitted	The REST alert contract intentionally exposes CRUD only an
 verify_credential_store	exposed	The operation has a direct credential-store collection, item, or verify REST operation.	spec/rest-api/credentials.yaml; crates/gvm-gateway-gvmd/src/gvmd_adapter/ports/credentials.rs
 verify_report_format	deferred	Report-format administration requires a dedicated administration and artifact-validation contract.	docs/upstream-surface-dispositions.md report-format family; parent #381
 verify_scanner	deferred	Scanner administration and verification require a dedicated appliance-ownership and secret-handling contract.	docs/upstream-surface-dispositions.md scanner-administration family; #401
+get_agent_inventory_token	blocked	Typed prerequisite adopted; REST implementation tracked by #727, #728 or #731.	spec/rest-api/planned-gmp-features.md
+get_active_directory_objects	blocked	Typed prerequisite adopted; REST adoption tracked by #727, #728 and #731.	spec/rest-api/planned-gmp-features.md
+verify_active_directory_credential	blocked	Typed prerequisite adopted; REST adoption tracked by #727, #728 and #731.	spec/rest-api/planned-gmp-features.md

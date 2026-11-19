@@ -156,7 +156,11 @@ fn agent_script_executor_config_from_gmp(
         bulk_size: config.bulk_size,
         bulk_throttle_time_in_ms: config.bulk_throttle_time_in_ms,
         indexer_dir_depth: config.indexer_dir_depth,
-        scheduler_cron_time: config.scheduler_cron_time,
+        scheduler_cron_time: config
+            .scheduler_cron_time
+            .into_iter()
+            .map(|entry| entry.cron)
+            .collect(),
     }
 }
 
