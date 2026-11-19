@@ -246,6 +246,27 @@ fn generated_and_curated_directory_shapes_have_identical_fields_and_optionality(
             "optionality: {name}"
         );
     }
+    fn enum_values(schema: &Value, schemas: &Value) -> BTreeSet<String> {
+        if let Some(name) = schema["$ref"]
+            .as_str()
+            .and_then(|v| v.strip_prefix("#/components/schemas/"))
+        {
+            return enum_values(&schemas[name], schemas);
+        }
+        let mut values = BTreeSet::new();
+        if let Some(value) = schema["const"].as_str() {
+            values.insert(value.to_string());
+        }
+        for value in schema["enum"].as_array().into_iter().flatten() {
+            values.insert(value.as_str().unwrap().to_string());
+        }
+        for key in ["oneOf", "anyOf", "allOf"] {
+            for branch in schema[key].as_array().into_iter().flatten() {
+                values.extend(enum_values(branch, schemas));
+            }
+        }
+        values
+    }
     for (name, owner, field) in [
         (
             "ActiveDirectorySearchScope",
@@ -258,13 +279,14 @@ fn generated_and_curated_directory_shapes_have_identical_fields_and_optionality(
             "objectType",
         ),
     ] {
-        // Schemars may inline primitive enum schemas rather than register components.
-        let property = &gs[owner]["properties"][field];
-        let schema = property["$ref"]
-            .as_str()
-            .and_then(|v| v.strip_prefix("#/components/schemas/"))
-            .map_or(property, |name| &gs[name]);
-        assert_eq!(schema["enum"], cs[name]["enum"], "enum: {name}");
+        // Schemars preserves variant documentation with const/oneOf rather
+        // than enum arrays; compare the exact closed set through either form.
+        let schema = &gs[owner]["properties"][field];
+        assert_eq!(
+            enum_values(schema, gs),
+            enum_values(&cs[name], cs),
+            "enum: {name}; generated: {schema}"
+        );
     }
 
     assert_eq!(
