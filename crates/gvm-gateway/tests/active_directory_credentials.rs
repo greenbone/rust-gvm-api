@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use gvm_gateway_app::{GatewayPorts, GatewayService};
 use gvm_gateway_domain::*;
 use gvm_gateway_gvmd::StaticGvmdAdapter;
-use gvm_gateway_rest::build_router;
+use gvm_gateway_rest::router::build_router;
 use reqwest::{Client, StatusCode};
 use std::sync::{Arc, Mutex};
 use tokio::net::TcpListener;
