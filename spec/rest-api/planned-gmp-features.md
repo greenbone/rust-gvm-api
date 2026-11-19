@@ -13,7 +13,7 @@ The implementation stack in **rust-gvm** supplies typed requests, response
 models, capability checks and deterministic/mock tests. That is not downstream
 REST integration or live gvmd/AD qualification. This supplement was checked on
 2026-11-19 against rust-gvm stack revision
-[`2ee57897e2121e600e278247c61635100d00d85a`](https://github.com/greenbone/rust-gvm/commit/2ee57897e2121e600e278247c61635100d00d85a).
+[`b6f33da1224aa4950f39dc3db0e6d5607e0e0f89`](https://github.com/greenbone/rust-gvm/commit/b6f33da1224aa4950f39dc3db0e6d5607e0e0f89).
 The source/schema review pins gvmd
 [`150a4cfad39d00f45ef147c35e1a5f27f415c8e9`](https://github.com/greenbone/gvmd/commit/150a4cfad39d00f45ef147c35e1a5f27f415c8e9).
 Neither pin proves a feature exists in every released/build configuration.
@@ -135,9 +135,10 @@ requests supply the source; never use an `Unknown` type workaround.
 
 Modify is partial: omitted fields preserve stored values; no empty host, bind DN,
 base DN or password. `clearPort=true` is invalid on create/inline verify.
-Require explicit `ad` type when supplying typed AD mutation fields, matching the
-upstream request validator. Read metadata includes optional `host`, `port`,
-`bindDn`, `baseDn`, `tlsMode`, `caCertificate`, but not `bindPassword` or
+Require explicit `ad` type on create when supplying AD fields. Partial modify
+targets the saved credential ID and does not require a redundant type field,
+matching the upstream partial-modify API. Read metadata includes optional
+`host`, `port`, `bindDn`, `baseDn`, `tlsMode`, `caCertificate`, but not `bindPassword` or
 `clearPort`. Read `tlsMode` is an open string so future backend values survive.
 
 Proposed verification resources/actions:
