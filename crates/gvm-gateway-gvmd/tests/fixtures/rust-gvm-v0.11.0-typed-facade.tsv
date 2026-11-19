@@ -1,7 +1,8 @@
-# rust-gvm-reference	release-tag
-# rust-gvm-tag	v0.11.0
-# rust-gvm-revision	bee36e69c2bfe9e4bc169a346600fcc9cebc2283
+# rust-gvm-reference	stack-commit
+# rust-gvm-tag	gmp-feature-stack
+# rust-gvm-revision	b6f33da1224aa4950f39dc3db0e6d5607e0e0f89
 module	method
+active_directory	get_active_directory_objects
 agents	clone_agent_group
 agents	create_agent_group
 agents	delete_agent
@@ -10,6 +11,7 @@ agents	get_agent
 agents	get_agent_group
 agents	get_agent_groups
 agents	get_agent_installer_instruction
+agents	get_agent_inventory_token
 agents	get_agent_support_bundle
 agents	get_agents
 agents	get_integration_config
@@ -235,6 +237,7 @@ security	get_vulnerabilities
 security	get_vulnerability
 security	modify_credential
 security	modify_credential_store_credential
+security	verify_active_directory_credential
 security	verify_credential_store
 system	describe_auth
 system	get_aggregates

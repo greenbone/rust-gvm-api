@@ -336,9 +336,12 @@ impl AgentPort for GvmdAdapter {
                     .to_string(),
             ));
         }
+        let name = match input.name {
+            Some(name) => name,
+            None => self.get_agent_group(session_token, id).await?.meta.name,
+        };
         let mut request =
-            ModifyAgentGroupRequest::new(parse_entity_id(id)?, input.scheduler_cron_time);
-        request.name = input.name;
+            ModifyAgentGroupRequest::new(parse_entity_id(id)?, name, input.scheduler_cron_time);
         request.comment = input.comment;
         request.agent_ids = input
             .agent_ids
@@ -451,7 +454,11 @@ fn agent_script_executor_config_opts_from_domain(
         bulk_size: input.bulk_size,
         bulk_throttle_time_in_ms: input.bulk_throttle_time_in_ms,
         indexer_dir_depth: input.indexer_dir_depth,
-        scheduler_cron_time: input.scheduler_cron_time,
+        scheduler_cron_time: input
+            .scheduler_cron_time
+            .into_iter()
+            .map(Into::into)
+            .collect(),
     }
 }
 
