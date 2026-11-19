@@ -94,6 +94,20 @@ impl ReportPort for GvmdAdapter {
             .map(report_from_gmp)
             .ok_or_else(|| GatewayError::NotFound(format!("report {id} not found")))?;
 
+        // Read the report snapshot through the typed structured source. Never fetch
+        // today's task/configuration to stand in for historical metadata.
+        let snapshot = self
+            .execute_with_session(
+                session_token,
+                "reports.snapshot",
+                gvm_gmp::commands::reports::GetScanReportRequest::new(parse_entity_id(id)?),
+            )
+            .await?;
+        report.task = snapshot
+            .report
+            .task
+            .and_then(crate::conversions::report_task_from_snapshot);
+
         // Fetch the explicitly requested embedded-result window for this report.
         let filter = paginated_filter(
             Some(&format!("report_id={id}")),

@@ -375,3 +375,29 @@ fn application_optional_counts_json_contract() {
     assert!(absent.get("occurrences").is_none());
     assert!(absent.get("threat").is_none());
 }
+
+// Intent: report-only scanConfig survives REST and domain JSON exports; generic refs remain unchanged.
+#[test]
+fn report_task_snapshot_json_contract() {
+    let task = gvm_gateway_domain::ReportTaskRef {
+        id: "33333333-3333-3333-3333-333333333333".into(),
+        name: Some("Task".into()),
+        scan_config: Some(gvm_gateway_domain::ResourceRef {
+            id: "11111111-1111-1111-1111-111111111111".into(),
+            name: Some("Old & frozen".into()),
+        }),
+    };
+    let export = serde_json::to_value(&task).unwrap();
+    let rest = serde_json::to_value(super::ReportTaskRefResponse::from(task)).unwrap();
+    assert_eq!(export, rest);
+    assert_eq!(rest["scanConfig"]["name"], "Old & frozen");
+    let absent = serde_json::to_value(super::ReportTaskRefResponse::from(
+        gvm_gateway_domain::ReportTaskRef {
+            id: "33333333-3333-3333-3333-333333333333".into(),
+            name: None,
+            scan_config: None,
+        },
+    ))
+    .unwrap();
+    assert!(absent.get("scanConfig").is_none());
+}

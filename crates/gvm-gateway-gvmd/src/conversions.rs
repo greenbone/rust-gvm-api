@@ -467,7 +467,10 @@ pub(crate) fn report_from_gmp(report: gvm_gmp::responses::Report) -> Report {
 
     Report {
         id: report.meta.id.to_string(),
-        task: report.task.map(resource_ref_from_named_entity),
+        task: report
+            .task
+            .map(resource_ref_from_named_entity)
+            .map(Into::into),
         scan_start: report.scan_start,
         scan_end: report.scan_end,
         severity,
@@ -1278,3 +1281,14 @@ fn map_parser_server_error(
 #[cfg(test)]
 #[path = "conversions_test.rs"]
 mod conversions_test;
+
+/// Convert only the historical task embedded in the structured report.
+pub(crate) fn report_task_from_snapshot(
+    task: gvm_gmp::responses::StructuredReportTask,
+) -> Option<gvm_gateway_domain::ReportTaskRef> {
+    task.id.map(|id| gvm_gateway_domain::ReportTaskRef {
+        id: id.to_string(),
+        name: Some(task.name),
+        scan_config: task.scan_config.map(resource_ref_from_named_entity),
+    })
+}

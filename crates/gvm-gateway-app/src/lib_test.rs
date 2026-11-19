@@ -1301,10 +1301,13 @@ impl ReportPort for MissingReportPort {
 fn test_report(id: &str) -> Report {
     Report {
         id: id.to_string(),
-        task: Some(ResourceRef {
-            id: "223e4567-e89b-12d3-a456-426614174000".to_string(),
-            name: Some("Task".to_string()),
-        }),
+        task: Some(
+            ResourceRef {
+                id: "223e4567-e89b-12d3-a456-426614174000".to_string(),
+                name: Some("Task".to_string()),
+            }
+            .into(),
+        ),
         scan_start: None,
         scan_end: None,
         severity: Some(0.0),
