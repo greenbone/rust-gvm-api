@@ -1595,3 +1595,35 @@ fn agent_os_metadata_preserves_open_strings_and_independent_absence() {
         assert_eq!(agent.architecture.as_deref(), body.contains("future64").then_some("future64"));
     }
 }
+
+/// Typed parsing owns missing/empty normalization; the gateway preserves future strings.
+#[test]
+fn target_source_conversion_preserves_upstream_optional_and_open_values() {
+    for (element, expected) in [
+        ("", None),
+        ("<source/>", None),
+        ("<source>manual</source>", Some("manual")),
+        (
+            "<source>active_directory</source>",
+            Some("active_directory"),
+        ),
+        (
+            "<source>future_directory</source>",
+            Some("future_directory"),
+        ),
+    ] {
+        let response = GmpResponse::from(
+            format!(
+                r#"<get_targets_response status="200" status_text="OK">
+                    <target id="550e8400-e29b-41d4-a716-446655440000">
+                        <name>Example</name>{element}
+                    </target>
+                </get_targets_response>"#
+            )
+            .into_bytes(),
+        );
+        let parsed = GetTargetsResponse::from_response(&response).unwrap();
+        let target = target_from_gmp(parsed.items.into_iter().next().unwrap());
+        assert_eq!(target.source.as_deref(), expected);
+    }
+}

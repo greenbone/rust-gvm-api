@@ -37,6 +37,7 @@ pub(crate) fn target_from_gmp(target: gvm_gmp::responses::Target) -> Target {
         id: target.meta.id.to_string(),
         name: target.meta.name,
         comment: target.meta.comment,
+        source: target.source,
         hosts: target.hosts,
         exclude_hosts: target.exclude_hosts,
         alive_test: target.alive_tests,

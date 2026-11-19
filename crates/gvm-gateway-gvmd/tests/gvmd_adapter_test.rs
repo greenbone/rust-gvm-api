@@ -175,6 +175,7 @@ async fn create_task_target(adapter: &GvmdAdapter, token: &str, name: &str) -> S
         .create_target(
             token,
             CreateTargetInput {
+                source: None,
                 name: name.to_string(),
                 comment: None,
                 hosts: vec!["192.0.2.10".to_string()],
@@ -493,6 +494,7 @@ async fn gvmd_adapter_create_target() {
     let (adapter, server, token) = create_mock_adapter().await;
 
     let input = CreateTargetInput {
+        source: None,
         name: "Test Target".to_string(),
         comment: Some("Integration test".to_string()),
         hosts: vec!["192.168.1.1".to_string()],
@@ -522,6 +524,7 @@ async fn gvmd_adapter_get_target() {
 
     // Create a target first so get can read an existing target path.
     let input = CreateTargetInput {
+        source: None,
         name: "Get Me".to_string(),
         comment: None,
         hosts: vec!["10.0.0.1".to_string()],
@@ -566,6 +569,7 @@ async fn gvmd_adapter_modify_target() {
 
     // Create a target first
     let input = CreateTargetInput {
+        source: None,
         name: "Before Modify".to_string(),
         comment: None,
         hosts: vec!["10.0.0.1".to_string()],
@@ -585,6 +589,7 @@ async fn gvmd_adapter_modify_target() {
     // Regression coverage for issue #309: reverse lookup flags supplied on
     // modify must reach rust-gvm's typed modify_target builder.
     let modify_input = ModifyTargetInput {
+        source: None,
         name: Some("After Modify".to_string()),
         comment: Some("Updated".to_string()),
         hosts: Some(vec!["10.0.0.2".to_string(), "10.0.0.3".to_string()]),
@@ -1620,6 +1625,7 @@ async fn gvmd_adapter_delete_target() {
 
     // Create a target first
     let input = CreateTargetInput {
+        source: None,
         name: "Delete Me".to_string(),
         comment: None,
         hosts: vec!["10.0.0.1".to_string()],
@@ -4863,6 +4869,7 @@ async fn gvmd_adapter_clone_target() {
     let (adapter, server, token) = create_mock_adapter().await;
 
     let input = CreateTargetInput {
+        source: None,
         name: "Clone Source".to_string(),
         comment: None,
         hosts: vec!["10.0.0.5".to_string()],

@@ -636,3 +636,11 @@ created. Directory DNs stay in the JSON body, never URL selectors or telemetry.
 Responses use Cache-Control: no-store and preserve absent versus empty collections,
 fetched-subset counts, truncation, optional SPN/target/task arrays and authorized
 configuration references. No invented pagination or completeness guarantee.
+
+### Target provenance
+
+Classic target create/modify accept optional source selectors `manual` and
+`active_directory` only. Omitted create retains gvmd's default; omitted modify
+preserves the saved value. Read/list source is optional and open to future server
+values. Existing filter forwarding and clone behavior remain server-owned; the
+gateway never synthesizes provenance.
