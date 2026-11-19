@@ -62,10 +62,13 @@ impl std::fmt::Debug for ActiveDirectoryObjects {
 #[serde(rename_all = "camelCase")]
 pub struct ActiveDirectoryObjectCounts {
     /// Observed value; optional values preserve absence.
+    #[schemars(range(min = 0, max = 4294967295u64))]
     pub ou: u32,
     /// Observed value; optional values preserve absence.
+    #[schemars(range(min = 0, max = 4294967295u64))]
     pub container: u32,
     /// Observed value; optional values preserve absence.
+    #[schemars(range(min = 0, max = 4294967295u64))]
     pub group: u32,
     /// Observed value; optional values preserve absence.
     pub computer: ActiveDirectoryComputerCounts,
@@ -80,9 +83,11 @@ impl std::fmt::Debug for ActiveDirectoryObjectCounts {
 #[serde(rename_all = "camelCase")]
 pub struct ActiveDirectoryComputerCounts {
     /// Observed value; optional values preserve absence.
+    #[schemars(range(min = 0, max = 4294967295u64))]
     pub total: u32,
     /// Observed value; optional values preserve absence.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 0, max = 4294967295u64))]
     pub disabled: Option<u32>,
 }
 impl std::fmt::Debug for ActiveDirectoryComputerCounts {
