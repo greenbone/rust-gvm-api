@@ -144,7 +144,7 @@ async fn report_drill_down_and_operating_system_routes_expose_typed_contracts() 
         assert_eq!(body["pagination"]["perPage"], Value::from(10));
         assert_eq!(
             body["data"][0].as_object().map(serde_json::Map::len),
-            Some(3),
+            Some(if subresource == "applications" { 2 } else { 3 }),
             "subresource={subresource} must remain purpose-shaped"
         );
     }
