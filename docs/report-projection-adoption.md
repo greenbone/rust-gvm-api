@@ -16,7 +16,7 @@ Detail GET /reports/{id} and gateway JSON exports preserve optional task.scanCon
 
 Ordinary results, embedded report results and catalog NVTs preserve generic refs entries with raw type/id, including unknown future types. Empty upstream collections are omitted. Existing cves extraction remains unchanged. Aggregate reference coverage remains tracked by #685 / upstream #825; it is not fabricated from ordinary records.
 
-KEV alone is blocked: rust-gvm b6f33da has typed generic references and EPSS but no typed KEV model; inspected gvmd producer/schema provides no KEV feed ingestion or per-CVE KEV metadata. No KEV field is advertised and no external CISA download or XML workaround is used. Exact producer/typed dependency drafts accompany this change. Existing #682/#685/#825 are reference work, not substitute KEV tracking. Optional advisory enrichment/filtering and raw multi-segment legacy advisory path handling are not implemented by this slice; existing route handling is unchanged.
+KEV alone is blocked: rust-gvm b6f33da has typed generic references and EPSS but no typed KEV model; inspected gvmd producer/schema provides no KEV feed ingestion or per-CVE KEV metadata. No KEV field is advertised and no external CISA download or XML workaround is used. Filed dependencies: [gvmd #3254](https://github.com/greenbone/gvmd/issues/3254) (producer/feed contract), then [rust-gvm #873](https://github.com/greenbone/rust-gvm/issues/873) (typed support). Source-backed issue bodies accompany this change. Existing #682/#685/#825 are reference work, not substitute KEV tracking. Optional advisory enrichment/filtering and raw multi-segment legacy advisory path handling are not implemented by this slice; existing route handling is unchanged.
 
 
 ## Endpoint/source matrix

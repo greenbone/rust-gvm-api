@@ -1723,7 +1723,7 @@ fn snapshot_task_omits_unavailable_name_like_generic_report_task() {
 // Intent: raw references (including future feed types) survive both typed result and catalog projections.
 #[test]
 fn generic_references_preserve_unknown_types_and_identifiers() {
-    let refs = r#"<refs><ref type="cert-bund" id="CB-K13/0067"/><ref type="dfn-cert" id="DFN-CERT-2024-1700"/><ref type="future-feed" id="opaque &amp; id"/></refs>"#;
+    let refs = r#"<refs><ref type="cert-bund" id="CB-K13/0067"/><ref type="dfn-cert" id="DFN-CERT-2024-1700"/><ref type="future-feed" id="opaque &amp; id"/><ref type="cve" id="CVE-2024-6387"/><ref type="url" id="https://example.test/a?x=1&amp;y=2"/><ref type="bid" id="123"/><ref type="cwe" id="CWE-79"/><ref type="euvd" id="EUVD-2025-1"/><ref type="ghsa" id="GHSA-abcd-1234-abcd"/><ref type="dsa" id="DSA-1"/><ref type="usn" id="USN-1"/><ref type="rhsa" id="RHSA-1"/><ref type="cert-cc" id="VU#123"/><ref type="jvn" id="JVN#123"/><ref type="future-feed" id="opaque &amp; id"/></refs>"#;
     let xml = format!(
         r#"<get_results_response status="200" status_text="OK"><result id="11111111-1111-1111-1111-111111111111"><name>Finding</name><nvt oid="1.2.3">{refs}<type>future</type><type_metadata>{{"x":1}}</type_metadata></nvt></result></get_results_response>"#
     );
@@ -1742,6 +1742,10 @@ fn generic_references_preserve_unknown_types_and_identifiers() {
     let parsed = GetNvtsResponse::from_response(&GmpResponse::from(xml.as_str())).unwrap();
     let catalog = nvt_from_gmp(parsed.items.into_iter().next().unwrap()).unwrap();
     assert_eq!(catalog.refs, nvt.refs);
+    assert_eq!(nvt.cves, vec!["CVE-2024-6387"]);
+    assert_eq!(catalog.refs.len(), 15);
+    assert_eq!(catalog.refs[2], catalog.refs[14]); // Do not deduplicate raw observations.
+    assert_eq!(catalog.refs[4].id, "https://example.test/a?x=1&y=2");
 }
 
 // Intent: Agent-derived nonzero and explicit zero counts are preserved alongside server severity.

@@ -269,3 +269,25 @@ fn raw_reference_json_is_lossless() {
         serde_json::json!({"type": "future-feed", "id": "opaque / & id"})
     );
 }
+
+#[test]
+fn raw_refs_survive_full_and_summary_without_fabricating_kev() {
+    // Intent (#742): reference collection survives the outer DTO mappings,
+    // preserving order/duplicates; CVE refs must never imply KEV membership.
+    let refs = serde_json::json!([
+        {"type":"cve","id":"CVE-2024-6387"},
+        {"type":"future-feed","id":"opaque / & id"},
+        {"type":"cve","id":"CVE-2024-6387"}
+    ]);
+    let nvt: NvtRef = serde_json::from_value(serde_json::json!({"refs":refs})).unwrap();
+    let full = serde_json::to_value(super::NvtRefResponse::from(nvt.clone())).unwrap();
+    let summary = serde_json::to_value(super::NvtRefSummaryResponse::from(nvt)).unwrap();
+    for value in [full, summary] {
+        assert_eq!(value["refs"], refs);
+        assert!(value.get("kev").is_none());
+    }
+    let absent: NvtRef = serde_json::from_value(serde_json::json!({})).unwrap();
+    let value = serde_json::to_value(super::NvtRefResponse::from(absent)).unwrap();
+    assert!(value.get("refs").is_none());
+    assert!(value.get("kev").is_none());
+}

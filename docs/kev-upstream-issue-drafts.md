@@ -1,8 +1,10 @@
 # KEV upstream dependency drafts for #742
 
-Not filed by this worker. Parent owns filing and cross-linking. Parent reports authenticated all-state KEV searches found no existing gvmd/rust-gvm issue; do not duplicate API #682/#685 or rust-gvm #825 (generic references/aggregates).
+Dependency issue bodies, reviewed against immutable producer and typed source. Parent reports authenticated all-state KEV searches found no existing gvmd/rust-gvm issue; do not duplicate API #682/#685 or rust-gvm #825 (generic references/aggregates).
 
 ## Producer issue — greenbone/gvmd
+
+Filed: https://github.com/greenbone/gvmd/issues/3254
 
 **Title:** Expose feed-backed per-CVE CISA KEV metadata through GMP results and NVTs
 
@@ -10,7 +12,7 @@ Not filed by this worker. Parent owns filing and cross-linking. Parent reports a
 
 API issue https://github.com/greenbone/rust-gvm-api/issues/742 requests per-CVE KEV observations alongside EPSS, usable without internet access from API consumers. Existing generic references do not establish catalogue membership, date added, remediation due date or ransomware campaign usage.
 
-Static inspection of gvmd revision `150a4cfad39d00f45ef147c35e1a5f27f415c8e9` found no `kev`, `known.exploit`, `known_ransomware` or `cisa` producer/feed contract in `src/`. Its [result reference/EPSS producer](https://github.com/greenbone/gvmd/blob/150a4cfad39d00f45ef147c35e1a5f27f415c8e9/src/gmp.c#L9480) emits CERT/generic refs and EPSS; neither is KEV evidence. This is source review, not a claim about unpublished feed products or live builds. Please identify an existing supported contract if one exists.
+Static inspection of gvmd revision `150a4cfad39d00f45ef147c35e1a5f27f415c8e9` found no `kev`, `known.exploit`, `known_ransomware` or `cisa` producer/feed contract in `src/`. Its [result reference/EPSS producer](https://github.com/greenbone/gvmd/blob/150a4cfad39d00f45ef147c35e1a5f27f415c8e9/src/gmp.c#L9523) emits CERT/generic refs and EPSS; neither is KEV evidence. The [EPSS producer](https://github.com/greenbone/gvmd/blob/150a4cfad39d00f45ef147c35e1a5f27f415c8e9/src/gmp.c#L9591) and [NVT/result GMP schema](https://github.com/greenbone/gvmd/blob/150a4cfad39d00f45ef147c35e1a5f27f415c8e9/src/schema_formats/XML/GMP.xml.in#L784) describe EPSS, not KEV. A repeated immutable-tree search of `src` and `docs` for whole-word KEV/CISA, known-exploit and ransomware terminology also found no matching contract. This is source review, not a claim about unpublished feed products or live builds. Please identify an existing supported contract if one exists.
 
 ### Requested upstream contract
 
@@ -26,11 +28,13 @@ Agent: b02-agent-035
 
 ## Typed library issue — greenbone/rust-gvm
 
+Filed: https://github.com/greenbone/rust-gvm/issues/873
+
 **Title:** Add typed per-CVE KEV response support once gvmd/feed producer contract exists
 
 ### Evidence / blocked consumer
 
-API https://github.com/greenbone/rust-gvm-api/issues/742 needs actual upstream KEV observations, not a web lookup or an inference from CVEs, tags or EPSS. At immutable revision `b6f33da1224aa4950f39dc3db0e6d5607e0e0f89`, [result NvtRef](https://github.com/greenbone/rust-gvm/blob/b6f33da1224aa4950f39dc3db0e6d5607e0e0f89/crates/gvm-gmp/src/responses/result.rs#L34), [catalog Nvt](https://github.com/greenbone/rust-gvm/blob/b6f33da1224aa4950f39dc3db0e6d5607e0e0f89/crates/gvm-gmp/src/responses/nvt.rs#L18) and common models preserve generic reference entries and EPSS but expose no KEV model or typed feed source. Static source searches found no KEV decoder. Link the producer issue above when filed; this is blocked on its agreed wire/feed semantics, not permission to invent XML.
+API https://github.com/greenbone/rust-gvm-api/issues/742 needs actual upstream KEV observations, not a web lookup or an inference from CVEs, tags or EPSS. At immutable revision `b6f33da1224aa4950f39dc3db0e6d5607e0e0f89`, [result NvtRef](https://github.com/greenbone/rust-gvm/blob/b6f33da1224aa4950f39dc3db0e6d5607e0e0f89/crates/gvm-gmp/src/responses/result.rs#L34), [catalog Nvt](https://github.com/greenbone/rust-gvm/blob/b6f33da1224aa4950f39dc3db0e6d5607e0e0f89/crates/gvm-gmp/src/responses/nvt.rs#L18) and common models preserve generic reference entries and EPSS but expose no KEV model or typed feed source. Static source searches found no KEV decoder. Producer dependency: https://github.com/greenbone/gvmd/issues/3254; this is blocked on its agreed wire/feed semantics, not permission to invent XML.
 
 ### Acceptance
 
