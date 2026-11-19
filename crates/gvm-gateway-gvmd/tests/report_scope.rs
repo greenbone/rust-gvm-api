@@ -174,3 +174,111 @@ async fn invalid_report_filter_controls_fail_before_result_execution() {
     }
     server.shutdown().await;
 }
+
+#[tokio::test]
+async fn quote_disguised_scope_and_window_overrides_never_reach_result_transport() {
+    // These are not literals in gvmd: apostrophes/backslashes do not quote or
+    // escape, and an embedded double quote does not open a literal. Validate
+    // both resolved saved terms and inline terms before any result request.
+    for term in [
+        "name='benign _and_report_id=other'",
+        r#"name="benign\" _and_report_id=other x="end""#,
+        r#"name=ab"cd _and_report_id=other x="end""#,
+        "name='benign rows=99'",
+        r#"name="benign\" first=99 x="end""#,
+        "name='severity>=5'",
+        r#"name="benign\" severity<=5 x="end""#,
+    ] {
+        let filter_id = "123e4567-e89b-12d3-a456-426614174000";
+        let server = MockGmpServer::builder()
+            .mode(ServerMode::Stateful)
+            .version(GmpVersion::V22_8)
+            .seed(|store| {
+                let mut filter = gvm_mock_server::Resource::with_id(
+                    "filter",
+                    "Untrusted saved filter",
+                    uuid::Uuid::parse_str(filter_id).unwrap(),
+                );
+                filter.set_attr("term", term);
+                filter.set_attr("type", "result");
+                store.create(filter);
+            })
+            .unix_socket_auto()
+            .build()
+            .await
+            .unwrap();
+        let adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
+        adapter
+            .connect_session("scope-session", "admin", "admin")
+            .await
+            .unwrap();
+        for saved in [false, true] {
+            server.clear_history();
+            let result = adapter
+                .get_report_results(
+                    "scope-session",
+                    PATH_REPORT,
+                    &ResultQuery {
+                        filter_string: (!saved).then(|| term.to_string()),
+                        filter_id: saved.then(|| filter_id.to_string()),
+                        page: 1,
+                        per_page: 25,
+                    },
+                )
+                .await;
+            assert!(
+                matches!(result, Err(GatewayError::InvalidInput(_))),
+                "saved={saved}, term={term}: {result:?}"
+            );
+            let history = server.command_history();
+            assert_eq!(
+                history
+                    .iter()
+                    .any(|record| record.command_name() == "get_filters"),
+                saved,
+                "saved terms must be resolved before validation"
+            );
+            assert!(
+                !history
+                    .iter()
+                    .any(|record| record.command_name() == "get_results"),
+                "saved={saved}, term={term}: unsafe text reached result transport"
+            );
+        }
+        server.shutdown().await;
+    }
+}
+
+#[tokio::test]
+async fn real_quoted_filter_literals_still_reach_result_transport() {
+    // The strict upstream boundary must not reject reserved/operator spellings
+    // inside genuine double-quoted literals. Fixture playback isolates gateway
+    // dispatch from the deliberately bounded stateful mock predicate parser.
+    let (adapter, server) = adapter_with_result(PATH_REPORT).await;
+    for term in [
+        r#"name="_and_report_id=other rows=99 severity>=5""#,
+        r#"name="ends in backslash\""#,
+        "name=O'Brien",
+    ] {
+        server.clear_history();
+        let result = adapter
+            .get_report_results(
+                "scope-session",
+                PATH_REPORT,
+                &ResultQuery {
+                    filter_string: Some(term.to_string()),
+                    page: 1,
+                    per_page: 25,
+                    ..Default::default()
+                },
+            )
+            .await
+            .expect("supported literal is dispatched");
+        assert_eq!(result.data.len(), 1);
+        assert!(server
+            .command_history()
+            .iter()
+            .any(|record| record.command_name() == "get_results"));
+    }
+    server.shutdown().await;
+}

@@ -642,7 +642,7 @@ dependencies = [
 [[package]]
 name = "gvm-client"
 version = "0.11.1"
-source = "git+https://github.com/greenbone/rust-gvm?rev=64b9d01820c8b4715265bbae06293462c24fdfe7#64b9d01820c8b4715265bbae06293462c24fdfe7"
+source = "git+https://github.com/greenbone/rust-gvm?rev=fa990ad0c8aab4609dec7999f01e9922713fe71b#fa990ad0c8aab4609dec7999f01e9922713fe71b"
 dependencies = [
  "async-trait",
  "gvm-connection",
@@ -656,7 +656,7 @@ dependencies = [
 [[package]]
 name = "gvm-connection"
 version = "0.11.1"
-source = "git+https://github.com/greenbone/rust-gvm?rev=64b9d01820c8b4715265bbae06293462c24fdfe7#64b9d01820c8b4715265bbae06293462c24fdfe7"
+source = "git+https://github.com/greenbone/rust-gvm?rev=fa990ad0c8aab4609dec7999f01e9922713fe71b#fa990ad0c8aab4609dec7999f01e9922713fe71b"
 dependencies = [
  "async-trait",
  "gvm-protocol",
@@ -799,7 +799,7 @@ dependencies = [
 [[package]]
 name = "gvm-gmp"
 version = "0.11.1"
-source = "git+https://github.com/greenbone/rust-gvm?rev=64b9d01820c8b4715265bbae06293462c24fdfe7#64b9d01820c8b4715265bbae06293462c24fdfe7"
+source = "git+https://github.com/greenbone/rust-gvm?rev=fa990ad0c8aab4609dec7999f01e9922713fe71b#fa990ad0c8aab4609dec7999f01e9922713fe71b"
 dependencies = [
  "base64 0.23.1",
  "gvm-protocol",
@@ -813,7 +813,7 @@ dependencies = [
 [[package]]
 name = "gvm-mock-server"
 version = "0.11.1"
-source = "git+https://github.com/greenbone/rust-gvm?rev=64b9d01820c8b4715265bbae06293462c24fdfe7#64b9d01820c8b4715265bbae06293462c24fdfe7"
+source = "git+https://github.com/greenbone/rust-gvm?rev=fa990ad0c8aab4609dec7999f01e9922713fe71b#fa990ad0c8aab4609dec7999f01e9922713fe71b"
 dependencies = [
  "base64 0.23.1",
  "clap",
@@ -833,7 +833,7 @@ dependencies = [
 [[package]]
 name = "gvm-protocol"
 version = "0.11.1"
-source = "git+https://github.com/greenbone/rust-gvm?rev=64b9d01820c8b4715265bbae06293462c24fdfe7#64b9d01820c8b4715265bbae06293462c24fdfe7"
+source = "git+https://github.com/greenbone/rust-gvm?rev=fa990ad0c8aab4609dec7999f01e9922713fe71b#fa990ad0c8aab4609dec7999f01e9922713fe71b"
 dependencies = [
  "quick-xml",
  "thiserror",
