@@ -1009,6 +1009,7 @@ pub(crate) struct ActiveDirectoryMetadataResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     host: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 65535))]
     port: Option<u16>,
     #[serde(skip_serializing_if = "Option::is_none")]
     bind_dn: Option<String>,
@@ -1106,8 +1107,11 @@ pub async fn verify_active_directory_inline(
     })
 }
 pub(crate) fn verify_active_directory_saved_docs(
-    op: TransformOperation<'_>,
+    mut op: TransformOperation<'_>,
 ) -> TransformOperation<'_> {
+    // Bytes enforces the empty-body contract at runtime, but must not publish
+    // an inferred binary request body for this bodyless saved action.
+    op.inner_mut().request_body = None;
     ad_verify_docs(
         op.id("verifyActiveDirectoryCredential")
             .input::<Path<ResourceIdPathDoc>>(),
