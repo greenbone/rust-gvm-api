@@ -34,6 +34,13 @@ v0.11.0 release commit.
 This table remains the family-level product narrative; the TSV is the
 exhaustive per-method source of truth.
 
+The [planned GMP feature supplement](../spec/rest-api/planned-gmp-features.md)
+records downstream contracts and prerequisites for API #727–736 after rust-gvm
+#847–857. It does not advance the accepted release inventory or change any
+implemented disposition below. In particular, scanner #850 remains an upstream
+sensor-port correction, not authorization for REST scanner writes; report
+scan-config metadata does not authorize specialized audit/delta routes.
+
 Disposition meanings are deliberately closed:
 
 - `exposed`: a public REST operation directly represents the upstream method;

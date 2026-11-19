@@ -1,5 +1,10 @@
 # Test Spec: GVM REST Gateway (`gvm-gateway-rest` / `gvm-gateway`)
 
+> **Future acceptance criteria:** [Planned GMP feature contracts (#727–736)](planned-gmp-features.md)
+> specify per-feature mapping, capability, confidentiality and migration tests.
+> These are not implemented tests or evidence of shipped REST support; existing
+> OpenAPI parity tests must continue to describe only registered behavior.
+
 ## 1. Test Strategy
 
 ### Test Pyramid

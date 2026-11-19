@@ -11,6 +11,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from registry_retry import run_registry_command
 from build_temporary_openvas_scanner import load_manifest
 from direct_openvasd_feed_resolution import FeedResolutionError, load_declared_channels
 
@@ -131,13 +132,7 @@ def inspect_manifest(image: str) -> None:
         if reference.startswith("localhost:"):
             command.append("--insecure")
         command.append(reference)
-        result = subprocess.run(
-            command,
-            check=False,
-            text=True,
-            capture_output=True,
-            timeout=60,
-        )
+        result = run_registry_command(command, timeout=60)
     except FileNotFoundError as error:
         raise RuntimeImageManifestError("Docker CLI is required to validate runtime image manifests") from error
     except subprocess.TimeoutExpired as error:

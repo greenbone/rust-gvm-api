@@ -1,5 +1,9 @@
 # OpenSpec: GVM REST API
 
+> **Planned, not shipped:** [GMP feature adoption contracts (#727–736)](planned-gmp-features.md)
+> describe ten downstream gaps after rust-gvm #847–857. They are separate from
+> the implemented OpenAPI contract and do not mark API issues complete.
+
 ## 1. Overview
 
 The REST surface of the `gvm-gateway`, exposing Greenbone Vulnerability Management (GVM) operations over HTTP/JSON. Built on [axum](https://github.com/tokio-rs/axum) and [rust-gvm](https://github.com/greenbone-hive/rust-gvm), providing a standards-compliant alternative to GMP's raw XML protocol.
