@@ -64,3 +64,4 @@
 - #734: preserve typed optional counts/threat and server severity. Dependency baseline pending.
 
 - #734 slice-boundary correction: explicit u32 schema bounds now live with application counts, not the later reference slice. Added generated schema regression; preserved curated limits.
+- #735: open JSON type on full/summary result NVTs; typed note/override references no longer mislabel discriminator as family. Aggregate sources retain absence.

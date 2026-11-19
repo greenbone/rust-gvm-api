@@ -456,6 +456,7 @@ fn scan_result_serializes_camel_case() {
             cvss_base: Some(9.8),
             cves: vec!["CVE-2024-1234".to_string()],
             tags: None,
+            type_: None,
             type_metadata: None,
             epss: None,
         }),
@@ -523,6 +524,7 @@ fn nvt_ref_omits_empty_cves() {
         cvss_base: None,
         cves: vec![],
         tags: None,
+        type_: None,
         type_metadata: None,
         epss: None,
     };

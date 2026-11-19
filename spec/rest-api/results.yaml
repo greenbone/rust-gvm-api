@@ -130,6 +130,9 @@ components:
             type: string
         tags:
           type: string
+        type:
+          type: string
+          description: Open backend NVT discriminator; unknown values are preserved.
         typeMetadata:
           type: string
           description: Source-shaped NVT type metadata supplied by gvmd. The gateway preserves this value without parsing or narrowing its schema.
@@ -154,6 +157,9 @@ components:
             type: string
         tags:
           type: string
+        type:
+          type: string
+          description: Open backend NVT discriminator; unknown values are preserved.
         typeMetadata:
           type: string
           description: Source-shaped NVT type metadata supplied by gvmd. The gateway preserves this value without parsing or narrowing its schema.
