@@ -176,6 +176,7 @@ the tables are relative to `/api/v1` except `/health` and `/ready`.
 | `POST` | `/targets/{id}/clone` | Clone a target |
 | `GET` | `/agents` | List agents |
 | `GET`, `PUT`, `DELETE` | `/agents/{id}` | Read, update, or delete an agent |
+| `POST` | `/agents/inventory-token` | Issue a confidential inventory token (no body; no-store) |
 | `POST` | `/agents/sync` | Synchronize agent state |
 | `GET` | `/agents/{id}/support-bundle` | Download an agent support bundle |
 | `PUT` | `/agent-control-scan-configs/{id}` | Update an agent-control scan configuration |
@@ -333,3 +334,5 @@ them.
 
 For the complete method-level upstream disposition, see the repository's
 [`upstream-surface-dispositions.tsv`](https://github.com/greenbone-hive/rust-gvm-api/blob/main/docs/upstream-surface-dispositions.tsv).
+
+Inventory tokens are opaque backend-issued confidential credentials, not sessions. The endpoint requires GMP 22.8, positive help discovery and `get_agents` permission. Unsupported capability returns 501, temporary issuance 503, internal generation 500, and malformed successful payload 502. Mock tokens are nonfunctional test fixtures, not live agent authentication qualification.

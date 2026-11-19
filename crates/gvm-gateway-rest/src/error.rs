@@ -187,6 +187,7 @@ impl IntoResponse for RestError {
 fn status_for_gateway_error(error: &GatewayError) -> StatusCode {
     match error {
         GatewayError::BackendUnavailable(_) => StatusCode::BAD_GATEWAY,
+        GatewayError::ServiceUnavailable(_) => StatusCode::SERVICE_UNAVAILABLE,
         GatewayError::NotImplemented(_) => StatusCode::NOT_IMPLEMENTED,
         GatewayError::NotFound(_) => StatusCode::NOT_FOUND,
         GatewayError::InvalidInput(_) => StatusCode::BAD_REQUEST,
@@ -237,6 +238,7 @@ fn log_private_gateway_error(
 fn title_for_code(code: GatewayErrorCode) -> &'static str {
     match code {
         GatewayErrorCode::BackendUnavailable => "Bad Gateway",
+        GatewayErrorCode::ServiceUnavailable => "Service Unavailable",
         GatewayErrorCode::NotImplemented => "Not Implemented",
         GatewayErrorCode::NotFound => "Not Found",
         GatewayErrorCode::BadRequest => "Bad Request",

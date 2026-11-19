@@ -160,6 +160,8 @@ paths:
     $ref: './emerging.yaml#/paths/~1agents'
   /agents/{id}:
     $ref: './emerging.yaml#/paths/~1agents~1{id}'
+  /agents/inventory-token:
+    $ref: './emerging.yaml#/paths/~1agents~1inventory-token'
   /agents/sync:
     $ref: './emerging.yaml#/paths/~1agents~1sync'
   /agents/{id}/support-bundle:

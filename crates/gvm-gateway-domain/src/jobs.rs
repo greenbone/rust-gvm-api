@@ -217,6 +217,7 @@ pub struct ReportJsonExport {
 fn status_for_code(code: GatewayErrorCode) -> u16 {
     match code {
         GatewayErrorCode::BackendUnavailable => 502,
+        GatewayErrorCode::ServiceUnavailable => 503,
         GatewayErrorCode::NotImplemented => 501,
         GatewayErrorCode::NotFound => 404,
         GatewayErrorCode::BadRequest => 400,
@@ -234,6 +235,7 @@ fn status_for_code(code: GatewayErrorCode) -> u16 {
 fn title_for_code(code: GatewayErrorCode) -> &'static str {
     match code {
         GatewayErrorCode::BackendUnavailable => "Bad Gateway",
+        GatewayErrorCode::ServiceUnavailable => "Service Unavailable",
         GatewayErrorCode::NotImplemented => "Not Implemented",
         GatewayErrorCode::NotFound => "Not Found",
         GatewayErrorCode::BadRequest => "Bad Request",

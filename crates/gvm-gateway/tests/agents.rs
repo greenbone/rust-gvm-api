@@ -450,3 +450,41 @@ async fn agent_routes_return_not_implemented_on_gmp_22_7() {
 
     harness.shutdown().await;
 }
+
+#[tokio::test]
+async fn inventory_token_route_is_authenticated_confidential_and_has_no_body() {
+    // Exercise the actual service/adapter route, not a local token generator.
+    let harness = specialized_target_harness(seed_agent_resource).await;
+    let url = harness.url("/api/v1/agents/inventory-token");
+    let response = harness
+        .client
+        .post(&url)
+        .bearer_auth(&harness.token)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.headers()[reqwest::header::CACHE_CONTROL],
+        "no-store"
+    );
+    assert_eq!(
+        response.json::<Value>().await.unwrap(),
+        json!({"token":"mock-agent-inventory-token"})
+    );
+    let rejected = harness
+        .client
+        .post(&url)
+        .bearer_auth(&harness.token)
+        .json(&json!({}))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(rejected.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(
+        rejected.headers()[reqwest::header::CACHE_CONTROL],
+        "no-store"
+    );
+    let unauthorized = harness.client.post(&url).send().await.unwrap();
+    assert_eq!(unauthorized.status(), StatusCode::UNAUTHORIZED);
+}

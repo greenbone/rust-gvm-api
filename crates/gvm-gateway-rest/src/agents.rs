@@ -1395,3 +1395,60 @@ pub(crate) fn clone_agent_group_docs(op: TransformOperation<'_>) -> TransformOpe
 #[cfg(test)]
 #[path = "agents_test.rs"]
 mod agents_test;
+
+#[derive(Serialize, JsonSchema)]
+#[schemars(rename = "AgentInventoryToken")]
+struct AgentInventoryTokenResponse {
+    token: String,
+}
+
+/// Issue an inventory token. No request body or agent identifier is accepted.
+pub async fn get_agent_inventory_token(
+    State(service): State<GatewayService>,
+    headers: HeaderMap,
+    uri: OriginalUri,
+    body: Bytes,
+) -> Response {
+    let instance = uri.path().to_string();
+    let result = match bearer_token(&headers) {
+        Err(error) => gateway_error(error, instance),
+        Ok(_) if !body.is_empty() => gateway_error(
+            GatewayError::InvalidInput("Inventory token issuance accepts no body.".into()),
+            instance,
+        ),
+        Ok(session) => match service.get_agent_inventory_token(&session).await {
+            Ok(token) => Json(AgentInventoryTokenResponse {
+                token: token.expose().to_owned(),
+            })
+            .into_response(),
+            Err(error) => gateway_error(error, instance),
+        },
+    };
+    inventory_token_no_store(result)
+}
+
+fn inventory_token_no_store(mut response: Response) -> Response {
+    response
+        .headers_mut()
+        .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
+    response
+}
+
+pub(crate) fn get_agent_inventory_token_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
+    let op = op
+        .id("getAgentInventoryToken")
+        .tag("Agents")
+        .summary("Issue a confidential agent inventory token")
+        .security_requirement("bearerAuth")
+        .response_with::<200, Json<AgentInventoryTokenResponse>, _>(|response| {
+            response.description("Confidential backend-issued token; Cache-Control: no-store")
+        });
+    let op = problem_response::<400>(op, "No body accepted");
+    let op = problem_response::<401>(op, "Authentication required");
+    let op = problem_response::<403>(op, "get_agents permission denied");
+    let op = problem_response::<500>(op, "Token generation failed");
+    let op = problem_response::<501>(op, "Unsupported or not discovered");
+    let op = problem_response::<502>(op, "Malformed response or connection failure");
+    let op = problem_response::<503>(op, "Issuance temporarily unavailable");
+    problem_response::<504>(op, "Backend timed out")
+}

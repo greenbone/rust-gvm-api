@@ -247,16 +247,16 @@ group create/modify/read delay, and a compatibility test proving the selected
 migration preserves existing client behavior. Verify canonical nested cron
 encoding via typed integration, not gateway XML assertions/parsing.
 
-## 7. Agent inventory token — #731
+## 7. Agent inventory token — #731 (implemented)
 
-Proposed `POST /agents/inventory-token`, no body or agent ID, returns `200` JSON
+Implemented `POST /agents/inventory-token`, no body or agent ID, returns `200` JSON
 `{ "token": "<opaque confidential value>" }` with `Cache-Control: no-store`.
 POST reflects confidential issuance, not a cached agent read; this is an explicit
 proposed controller exception. No expiration, JWT claims, rotation or signer is
 invented; no local issuance, caching, or persistence. Map the no-argument
 `GetAgentInventoryTokenRequest` and unwrap `AgentInventoryToken` only for the
 intended response. A session token and inventory token are distinct credentials.
-Route/method remains a #731 review choice; it is not present in current OpenAPI.
+This controller exception is implemented in runtime and OpenAPI.
 
 Tests: authorized success and exact no-argument typed dispatch, `get_agents`
 denial (source GMP 400 => HTTP 403), absent capability/disabled build,

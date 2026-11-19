@@ -28,3 +28,5 @@
 - Adopted upstream immutable feature stack b6f33da; reviewed 270-method typed facade (three newly blocked REST adopters). Building isolated target; native compiler provisioned inside workspace only.
 - Prerequisite commit b6b901b compiles all workspace features; SHA also recorded in /workspace/api-agent-baseline.txt for parent coordination (no sessions-send tool available).
 - #730 runtime maps structured schedules/delays with legacy writes and explicit documented Tech Preview response break.
+- #730 acceptance: 12 REST agent tests passed; strict all-target/all-feature clippy passed before token slice.
+- #731 implemented typed backend-only token issuance, no-store REST, confidential domain wrapper and sanitized status-aware failure mapping including distinct 503.

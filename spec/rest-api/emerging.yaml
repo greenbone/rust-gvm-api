@@ -4,6 +4,32 @@
 openapi: 3.1.0
 
 paths:
+  /agents/inventory-token:
+    post:
+      operationId: getAgentInventoryToken
+      tags: [Agents]
+      summary: Issue a confidential agent inventory token
+      description: No body or agent ID. Requires GMP 22.8 and positive help discovery. Tokens are not gateway sessions and are never cached.
+      responses:
+        "200":
+          description: Backend-issued confidential token
+          headers:
+            Cache-Control: { schema: { type: string, const: no-store } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token]
+                properties:
+                  token: { type: string }
+        "400": { $ref: "./common.yaml#/components/responses/BadRequest" }
+        "401": { $ref: "./common.yaml#/components/responses/Unauthorized" }
+        "403": { $ref: "./common.yaml#/components/responses/Forbidden" }
+        "500": { description: Sanitized token generation failure }
+        "501": { $ref: "./common.yaml#/components/responses/NotImplemented" }
+        "502": { $ref: "./common.yaml#/components/responses/BadGateway" }
+        "503": { description: Known issuance operation temporarily unavailable }
+        "504": { $ref: "./common.yaml#/components/responses/GatewayTimeout" }
   /agents:
     get:
       operationId: getAgents

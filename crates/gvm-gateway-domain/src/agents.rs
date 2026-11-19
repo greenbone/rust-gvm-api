@@ -284,3 +284,24 @@ pub struct ModifyAgentGroupInput {
     /// Optional agent membership replacement.
     pub agent_ids: Option<Vec<String>>,
 }
+
+/// Confidential inventory credential; Debug never reveals its contents.
+#[derive(Clone, Eq, PartialEq)]
+pub struct AgentInventoryToken(String);
+
+impl AgentInventoryToken {
+    /// Wrap a token issued by the backend; never issue tokens locally.
+    pub fn from_backend(value: String) -> Self {
+        Self(value)
+    }
+    /// Expose only for the intended HTTP response.
+    pub fn expose(&self) -> &str {
+        &self.0
+    }
+}
+
+impl std::fmt::Debug for AgentInventoryToken {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("AgentInventoryToken([REDACTED])")
+    }
+}

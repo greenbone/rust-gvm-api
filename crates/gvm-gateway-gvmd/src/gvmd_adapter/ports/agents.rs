@@ -38,6 +38,28 @@ const MAX_AGENT_SUPPORT_BUNDLE_BYTES: usize = 16 * 1024 * 1024;
 
 #[async_trait]
 impl AgentPort for GvmdAdapter {
+    async fn get_agent_inventory_token(
+        &self,
+        session_token: &str,
+    ) -> Result<gvm_gateway_domain::AgentInventoryToken, GatewayError> {
+        let client = self.session_client(session_token)?;
+        let mut client = client.lock().await?;
+        if client.command_support("get_agent_inventory_token") == CommandSupport::RequiresDiscovery
+        {
+            client
+                .discover_commands()
+                .await
+                .map_err(map_inventory_token_error)?;
+        }
+        let response = client
+            .get_agent_inventory_token(gvm_gmp::commands::agents::GetAgentInventoryTokenRequest)
+            .await
+            .map_err(map_inventory_token_error)?;
+        Ok(gvm_gateway_domain::AgentInventoryToken::from_backend(
+            response.token.as_str().to_owned(),
+        ))
+    }
+
     async fn list_agents(
         &self,
         session_token: &str,
@@ -473,5 +495,31 @@ fn agent_heartbeat_config_opts_from_domain(
     GmpAgentHeartbeatConfig {
         interval_in_seconds: input.interval_in_seconds,
         miss_until_inactive: input.miss_until_inactive,
+    }
+}
+
+// Inventory issuance errors are sensitive: preserve status/category, never backend diagnostics.
+fn map_inventory_token_error(error: gvm_client::GvmError) -> GatewayError {
+    use gvm_client::GvmError;
+    let kind = error.server_error_kind();
+    match error {
+        GvmError::UnsupportedCommand { .. }
+        | GvmError::CommandDiscoveryRequired { .. }
+        | GvmError::CommandNotAdvertised { .. } => {
+            GatewayError::NotImplemented("Agent inventory token issuance is unsupported.".into())
+        }
+        GvmError::Server { .. } if kind == Some(gvm_gmp::GmpServerErrorKind::PermissionDenied) => {
+            GatewayError::Forbidden("Agent inventory token issuance is forbidden.".into())
+        }
+        GvmError::Server { status: 503, .. } => GatewayError::ServiceUnavailable(
+            "Agent inventory token issuance is temporarily unavailable.".into(),
+        ),
+        GvmError::Server { status: 500, .. } => {
+            GatewayError::Internal("Agent inventory token generation failed.".into())
+        }
+        GvmError::Timeout(_) => {
+            GatewayError::GatewayTimeout("Agent inventory token issuance timed out.".into())
+        }
+        _ => GatewayError::BackendUnavailable("Agent inventory token issuance failed.".into()),
     }
 }

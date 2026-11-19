@@ -349,3 +349,6 @@ Coverage target: **80%** line coverage for route handlers and service layer.
 
 ### Implemented agent schedules (#730)
 Legacy and structured writes, structured-only responses, delay omission/zero/maximum and rejection of negative/fractional/overflow values are deterministic contract tests. Group cron stays string-shaped and optional names preserve backend state. Live qualification remains separate.
+
+### Implemented inventory token (#731)
+Typed no-argument issuance, positive discovery, missing payload, 400 permission denial, 500 generation failure and 503 temporary issuance have focused adapter coverage. Token Debug/log capture is redacted; HTTP issuance is authenticated and no-store.
