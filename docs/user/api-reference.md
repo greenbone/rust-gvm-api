@@ -9,7 +9,7 @@ The normative contract is
 [`spec/rest-api`](https://github.com/greenbone-hive/rust-gvm-api/tree/main/spec/rest-api)
 in the source repository and `api/rest/openapi.yaml` in the release docs
 archive. The curated contract and runtime-generated contract are tested for
-alignment. The current contract contains 121 paths and 199 operations.
+alignment. The current contract contains 122 paths and 200 operations.
 
 ## Base paths and documentation
 
