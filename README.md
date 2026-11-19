@@ -78,6 +78,11 @@ contract-tested against the curated release specification. MCP remains a
 planned surface; its roadmap should be read as forward-looking design material
 rather than shipped runtime behavior.
 
+Planned downstream adoption of rust-gvm #847–857 is documented in the
+[GMP feature contract supplement](spec/rest-api/planned-gmp-features.md).
+Its ten API gaps (#727–736) are **not implemented REST behavior**; the shipped
+OpenAPI remains authoritative. Scanner mutation routes remain out of scope.
+
 ## Shared Session Model
 
 The gateway's multi-request execution model is session-backed rather than stateless:
