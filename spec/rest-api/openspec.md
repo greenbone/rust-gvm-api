@@ -625,3 +625,14 @@ destination, TLS and permission policy, including explicit AD write permissions.
 Positive help discovery is required; missing support returns 501, never an LDAP
 workaround. Backend diagnostics are sanitized. Deterministic tests are not live
 AD/TLS interoperability qualification.
+
+### Active Directory discovery
+
+`POST /active-directory/object-searches` is an authenticated, read-only controller
+search using a saved credentialId. Optional scope, limit, disabled-computer,
+expansion and DN selectors preserve backend defaults. tasks=true requires explicit
+targets=true; maxResults is bounded to 1–1000. No target, task or stored search is
+created. Directory DNs stay in the JSON body, never URL selectors or telemetry.
+Responses use Cache-Control: no-store and preserve absent versus empty collections,
+fetched-subset counts, truncation, optional SPN/target/task arrays and authorized
+configuration references. No invented pagination or completeness guarantee.

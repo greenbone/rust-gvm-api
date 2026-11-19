@@ -6,6 +6,7 @@
 
 //! Domain types and ports for the GVM gateway.
 
+mod active_directory;
 mod agents;
 mod alerts;
 mod common;
@@ -34,6 +35,7 @@ mod targets;
 mod tasks;
 mod time;
 
+pub use active_directory::*;
 pub use agents::*;
 pub use alerts::*;
 pub use common::*;

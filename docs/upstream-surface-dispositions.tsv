@@ -270,5 +270,5 @@ verify_credential_store	exposed	The operation has a direct credential-store coll
 verify_report_format	deferred	Report-format administration requires a dedicated administration and artifact-validation contract.	docs/upstream-surface-dispositions.md report-format family; parent #381
 verify_scanner	deferred	Scanner administration and verification require a dedicated appliance-ownership and secret-handling contract.	docs/upstream-surface-dispositions.md scanner-administration family; #401
 get_agent_inventory_token	exposed	Confidential authenticated POST issuance with no-store and sanitized errors.	spec/rest-api/emerging.yaml /agents/inventory-token
-get_active_directory_objects	blocked	Typed prerequisite adopted; REST adoption tracked by #727, #728 and #731.	spec/rest-api/planned-gmp-features.md
+get_active_directory_objects	exposed	Read-only bounded directory searches preserve optional collections and fetched subset counts without persistence.	spec/rest-api/active-directory.yaml; crates/gvm-gateway-gvmd/src/gvmd_adapter/ports/active_directory.rs
 verify_active_directory_credential	exposed	Saved and inline verification return status-only success without persistence.	spec/rest-api/credentials.yaml; crates/gvm-gateway-gvmd/src/gvmd_adapter/ports/credentials.rs

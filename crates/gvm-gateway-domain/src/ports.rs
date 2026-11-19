@@ -151,6 +151,17 @@ pub trait SchedulePort: Send + Sync + 'static {
 /// Port for credential CRUD operations.
 #[async_trait]
 pub trait CredentialPort: Send + Sync + 'static {
+    /// Read-only directory discovery; static backends do not emulate LDAP.
+    async fn search_active_directory_objects(
+        &self,
+        _session_token: &str,
+        _input: crate::ActiveDirectorySearchInput,
+    ) -> Result<crate::ActiveDirectorySearchResult, GatewayError> {
+        Err(GatewayError::NotImplemented(
+            "Active Directory search unavailable".into(),
+        ))
+    }
+
     /// Verify an AD credential without creating resources.
     async fn verify_active_directory(
         &self,
