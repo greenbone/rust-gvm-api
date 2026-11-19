@@ -18,7 +18,7 @@ const RUST_GVM_COMPONENTS: &[&str] = &[
 // immutable upstream stack commit; this is not a released tag.
 const RUST_GVM_DEPENDENCY_URL: &str = "https://github.com/greenbone/rust-gvm";
 const RUST_GVM_DEPENDENCY_VERSION: &str = "0.11.1";
-const RUST_GVM_DEPENDENCY_REVISION: &str = "b6f33da1224aa4950f39dc3db0e6d5607e0e0f89";
+const RUST_GVM_DEPENDENCY_REVISION: &str = "64b9d01820c8b4715265bbae06293462c24fdfe7";
 // The feature stack adds AD verification/discovery and inventory-token helpers
 // to the previous 267-method baseline. All 270 helpers are deliberately reviewed
 // in the matching snapshot and disposition ledger.
