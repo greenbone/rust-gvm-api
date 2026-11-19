@@ -68,3 +68,4 @@
 - #735 acceptance review: typed classic/nonclassic/future/empty/absent discriminator projections qualified; description comments corrected.
 
 - #736: detail/JSON-export scope selected; typed structured report snapshot supplies task.scanConfig; generic list cannot supply it without upstream generic model extension.
+- #736 compatibility review: unsupported snapshot omits enrichment only; real backend errors propagate. Focused older-backend/error regressions pass.

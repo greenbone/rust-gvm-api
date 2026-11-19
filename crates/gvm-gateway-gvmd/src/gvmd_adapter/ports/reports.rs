@@ -102,11 +102,21 @@ impl ReportPort for GvmdAdapter {
                 "reports.snapshot",
                 gvm_gmp::commands::reports::GetScanReportRequest::new(parse_entity_id(id)?),
             )
-            .await?;
-        report.task = snapshot
-            .report
-            .task
-            .and_then(crate::conversions::report_task_from_snapshot);
+            .await;
+        match snapshot {
+            Ok(snapshot) => {
+                report.task = snapshot
+                    .report
+                    .task
+                    .and_then(crate::conversions::report_task_from_snapshot)
+                    .or(report.task);
+            }
+            // This additive metadata must not make older report reads fail.
+            // The typed capability check rejects unsupported commands before
+            // transport. Do not suppress permission, parse or backend errors.
+            Err(GatewayError::NotImplemented(_)) => {}
+            Err(error) => return Err(error),
+        }
 
         // Fetch the explicitly requested embedded-result window for this report.
         let filter = paginated_filter(
