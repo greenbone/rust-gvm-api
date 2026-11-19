@@ -82,7 +82,7 @@ impl ReportPort for GvmdAdapter {
 
         // Fetch only report metadata; embedded results are loaded below through
         // the explicit result-window request.
-        let mut request = GetReportRequest::new(report_id);
+        let mut request = GetReportRequest::new(report_id.clone());
         request.details = Some(false);
         let parsed = self
             .execute_with_session(session_token, "reports.get", request)
@@ -119,12 +119,15 @@ impl ReportPort for GvmdAdapter {
         }
 
         // Fetch the explicitly requested embedded-result window for this report.
-        let filter = paginated_filter(
-            Some(&format!("report_id={id}")),
-            None,
-            opts.page,
-            opts.per_page,
-        )?;
+        let filter = Some(
+            gvm_gmp::compose_report_results_filter(
+                &report_id,
+                None,
+                None,
+                GmpPagination::new(opts.page as usize, opts.per_page as usize),
+            )
+            .map_err(|error| GatewayError::InvalidInput(error.to_string()))?,
+        );
 
         let results_parsed = self
             .execute_with_session(
@@ -286,25 +289,27 @@ impl ReportPort for GvmdAdapter {
         report_id: &str,
         query: &ResultQuery,
     ) -> Result<ResultPage, GatewayError> {
-        // Validate that the report_id is a valid UUID
-        let _ = parse_entity_id(report_id)?;
+        let scope_id = parse_entity_id(report_id)?;
 
         let filter_id = query
             .filter_id
             .as_deref()
             .map(parse_entity_id)
             .transpose()?;
-        let filter = self
-            .paginated_filter_resolving_filter_id(
-                session_token,
-                Some(&format!("report_id={report_id}")),
-                query.filter_string.as_deref(),
-                filter_id.as_ref(),
-                query.page,
-                query.per_page,
-                &["report_id"],
-            )
+        let saved_filter = self
+            .saved_filter_term(session_token, filter_id.as_ref())
             .await?;
+        // Keep wire semantics in rust-gvm: its protected scope control is
+        // independent of the caller's boolean expression and applies to counts.
+        let filter = Some(
+            gvm_gmp::compose_report_results_filter(
+                &scope_id,
+                saved_filter.as_deref(),
+                query.filter_string.as_deref(),
+                GmpPagination::new(query.page as usize, query.per_page as usize),
+            )
+            .map_err(|error| GatewayError::InvalidInput(error.to_string()))?,
+        );
 
         let parsed = self
             .execute_with_session(

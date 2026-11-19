@@ -94,3 +94,7 @@
 - Identified protected `_and_report_id` control in gvmd source; filed rust-gvm#871 for typed composition and strict comparator validation, rather than parsing GMP in gateway.
 - Adding defense-in-depth response scope invariant: backend cross-report rows fail the whole page with sanitized502; UUID case-equivalent identities remain accepted.
 - Waiting on upstream helper plus shared immutable dependency adoption before final adapter integration/testing/publication.
+
+- Adopted upstream immutable feature stack b6f33da; reviewed 270-method typed facade (three newly blocked REST adopters). Building isolated target; native compiler provisioned inside workspace only.
+- Integrated typed compose_report_results_filter at both report result read paths; saved terms resolve first and no filter_id is forwarded. Added transport regressions for caller/saved boolean alternatives, report-scoped counts across pages, and rejection before result execution for unsupported or endpoint-owned predicates.
+- Focused testing initially used CLI path patches; final manifest and regenerated lockfile now pin all five upstream crates to published immutable 64b9d01820c8b4715265bbae06293462c24fdfe7 (rust-gvm#872), without local patches. All 120 focused adapter/scope tests and strict workspace Clippy passed; full workspace tests running.

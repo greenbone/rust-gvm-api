@@ -1855,7 +1855,7 @@ async fn gvmd_adapter_direct_lists_emit_backend_pagination_filter() {
             }
         ),
         "get_results",
-        "filter=\"report_id=550e8400-e29b-41d4-a716-446655440000 name=Target first=11 rows=10\""
+        "filter=\"name=Target _and_report_id=550e8400-e29b-41d4-a716-446655440000 first=11 rows=10\""
     );
     assert_backend_pagination!(
         adapter,
@@ -3966,7 +3966,7 @@ async fn gvmd_adapter_get_report_results_resolves_filter_id_into_inline_filter()
         .expect("get_results command should be recorded");
     let xml = String::from_utf8(command.raw_xml().to_vec()).expect("xml command");
     assert!(xml.contains(
-            "filter=\"threat=Alarm report_id=550e8400-e29b-41d4-a716-446655440000 severity&gt;5 first=1 rows=25\""
+            "filter=\"threat=Alarm severity&gt;5 _and_report_id=550e8400-e29b-41d4-a716-446655440000 first=1 rows=25\""
         ));
     assert!(!xml.contains("filter_id"));
 
