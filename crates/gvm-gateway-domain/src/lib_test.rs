@@ -161,6 +161,7 @@ fn log_safety_helpers_hide_values() {
 #[test]
 fn credential_command_debug_redacts_secrets() {
     let create = CreateCredentialInput {
+        active_directory: None,
         name: "Credential".to_string(),
         comment: Some("visible comment".to_string()),
         credential_type: "snmpv3".to_string(),
@@ -177,6 +178,7 @@ fn credential_command_debug_redacts_secrets() {
         host_identifier: Some("create-host-secret".to_string()),
     };
     let modify = ModifyCredentialInput {
+        active_directory: None,
         name: Some("Credential".to_string()),
         comment: Some("visible comment".to_string()),
         login: Some("visible-login".to_string()),

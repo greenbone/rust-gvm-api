@@ -1,8 +1,8 @@
 # Planned REST contracts: GMP feature adoption (#727–736)
 
-> **Mixed implementation/design supplement.** Agent slices #730–733 are implemented in runtime and OpenAPI; other sections remain planned. This document
+> **Mixed implementation/design supplement.** Agent slices #730–733 and AD credentials #727 are implemented in runtime and OpenAPI; other sections remain planned. This document
 > specifies downstream adoption work for rust-gvm #847–857. Planned sections do not add routes,
-> parameters or response fields to the shipped API. The dependency pin was adopted in the agent implementation prerequisite. Clients must use the implemented
+> parameters or response fields to the shipped API. The immutable typed dependency is adopted in this stack. Clients must use the implemented
 > [OpenAPI root](openapi.yaml) and [REST design](openspec.md) for current behavior.
 > Anonymization is forwarded to gvmd; it is not a promise that every bundle is safe to share.
 
@@ -116,7 +116,7 @@ sensitive too: return only authorized data and exclude payloads from telemetry.
 Use safe operation/resource identifiers for diagnostics. Backend wire-trace
 redaction does not make gateway JSON logging safe.
 
-## 3. AD credentials and verification — #727
+## 3. AD credentials and verification — #727 (implemented)
 
 Extend existing credential create/update/read shapes with type `ad` and a nested
 `activeDirectory` object. `CredentialKind::ActiveDirectory`/typed credential
@@ -140,7 +140,7 @@ matching the upstream partial-modify API. Read metadata includes optional
 `host`, `port`, `bindDn`, `baseDn`, `tlsMode`, `caCertificate`, but not `bindPassword` or
 `clearPort`. Read `tlsMode` is an open string so future backend values survive.
 
-Proposed verification resources/actions:
+Implemented verification resources/actions:
 
 - `POST /credentials/{id}/actions/verify-active-directory`, no inline fields:
   `VerifyActiveDirectoryCredentialRequest::Saved`.
@@ -149,7 +149,7 @@ Proposed verification resources/actions:
 - Both return `204 No Content` on status-only success; no fabricated connection
   details, credential resource or Location. The saved action is a deliberate
   controller exception to the resource-first rule; the inline operation creates
-  no durable saved credential. Final route naming is subject to #727 review.
+  no durable saved credential. These route names are the implemented contract.
 
 Tests must prove required/type/range validation, escaped values, partial updates,
 CA clearing, port clearing/default omission, saved-vs-inline mutual exclusion,

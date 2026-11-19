@@ -239,6 +239,16 @@ pub(crate) fn schedule_from_gmp(schedule: gvm_gmp::responses::Schedule) -> Sched
 
 pub(crate) fn credential_from_gmp(credential: gvm_gmp::responses::Credential) -> Credential {
     Credential {
+        active_directory: credential.active_directory.map(|v| {
+            gvm_gateway_domain::ActiveDirectoryMetadata {
+                host: v.host,
+                port: v.port,
+                bind_dn: v.bind_dn,
+                base_dn: v.base_dn,
+                tls_mode: v.tls_mode,
+                ca_certificate: v.ca_certificate,
+            }
+        }),
         id: credential.meta.id.to_string(),
         name: credential.meta.name,
         comment: credential.meta.comment,

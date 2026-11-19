@@ -1,4 +1,4 @@
-# Agent API implementation stack
+# AD API implementation stack
 
 ## 2026-11-19
 
@@ -45,3 +45,10 @@
 - Generated/curated OpenAPI parity now passes end-to-end after removing the inferred binary request body from the no-body issuance route and defining problem+json content for 500/503. Strict all-workspace/all-target/all-feature clippy and fmt check passed on final code.
 - Earlier whole-workspace attempt still has an unrelated report application fixture contract mismatch (3 keys versus 2); parent confirms combined report/#741 workspace suite passes. No live gvmd qualification claimed.
 - Final slice includes acceptance-hardening followups for preceding agent slices (non-null delay validation, group delay lifecycle assertions, no-body/cache/error OpenAPI fidelity). Earlier published slice commits are unchanged.
+
+## AD implementation
+
+- Created b02/api-ad-impl at PR740 9a5664f.
+- Adopted parent-owned immutable dependency baseline b6b901b (local cherry-pick a0b2e1b).
+- Implementing #727 credential writes/read metadata + saved/inline verification; #728 search and #729 provenance isolated in parallel file scopes.
+- Native compiler inherited from /workspace/api-agent-env; target /workspace/.cache/api-ad-target. Initial compile exposed REST DTO omissions, fixed; focused test build underway.

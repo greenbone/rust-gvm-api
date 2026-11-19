@@ -68,3 +68,21 @@ fn unsupported_credential_store_error_documents_no_synthesis_boundary() {
     assert!(detail.contains("get_credential_stores"));
     assert!(detail.contains("does not synthesize credential store entries"));
 }
+
+// AD diagnostics must preserve denial categories, not LDAP strings or secrets.
+#[test]
+fn ad_errors_are_classified_and_sanitized() {
+    for (status, message, expected) in [
+        (400, "Permission denied", "forbidden"),
+        (404, "Not found: CN=secret", "not_found"),
+        (400, "LDAP bind failed: secret", "backend_unavailable"),
+        (500, "Internal error: secret", "internal_server_error"),
+    ] {
+        let error = super::credentials::map_ad_error(gvm_client::GvmError::Server {
+            status,
+            message: message.into(),
+        });
+        assert_eq!(error.code().as_str(), expected);
+        assert!(!format!("{error:?}").contains("secret"));
+    }
+}

@@ -1063,7 +1063,7 @@ fn generated_and_curated_response_enums_accept_known_and_unknown_values_of_the_r
             json!("future_credential"),
             json!(1),
             json!([
-                "cc", "krb5", "pw", "pgp", "smime", "snmp", "up", "usk", "cs_krb5", "cs_pw",
+                "ad", "cc", "krb5", "pw", "pgp", "smime", "snmp", "up", "usk", "cs_krb5", "cs_pw",
                 "cs_pgp", "cs_smime", "cs_snmp", "cs_up", "cs_usk"
             ]),
         ),
@@ -1222,7 +1222,7 @@ fn generated_and_curated_response_enums_accept_known_and_unknown_values_of_the_r
             json!("future_credential"),
             json!(1),
             json!([
-                "cc", "krb5", "pw", "pgp", "smime", "snmp", "up", "usk", "cs_krb5", "cs_pw",
+                "ad", "cc", "krb5", "pw", "pgp", "smime", "snmp", "up", "usk", "cs_krb5", "cs_pw",
                 "cs_pgp", "cs_smime", "cs_snmp", "cs_up", "cs_usk"
             ]),
         ),
@@ -1444,7 +1444,7 @@ fn request_only_closed_enums_remain_restrictive() {
     let generated_task_type = &schemas["CreateTask"]["properties"]["type"];
     let curated_task_type = &tasks["components"]["schemas"]["CreateTask"]["properties"]["type"];
     let credential_request_types = json!([
-        "cc", "pw", "smime", "snmp", "snmpv3", "up", "usk", "cs_pw", "cs_pgp", "cs_smime",
+        "ad", "cc", "pw", "smime", "snmp", "snmpv3", "up", "usk", "cs_pw", "cs_pgp", "cs_smime",
         "cs_snmp", "cs_up", "cs_usk"
     ]);
 

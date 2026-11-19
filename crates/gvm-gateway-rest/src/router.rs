@@ -51,7 +51,9 @@ use crate::{
         get_credential, get_credential_docs, get_credential_store, get_credential_store_docs,
         list_credential_stores, list_credential_stores_docs, list_credentials,
         list_credentials_docs, update_credential, update_credential_docs, update_credential_store,
-        update_credential_store_docs, verify_credential_store, verify_credential_store_docs,
+        update_credential_store_docs, verify_active_directory_inline,
+        verify_active_directory_inline_docs, verify_active_directory_saved,
+        verify_active_directory_saved_docs, verify_credential_store, verify_credential_store_docs,
     },
     docs::{api_docs, redoc_js},
     error::RestError,
@@ -492,6 +494,20 @@ fn documented_router() -> ApiRouter<GatewayService> {
             delete_with(delete_schedule, delete_schedule_docs),
         )
         // Credentials
+        .api_route(
+            "/api/v1/credentials/{id}/actions/verify-active-directory",
+            post_with(
+                verify_active_directory_saved,
+                verify_active_directory_saved_docs,
+            ),
+        )
+        .api_route(
+            "/api/v1/active-directory/credential-verifications",
+            post_with(
+                verify_active_directory_inline,
+                verify_active_directory_inline_docs,
+            ),
+        )
         .api_route(
             "/api/v1/credential-stores",
             get_with(list_credential_stores, list_credential_stores_docs),

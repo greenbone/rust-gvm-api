@@ -6089,3 +6089,56 @@ async fn explicit_bundle_privacy_never_becomes_success_on_unsupported_backend() 
         .any(|r| r.command_name() == "get_agent_support_bundle"));
     server.shutdown().await;
 }
+
+#[tokio::test]
+async fn ad_verification_uses_discovery_and_status_only_fixture_without_persistence() {
+    // This scripted success proves gateway command wiring, not a real LDAP bind.
+    let server = MockGmpServer::builder().mode(ServerMode::Fixture).version(MockVersion::V22_8)
+        .override_response("help", r#"<help_response status="200" status_text="OK"><schema format="XML"><command><name>verify_active_directory_credential</name></command></schema></help_response>"#)
+        .override_response("verify_active_directory_credential", r#"<verify_active_directory_credential_response status="200" status_text="OK"/>"#)
+        .unix_socket_auto().build().await.unwrap();
+    let adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
+    adapter
+        .connect_session("ad-fixture-session", "admin", "admin")
+        .await
+        .unwrap();
+    server.clear_history();
+    adapter
+        .verify_active_directory(
+            "ad-fixture-session",
+            VerifyActiveDirectoryInput::Saved("123e4567-e89b-12d3-a456-426614174000".into()),
+        )
+        .await
+        .unwrap();
+    let input = ActiveDirectoryInput {
+        host: Some("fixture.invalid".into()),
+        bind_dn: Some("CN=bind<&>".into()),
+        base_dn: Some("DC=fixture".into()),
+        bind_password: Some("ad-fixture-secret".into()),
+        tls_mode: Some("ldaps".into()),
+        ..Default::default()
+    };
+    adapter
+        .verify_active_directory(
+            "ad-fixture-session",
+            VerifyActiveDirectoryInput::Inline(input),
+        )
+        .await
+        .unwrap();
+    let history = server.command_history();
+    assert_eq!(
+        history
+            .iter()
+            .filter(|v| v.command_name() == "verify_active_directory_credential")
+            .count(),
+        2
+    );
+    assert!(history.iter().any(|v| v.command_name() == "help"));
+    assert!(
+        !history
+            .iter()
+            .any(|v| ["create_credential", "create_target", "create_task"]
+                .contains(&v.command_name()))
+    );
+    server.shutdown().await;
+}
