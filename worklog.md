@@ -30,3 +30,8 @@
 - #730 runtime maps structured schedules/delays with legacy writes and explicit documented Tech Preview response break.
 - #730 acceptance: 12 REST agent tests passed; strict all-target/all-feature clippy passed before token slice.
 - #731 implemented typed backend-only token issuance, no-store REST, confidential domain wrapper and sanitized status-aware failure mapping including distinct 503.
+
+## #731 independent-head contract correction
+
+- Exact-head CI exposed Aide inferring a request body from the rejection-only Bytes extractor. Move the existing later-slice suppression into inventory-token issuance itself, preserving runtime body rejection and the curated no-body contract.
+- Add an explicit generated-OpenAPI regression asserting this operation has no requestBody.

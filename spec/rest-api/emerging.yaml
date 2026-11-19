@@ -25,10 +25,18 @@ paths:
         "400": { $ref: "./common.yaml#/components/responses/BadRequest" }
         "401": { $ref: "./common.yaml#/components/responses/Unauthorized" }
         "403": { $ref: "./common.yaml#/components/responses/Forbidden" }
-        "500": { description: Sanitized token generation failure }
+        "500":
+          description: Sanitized token generation failure
+          content:
+            application/problem+json:
+              schema: { $ref: "./common.yaml#/components/schemas/ProblemDetail" }
         "501": { $ref: "./common.yaml#/components/responses/NotImplemented" }
         "502": { $ref: "./common.yaml#/components/responses/BadGateway" }
-        "503": { description: Known issuance operation temporarily unavailable }
+        "503":
+          description: Known issuance operation temporarily unavailable
+          content:
+            application/problem+json:
+              schema: { $ref: "./common.yaml#/components/schemas/ProblemDetail" }
         "504": { $ref: "./common.yaml#/components/responses/GatewayTimeout" }
   /agents:
     get:

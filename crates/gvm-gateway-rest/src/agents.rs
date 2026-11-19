@@ -1434,7 +1434,11 @@ fn inventory_token_no_store(mut response: Response) -> Response {
     response
 }
 
-pub(crate) fn get_agent_inventory_token_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
+pub(crate) fn get_agent_inventory_token_docs(
+    mut op: TransformOperation<'_>,
+) -> TransformOperation<'_> {
+    // Bytes is used only to reject nonempty bodies, not to publish a request-body contract.
+    op.inner_mut().request_body = None;
     let op = op
         .id("getAgentInventoryToken")
         .tag("Agents")
