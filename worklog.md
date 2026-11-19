@@ -69,3 +69,4 @@
 
 - #736: detail/JSON-export scope selected; typed structured report snapshot supplies task.scanConfig; generic list cannot supply it without upstream generic model extension.
 - #736 compatibility review: unsupported snapshot omits enrichment only; real backend errors propagate. Focused older-backend/error regressions pass.
+- #736 absent snapshot task names remain absent, with targeted regression coverage.

@@ -1288,7 +1288,7 @@ pub(crate) fn report_task_from_snapshot(
 ) -> Option<gvm_gateway_domain::ReportTaskRef> {
     task.id.map(|id| gvm_gateway_domain::ReportTaskRef {
         id: id.to_string(),
-        name: Some(task.name),
+        name: (!task.name.is_empty()).then_some(task.name),
         scan_config: task.scan_config.map(resource_ref_from_named_entity),
     })
 }

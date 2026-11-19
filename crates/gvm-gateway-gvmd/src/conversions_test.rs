@@ -1707,3 +1707,15 @@ fn snapshot_config_preserves_identity_name_and_absence() {
         }
     }
 }
+
+#[test]
+fn snapshot_task_omits_unavailable_name_like_generic_report_task() {
+    // Intent (#736): snapshot enrichment must retain the generic reference's
+    // optional-name convention when gvmd does not provide a task name.
+    let parsed = gvm_gmp::responses::GetScanReportResponse::from_response(&GmpResponse::from(
+        r#"<get_scan_report_response status="200" status_text="OK"><report id="22222222-2222-2222-2222-222222222222"><name>Report</name><task id="33333333-3333-3333-3333-333333333333"/></report></get_scan_report_response>"#,
+    )).unwrap();
+    let task = report_task_from_snapshot(parsed.report.task.unwrap()).unwrap();
+    assert!(task.name.is_none());
+    assert!(task.scan_config.is_none());
+}
