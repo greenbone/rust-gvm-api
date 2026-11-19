@@ -63,6 +63,7 @@ fn result_response_preserves_source_shaped_type_metadata() {
         threat: None,
         qod: None,
         nvt: Some(NvtRef {
+            refs: vec![],
             oid: Some("1.3.6.1".to_string()),
             name: None,
             family: None,
@@ -130,6 +131,7 @@ fn result_response_omits_absent_type_metadata() {
     // Additive response compatibility requires the field to disappear, not
     // serialize as null, when gvmd did not provide it.
     let nvt = super::NvtRefResponse::from(NvtRef {
+        refs: vec![],
         oid: Some("1.3.6.1".to_string()),
         name: None,
         family: None,
@@ -151,6 +153,7 @@ fn result_response_serializes_distinct_epss_selections() {
     // The shared result DTO must expose both maxima without normalizing the
     // backend-native percentile or fabricating an absent CVE severity.
     let nvt = super::NvtRefResponse::from(NvtRef {
+        refs: vec![],
         oid: Some("1.3.6.1".to_string()),
         name: None,
         family: None,
@@ -195,6 +198,7 @@ fn summary_nvt_reference_does_not_expose_epss() {
     // Aggregate report vulnerabilities and other summary-only surfaces remain
     // outside issue #620 even if their shared domain value carries EPSS.
     let nvt = super::NvtRefSummaryResponse::from(NvtRef {
+        refs: vec![],
         oid: Some("1.3.6.1".to_string()),
         name: None,
         family: None,
@@ -232,6 +236,7 @@ fn summary_nvt_reference_does_not_expose_epss() {
 fn nvt_open_type_full_and_summary() {
     for kind in [Some("nvt"), Some("package"), Some("future-source"), None] {
         let n = NvtRef {
+            refs: vec![],
             oid: None,
             name: None,
             family: None,
@@ -249,4 +254,18 @@ fn nvt_open_type_full_and_summary() {
             assert_eq!(json.get("type").and_then(serde_json::Value::as_str), kind);
         }
     }
+}
+
+// Intent: unknown raw reference types stay open and IDs are not interpreted or normalized.
+#[test]
+fn raw_reference_json_is_lossless() {
+    let reference = gvm_gateway_domain::NvtReference {
+        type_: "future-feed".into(),
+        id: "opaque / & id".into(),
+    };
+    let json = serde_json::to_value(super::NvtReferenceResponse::from(reference)).unwrap();
+    assert_eq!(
+        json,
+        serde_json::json!({"type": "future-feed", "id": "opaque / & id"})
+    );
 }

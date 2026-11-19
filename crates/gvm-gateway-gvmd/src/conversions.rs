@@ -497,6 +497,7 @@ pub(crate) fn result_from_gmp(
         .map(|n| {
             let cvss_base = n.cvss_base_score();
             Ok(NvtRef {
+                refs: n.refs.into_iter().map(nvt_reference_from_gmp).collect(),
                 oid: Some(n.oid),
                 name: n.name,
                 family: n.family,
@@ -544,6 +545,7 @@ pub(crate) fn result_from_report_vulnerability(
         )?,
         threat: vulnerability.threat,
         nvt: Some(NvtRef {
+            refs: vec![],
             oid: vulnerability.nvt_oid,
             name: nvt_name,
             family: vulnerability.family,
@@ -594,6 +596,7 @@ pub(crate) fn report_closed_cve_from_gmp(
         severity: parse_optional_backend_f64(closed_cve.severity, "closed CVE severity")?,
         threat: closed_cve.threat,
         nvt: Some(NvtRef {
+            refs: vec![],
             oid: closed_cve.nvt_oid,
             name: closed_cve.name,
             family: None,
@@ -954,6 +957,7 @@ pub(crate) fn nvt_from_gmp(nvt: gvm_gmp::responses::Nvt) -> Result<Nvt, GatewayE
     let severity = nvt.severity_score();
 
     Ok(Nvt {
+        refs: nvt.refs.into_iter().map(nvt_reference_from_gmp).collect(),
         oid: nvt.oid,
         name: nvt.name,
         family: nvt.family,
@@ -1144,6 +1148,7 @@ fn operating_system_host_from_gmp(
 
 fn nvt_ref_from_gmp(nvt: gvm_gmp::responses::common::NvtReference) -> NvtRef {
     NvtRef {
+        refs: vec![],
         oid: Some(nvt.oid),
         name: nvt.name,
         family: nvt.type_.clone(),
@@ -1291,4 +1296,13 @@ pub(crate) fn report_task_from_snapshot(
         name: (!task.name.is_empty()).then_some(task.name),
         scan_config: task.scan_config.map(resource_ref_from_named_entity),
     })
+}
+
+fn nvt_reference_from_gmp(
+    reference: gvm_gmp::responses::common::NvtReferenceEntry,
+) -> gvm_gateway_domain::NvtReference {
+    gvm_gateway_domain::NvtReference {
+        type_: reference.type_,
+        id: reference.id,
+    }
 }

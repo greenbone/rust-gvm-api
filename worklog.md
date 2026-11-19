@@ -70,3 +70,10 @@
 - #736: detail/JSON-export scope selected; typed structured report snapshot supplies task.scanConfig; generic list cannot supply it without upstream generic model extension.
 - #736 compatibility review: unsupported snapshot omits enrichment only; real backend errors propagate. Focused older-backend/error regressions pass.
 - #736 absent snapshot task names remain absent, with targeted regression coverage.
+
+- #742: raw typed refs mapped on ordinary result/catalog paths. KEV-specific typed/source gaps isolated; producer and library issue drafts prepared for parent filing; no public issue creation or pushes.
+
+- Adopted parent baseline b6b901b as cherry-pick 1a5f802 (worklog conflict resolved locally); no independent dependency upgrade.
+- Verification: cargo test --workspace passed, including generated/curated contract parity and typed application/NVT/snapshot/ref regressions. Required Clippy --workspace --all-targets --all-features -- -D warnings passed; fmt/check and diff/check passed. Existing manifest-only unused-dependency warnings remain.
+- Native compiler reused from parent workspace-local cache with CFLAGS --sysroot=/workspace/.cache/api-agent-native -g0; the initial native build failed without cc and then with compressed native debug sections unsupported by rust-lld. Corrected environment /workspace/report-test-env; successful run /workspace/report-tests2.log, Clippy /workspace/report-clippy.log.
+- No pushes/PRs/merges or issue filing. KEV-only dependency drafts: docs/kev-upstream-issue-drafts.md. Optional advisory enrichment/filter/raw-slash-route work remains excluded, not advertised.

@@ -141,6 +141,7 @@ fn report_vulnerability_response_preserves_aggregate_fields() {
             data: vec![ReportVulnerability {
                 id: Some("row-1".to_string()),
                 nvt: Some(gvm_gateway_domain::NvtRef {
+                    refs: vec![],
                     oid: Some("1.3.6.1.4.1.25623.1.0.100000".to_string()),
                     name: Some("TLS finding".to_string()),
                     family: Some("General".to_string()),
@@ -213,6 +214,7 @@ fn report_closed_cve_response_preserves_closed_cve_fields() {
         data: vec![ReportClosedCve {
             id: Some("row-3".to_string()),
             nvt: Some(gvm_gateway_domain::NvtRef {
+                refs: vec![],
                 oid: Some("1.3.6.1.4.1.25623.1.0.200000".to_string()),
                 name: Some("Closed check".to_string()),
                 family: None,
@@ -387,6 +389,30 @@ fn report_task_snapshot_json_contract() {
             name: Some("Old & frozen".into()),
         }),
     };
+    let report = gvm_gateway_domain::Report {
+        id: "22222222-2222-2222-2222-222222222222".into(),
+        task: Some(task.clone()),
+        scan_start: None,
+        scan_end: None,
+        severity: None,
+        result_count: None,
+        results: vec![],
+    };
+    let detail = serde_json::to_value(super::ReportResponse::from(report.clone())).unwrap();
+    let full_export = serde_json::to_value(gvm_gateway_domain::ReportJsonExport {
+        report,
+        results: vec![],
+        generated_at: None,
+    })
+    .unwrap();
+    assert_eq!(
+        detail["task"]["scanConfig"],
+        full_export["report"]["task"]["scanConfig"]
+    );
+    assert_eq!(
+        detail["task"]["scanConfig"]["id"],
+        "11111111-1111-1111-1111-111111111111"
+    );
     let export = serde_json::to_value(&task).unwrap();
     let rest = serde_json::to_value(super::ReportTaskRefResponse::from(task)).unwrap();
     assert_eq!(export, rest);

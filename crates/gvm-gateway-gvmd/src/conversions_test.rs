@@ -1719,3 +1719,56 @@ fn snapshot_task_omits_unavailable_name_like_generic_report_task() {
     assert!(task.name.is_none());
     assert!(task.scan_config.is_none());
 }
+
+// Intent: raw references (including future feed types) survive both typed result and catalog projections.
+#[test]
+fn generic_references_preserve_unknown_types_and_identifiers() {
+    let refs = r#"<refs><ref type="cert-bund" id="CB-K13/0067"/><ref type="dfn-cert" id="DFN-CERT-2024-1700"/><ref type="future-feed" id="opaque &amp; id"/></refs>"#;
+    let xml = format!(
+        r#"<get_results_response status="200" status_text="OK"><result id="11111111-1111-1111-1111-111111111111"><name>Finding</name><nvt oid="1.2.3">{refs}<type>future</type><type_metadata>{{"x":1}}</type_metadata></nvt></result></get_results_response>"#
+    );
+    let parsed = GetResultsResponse::from_response(&GmpResponse::from(xml.as_str())).unwrap();
+    let nvt = result_from_gmp(parsed.items.into_iter().next().unwrap())
+        .unwrap()
+        .nvt
+        .unwrap();
+    assert_eq!(nvt.type_.as_deref(), Some("future"));
+    assert_eq!(nvt.refs[0].id, "CB-K13/0067");
+    assert_eq!(nvt.refs[2].type_, "future-feed");
+    assert_eq!(nvt.refs[2].id, "opaque & id");
+    let xml = format!(
+        r#"<get_nvts_response status="200" status_text="OK"><nvt oid="1.2.3"><name>Catalog</name>{refs}</nvt></get_nvts_response>"#
+    );
+    let parsed = GetNvtsResponse::from_response(&GmpResponse::from(xml.as_str())).unwrap();
+    let catalog = nvt_from_gmp(parsed.items.into_iter().next().unwrap()).unwrap();
+    assert_eq!(catalog.refs, nvt.refs);
+}
+
+// Intent: Agent-derived nonzero and explicit zero counts are preserved alongside server severity.
+#[test]
+fn application_typed_counts_do_not_recalculate_severity() {
+    for counts in [
+        "<hosts_count>2</hosts_count><occurrences>7</occurrences>",
+        "<hosts_count>0</hosts_count><occurrences>0</occurrences>",
+        "",
+    ] {
+        let xml = format!(
+            r#"<get_report_applications_response status="200" status_text="OK"><applications><application><name>Agent application</name><severity>9.7</severity><threat>Future</threat>{counts}</application></applications></get_report_applications_response>"#
+        );
+        let parsed = gvm_gmp::responses::GetReportApplicationsResponse::from_response(
+            &GmpResponse::from(xml.as_str()),
+        )
+        .unwrap();
+        let row = report_application_from_gmp(parsed.items.into_iter().next().unwrap());
+        assert_eq!(row.severity.as_deref(), Some("9.7"));
+        assert_eq!(row.threat.as_deref(), Some("Future"));
+        assert_eq!(row.hosts_count.is_some(), !counts.is_empty());
+        assert_eq!(row.occurrences.is_some(), !counts.is_empty());
+        if counts.contains(">2<") {
+            assert_eq!((row.hosts_count, row.occurrences), (Some(2), Some(7)));
+        }
+        if counts.contains(">0<") {
+            assert_eq!((row.hosts_count, row.occurrences), (Some(0), Some(0)));
+        }
+    }
+}

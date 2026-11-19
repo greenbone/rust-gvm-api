@@ -115,6 +115,11 @@ components:
     NvtRef:
       type: object
       properties:
+        refs:
+          type: array
+          items:
+            $ref: "./results.yaml#/components/schemas/NvtReference"
+          description: Generic backend references, including unknown types; omitted when unavailable.
         oid:
           type: string
         name:
@@ -142,6 +147,11 @@ components:
     NvtRefSummary:
       type: object
       properties:
+        refs:
+          type: array
+          items:
+            $ref: "./results.yaml#/components/schemas/NvtReference"
+          description: Generic backend references, including unknown types; omitted when unavailable.
         oid:
           type: string
         name:
@@ -217,3 +227,14 @@ components:
             $ref: "#/components/schemas/Result"
         pagination:
           $ref: "./common.yaml#/components/schemas/Pagination"
+
+    NvtReference:
+      type: object
+      required: [type, id]
+      properties:
+        type:
+          type: string
+          description: Open feed reference type, preserved verbatim.
+        id:
+          type: string
+          description: Opaque reference identifier, preserved verbatim.

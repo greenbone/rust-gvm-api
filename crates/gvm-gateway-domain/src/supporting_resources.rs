@@ -351,6 +351,9 @@ pub struct Nvt {
     /// Optional EPSS selections supplied by gvmd.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub epss: Option<crate::Epss>,
+    /// Generic advisory/feed references.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub refs: Vec<crate::NvtReference>,
 }
 
 /// Paginated NVT list response.

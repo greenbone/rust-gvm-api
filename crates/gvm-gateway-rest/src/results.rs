@@ -65,6 +65,8 @@ pub(crate) struct NvtRefResponse {
     type_metadata: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     epss: Option<EpssResponse>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    refs: Vec<NvtReferenceResponse>,
 }
 
 impl From<gvm_gateway_domain::NvtRef> for NvtRefResponse {
@@ -76,9 +78,28 @@ impl From<gvm_gateway_domain::NvtRef> for NvtRefResponse {
             cvss_base: n.cvss_base,
             cves: n.cves,
             tags: n.tags,
+            refs: n.refs.into_iter().map(NvtReferenceResponse::from).collect(),
             type_: n.type_,
             type_metadata: n.type_metadata,
             epss: n.epss.map(EpssResponse::from),
+        }
+    }
+}
+
+/// Generic feed reference with an open type vocabulary.
+#[derive(Clone, Debug, Serialize, JsonSchema)]
+#[schemars(rename = "NvtReference")]
+pub(crate) struct NvtReferenceResponse {
+    #[serde(rename = "type")]
+    type_: String,
+    id: String,
+}
+
+impl From<gvm_gateway_domain::NvtReference> for NvtReferenceResponse {
+    fn from(reference: gvm_gateway_domain::NvtReference) -> Self {
+        Self {
+            type_: reference.type_,
+            id: reference.id,
         }
     }
 }
@@ -149,6 +170,8 @@ pub(crate) struct NvtRefSummaryResponse {
     /// Opaque backend type metadata, preserved without interpretation.
     #[serde(rename = "typeMetadata", skip_serializing_if = "Option::is_none")]
     type_metadata: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    refs: Vec<NvtReferenceResponse>,
 }
 
 impl From<gvm_gateway_domain::NvtRef> for NvtRefSummaryResponse {
@@ -160,6 +183,11 @@ impl From<gvm_gateway_domain::NvtRef> for NvtRefSummaryResponse {
             cvss_base: nvt.cvss_base,
             cves: nvt.cves,
             tags: nvt.tags,
+            refs: nvt
+                .refs
+                .into_iter()
+                .map(NvtReferenceResponse::from)
+                .collect(),
             type_: nvt.type_,
             type_metadata: nvt.type_metadata,
         }
