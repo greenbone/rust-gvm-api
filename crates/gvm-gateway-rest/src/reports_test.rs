@@ -283,6 +283,9 @@ fn report_drill_downs_serialize_as_purpose_shaped_summaries() {
                 id: Some("application-row".to_string()),
                 name: Some("nginx".to_string()),
                 severity: Some("5.0".to_string()),
+                hosts_count: None,
+                occurrences: None,
+                threat: None,
             }],
             pagination: pagination.clone(),
         }))
@@ -339,4 +342,34 @@ fn report_operating_system_response_preserves_the_live_gvmd_row_shape() {
     assert!(row.get("id").is_none());
     assert!(row.get("name").is_none());
     assert!(row.get("severity").is_none());
+}
+
+// Intent: preserve explicit zero and future threat; omit unavailable fields.
+#[test]
+fn application_optional_counts_json_contract() {
+    let row = super::ReportApplicationResponse::from(ReportApplication {
+        id: None,
+        name: None,
+        severity: Some("9.7".into()),
+        hosts_count: Some(0),
+        occurrences: Some(7),
+        threat: Some("Future".into()),
+    });
+    let json = serde_json::to_value(row).unwrap();
+    assert_eq!(json["hostsCount"], 0);
+    assert_eq!(json["occurrences"], 7);
+    assert_eq!(json["severity"], "9.7");
+    assert_eq!(json["threat"], "Future");
+    let absent = serde_json::to_value(super::ReportApplicationResponse::from(ReportApplication {
+        id: None,
+        name: None,
+        severity: None,
+        hosts_count: None,
+        occurrences: None,
+        threat: None,
+    }))
+    .unwrap();
+    assert!(absent.get("hostsCount").is_none());
+    assert!(absent.get("occurrences").is_none());
+    assert!(absent.get("threat").is_none());
 }

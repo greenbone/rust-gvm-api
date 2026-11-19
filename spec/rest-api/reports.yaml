@@ -714,6 +714,17 @@ components:
           type: string
           description: Backend severity summary for the application row.
 
+        hostsCount:
+          type: integer
+          minimum: 0
+          maximum: 4294967295
+        occurrences:
+          type: integer
+          minimum: 0
+          maximum: 4294967295
+        threat:
+          type: string
+
     ReportApplicationList:
       type: object
       required:

@@ -285,6 +285,15 @@ pub(crate) struct ReportApplicationResponse {
     name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     severity: Option<String>,
+    /// Server-provided hosts count.
+    #[serde(rename = "hostsCount", skip_serializing_if = "Option::is_none")]
+    hosts_count: Option<u32>,
+    /// Server-provided occurrences.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    occurrences: Option<u32>,
+    /// Server-provided threat.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    threat: Option<String>,
 }
 
 impl From<ReportApplication> for ReportApplicationResponse {
@@ -293,6 +302,9 @@ impl From<ReportApplication> for ReportApplicationResponse {
             id: application.id,
             name: application.name,
             severity: application.severity,
+            hosts_count: application.hosts_count,
+            occurrences: application.occurrences,
+            threat: application.threat,
         }
     }
 }

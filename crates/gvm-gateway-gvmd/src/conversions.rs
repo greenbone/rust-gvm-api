@@ -831,6 +831,9 @@ pub(crate) fn report_application_from_gmp(
         id: application.id,
         name: application.name,
         severity: application.severity,
+        hosts_count: application.hosts_count,
+        occurrences: application.occurrences,
+        threat: application.threat,
     }
 }
 

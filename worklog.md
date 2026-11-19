@@ -57,3 +57,8 @@
 
 - #729 target provenance implemented with closed writes, open optional reads, omission/default preservation and server-owned cloning/filtering. Independent focused tests passed: HTTP 2, REST 10, typed conversion 1.
 - Parent integration follow-up: added missing human API-reference rows and behavior notes in issue-specific #727/#728 docs corrections. AD worktree curated contract has 124 paths/202 operations; combined parent stack has an additional non-AD route (125/203), so preserve the parent inventory increment while cherry-picking these docs corrections.
+
+# Report implementation worklog
+
+- Read repository rules, curated report/result contracts and #734–736/#742. Rooted at PR740 9a5664f.
+- #734: preserve typed optional counts/threat and server severity. Dependency baseline pending.
