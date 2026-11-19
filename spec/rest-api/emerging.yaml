@@ -732,7 +732,7 @@ components:
         schedulerCronTime:
           type: array
           items:
-            oneOf:
+            anyOf:
               - { type: string }
               - { $ref: "#/components/schemas/AgentSchedule" }
     AgentHeartbeatConfigUpdate:

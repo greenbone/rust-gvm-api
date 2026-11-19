@@ -16,6 +16,45 @@ use crate::auth_policy::{
 use crate::router::build_openapi;
 
 #[test]
+fn agent_schedule_input_union_preserves_disjoint_branches_and_constraints() {
+    // Regression for #730: serde's untagged union emits anyOf, which is equivalent
+    // to oneOf here only because a string cannot also satisfy the object branch.
+    // Keep the concrete branches and their constraints checked, not a permissive
+    // comparison-helper exception that might conceal overlapping alternatives.
+    fn resolve_local<'a>(document: &'a Value, schema: &'a Value) -> &'a Value {
+        match schema.get("$ref").and_then(Value::as_str) {
+            Some(reference) => document
+                .pointer(reference.strip_prefix('#').expect("local schema reference"))
+                .expect("referenced schema"),
+            None => schema,
+        }
+    }
+
+    let generated = build_openapi();
+    let spec_path = root_spec_path();
+    let curated = read_yaml(&spec_path.parent().unwrap().join("emerging.yaml"));
+    for document in [&generated, &curated] {
+        let schemas = &document["components"]["schemas"];
+        let items = resolve_local(
+            document,
+            &schemas["AgentScriptExecutorConfigUpdate"]["properties"]["schedulerCronTime"]["items"],
+        );
+        assert!(items.get("oneOf").is_none());
+        let branches = items["anyOf"].as_array().expect("untagged schedule union");
+        assert_eq!(branches.len(), 2);
+        assert_eq!(branches[0]["type"], "string");
+        let structured = resolve_local(document, &branches[1]);
+        assert_eq!(structured["type"], "object");
+        assert_eq!(structured["required"], json!(["cron"]));
+        assert_eq!(structured["properties"]["cron"]["type"], "string");
+        let delay = &structured["properties"]["maxDelaySeconds"];
+        assert_eq!(delay["type"], "integer");
+        assert_eq!(delay["minimum"].as_f64(), Some(0.0));
+        assert_eq!(delay["maximum"].as_f64(), Some(2147483647.0));
+    }
+}
+
+#[test]
 fn generated_openapi_matches_curated_spec() {
     let generated = build_openapi();
     let curated = root_spec();
