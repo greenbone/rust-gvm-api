@@ -136,7 +136,26 @@ pub struct AgentScriptExecutorConfig {
         default,
         skip_serializing_if = "Vec::is_empty"
     )]
-    pub scheduler_cron_time: Vec<String>,
+    pub scheduler_cron_time: Vec<AgentSchedule>,
+}
+
+/// One backend-owned cron schedule, with optional randomized delay.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct AgentSchedule {
+    /// Cron expression interpreted by the backend.
+    pub cron: String,
+    /// Maximum delay; absence is distinct from zero.
+    #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
+    pub max_delay_seconds: Option<u32>,
+}
+
+impl From<String> for AgentSchedule {
+    fn from(cron: String) -> Self {
+        Self {
+            cron,
+            max_delay_seconds: None,
+        }
+    }
 }
 
 /// Agent heartbeat settings.
@@ -219,6 +238,9 @@ pub struct AgentGroup {
     /// Scheduler cron time.
     #[serde(rename = "schedulerCronTime", skip_serializing_if = "Option::is_none")]
     pub scheduler_cron_time: Option<String>,
+    /// Optional scheduler delay in seconds.
+    #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
+    pub max_delay_seconds: Option<u32>,
     /// Agents in the group.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub agents: Vec<ResourceRef>,
@@ -240,6 +262,8 @@ pub struct CreateAgentGroupInput {
     pub name: String,
     /// Scheduler cron time.
     pub scheduler_cron_time: String,
+    /// Optional scheduler delay in seconds.
+    pub max_delay_seconds: Option<u32>,
     /// Optional comment.
     pub comment: Option<String>,
     /// Included agent identifiers.
@@ -251,6 +275,8 @@ pub struct CreateAgentGroupInput {
 pub struct ModifyAgentGroupInput {
     /// Scheduler cron time.
     pub scheduler_cron_time: String,
+    /// Optional scheduler delay in seconds.
+    pub max_delay_seconds: Option<u32>,
     /// Optional name replacement.
     pub name: Option<String>,
     /// Optional comment replacement.

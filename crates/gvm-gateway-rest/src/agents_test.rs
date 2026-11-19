@@ -96,6 +96,7 @@ fn create_agent_group_requires_trimmed_name_and_scheduler_cron_time() {
     let error = CreateAgentGroupRequest {
         name: Some("  ".to_string()),
         scheduler_cron_time: Some(" ".to_string()),
+        max_delay_seconds: None,
         comment: None,
         agent_ids: Vec::new(),
     }
@@ -113,6 +114,7 @@ fn modify_agent_group_requires_scheduler_cron_time() {
     // REST must enforce that contract instead of silently sending omissions.
     let error = ModifyAgentGroupRequest {
         scheduler_cron_time: None,
+        max_delay_seconds: None,
         name: Some("renamed".to_string()),
         comment: None,
         agent_ids: None,
@@ -131,6 +133,7 @@ fn modify_agent_group_validates_agent_selection_update_semantics() {
     // supported replacement, and an explicit empty list must fail before gvmd.
     let omitted = ModifyAgentGroupRequest {
         scheduler_cron_time: Some("0 */15 * * *".to_string()),
+        max_delay_seconds: None,
         name: None,
         comment: None,
         agent_ids: None,
@@ -142,6 +145,7 @@ fn modify_agent_group_validates_agent_selection_update_semantics() {
     let replacement = Uuid::parse_str(RESOURCE_ID).expect("valid agent UUID");
     let replaced = ModifyAgentGroupRequest {
         scheduler_cron_time: Some("0 */15 * * *".to_string()),
+        max_delay_seconds: None,
         name: None,
         comment: None,
         agent_ids: Some(vec![replacement]),
@@ -152,6 +156,7 @@ fn modify_agent_group_validates_agent_selection_update_semantics() {
 
     let clear = ModifyAgentGroupRequest {
         scheduler_cron_time: Some("0 */15 * * *".to_string()),
+        max_delay_seconds: None,
         name: None,
         comment: None,
         agent_ids: Some(vec![]),
@@ -173,4 +178,44 @@ fn attachment_filename_sanitizes_path_and_control_characters() {
         "_bundle__name.zip"
     );
     assert_eq!(safe_attachment_filename("..."), "agent-support-bundle.bin");
+}
+
+#[test]
+fn schedules_accept_legacy_and_structured_and_publish_only_structured() {
+    // Tech Preview migration deliberately breaks response type, while preserving legacy writes.
+    let request: AgentScriptExecutorConfigRequest = serde_json::from_value(serde_json::json!({
+        "schedulerCronTime": ["0 */6 * * *", {"cron":"1 * * * *", "maxDelaySeconds":0},
+            {"cron":"2 * * * *", "maxDelaySeconds":2147483647}]
+    }))
+    .unwrap();
+    let domain = request.validate_into().unwrap();
+    assert_eq!(domain.scheduler_cron_time[0].max_delay_seconds, None);
+    assert_eq!(domain.scheduler_cron_time[1].max_delay_seconds, Some(0));
+    let response = serde_json::to_value(AgentScriptExecutorConfigResponse::from(domain)).unwrap();
+    assert_eq!(
+        response["schedulerCronTime"][0],
+        serde_json::json!({"cron":"0 */6 * * *"})
+    );
+    assert_eq!(
+        response["schedulerCronTime"][2]["maxDelaySeconds"],
+        2147483647
+    );
+}
+
+#[test]
+fn scheduler_delay_rejects_invalid_ranges_and_types_before_dispatch() {
+    // Signed, overflowing and fractional delays must never be sent to gvmd.
+    for value in [
+        serde_json::json!(-1),
+        serde_json::json!(2147483648u64),
+        serde_json::json!(1.5),
+    ] {
+        let parsed =
+            serde_json::from_value::<AgentScriptExecutorConfigRequest>(serde_json::json!({
+                "schedulerCronTime":[{"cron":"* * * * *", "maxDelaySeconds":value}]
+            }));
+        assert!(parsed
+            .map(|request| request.validate_into().is_err())
+            .unwrap_or(true));
+    }
 }

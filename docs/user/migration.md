@@ -62,3 +62,7 @@ Policy request example:
 Pinned gvmd versions do not parse a request-side host-ordering field, so the
 previous Technology Preview input was misleading. Response-side
 `hostsOrdering` remains unchanged when gvmd reports it.
+
+## Tech Preview breaking change: structured agent schedules (#730)
+
+This unreleased Tech Preview deliberately changes v1 schedule responses from string entries to objects. No negotiated or version endpoint is introduced. Migrate readers from `entry` to `entry.cron`; retain optional `entry.maxDelaySeconds` (absent differs from zero). Writes accept both legacy `"0 */6 * * *"` and `{"cron":"0 */6 * * *","maxDelaySeconds":30}` entries. Groups retain a single cron string and gain optional top-level `maxDelaySeconds`. Delay range is 0–2147483647. An empty schedule array does not promise clearing schedules. Omitted group name on updates is preserved by fetching its authorized typed current representation; gvmd receives its required name. This behavior needs live Agent Control qualification.

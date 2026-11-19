@@ -1280,7 +1280,7 @@ impl AgentPort for MockAgentPort {
                     bulk_size: Some(10),
                     bulk_throttle_time_in_ms: Some(250),
                     indexer_dir_depth: Some(3),
-                    scheduler_cron_time: vec!["0 */6 * * *".to_string()],
+                    scheduler_cron_time: vec!["0 */6 * * *".to_string().into()],
                 }),
                 heartbeat: Some(AgentHeartbeatConfig {
                     interval_in_seconds: Some(60),
@@ -1394,6 +1394,7 @@ impl AgentPort for MockAgentPort {
                 in_use: false,
             },
             scheduler_cron_time: Some("0 */6 * * *".to_string()),
+            max_delay_seconds: None,
             agents: vec![ResourceRef {
                 id: "00000000-0000-0000-0000-000000000043".to_string(),
                 name: Some("Mock Agent".to_string()),

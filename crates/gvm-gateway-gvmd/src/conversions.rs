@@ -70,6 +70,7 @@ pub(crate) fn agent_group_from_gmp(agent_group: gvm_gmp::responses::AgentGroup) 
     AgentGroup {
         meta: supporting_meta_from_gmp(agent_group.meta),
         scheduler_cron_time: agent_group.scheduler_cron_time,
+        max_delay_seconds: agent_group.max_delay_seconds,
         agents: agent_group
             .agents
             .into_iter()
@@ -159,7 +160,10 @@ fn agent_script_executor_config_from_gmp(
         scheduler_cron_time: config
             .scheduler_cron_time
             .into_iter()
-            .map(|entry| entry.cron)
+            .map(|entry| gvm_gateway_domain::AgentSchedule {
+                cron: entry.cron,
+                max_delay_seconds: entry.max_delay_seconds,
+            })
             .collect(),
     }
 }
