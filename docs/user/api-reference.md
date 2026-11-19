@@ -9,7 +9,7 @@ The normative contract is
 [`spec/rest-api`](https://github.com/greenbone-hive/rust-gvm-api/tree/main/spec/rest-api)
 in the source repository and `api/rest/openapi.yaml` in the release docs
 archive. The curated contract and runtime-generated contract are tested for
-alignment. The current contract contains 122 paths and 200 operations.
+alignment. The current contract contains 124 paths and 202 operations.
 
 ## Base paths and documentation
 
@@ -265,8 +265,17 @@ completion.
 | `POST` | `/credential-stores/{id}/actions/verify` | Verify a credential store |
 | `GET`, `POST` | `/credentials` | List or create credentials |
 | `GET`, `PUT`, `DELETE` | `/credentials/{id}` | Read, update, or delete a credential |
+| `POST` | `/credentials/{id}/actions/verify-active-directory` | Verify a saved Active Directory credential without persisting changes |
+| `POST` | `/active-directory/credential-verifications` | Verify inline Active Directory credentials without saving a credential |
 | `GET`, `POST` | `/port-lists` | List or create port lists |
 | `GET`, `PUT`, `DELETE` | `/port-lists/{id}` | Read, update, or delete a port list |
+
+Active Directory credentials use type `ad` and nested `activeDirectory` fields.
+Create and inline verification require connection, bind, and TLS settings;
+updates preserve omitted fields. The bind password is write-only. Both saved
+and inline verification return `204 No Content` on success, without creating a
+resource or returning a `Location` header. Verification is backend-capability
+dependent; unsupported backends return `501`, not a simulated bind result.
 
 ### Identity and current-user settings
 
