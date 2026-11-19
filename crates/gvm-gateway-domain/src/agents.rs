@@ -228,6 +228,8 @@ pub struct AgentSupportBundleQuery {
     pub days: Option<u32>,
     /// Optional backend encryption selector; omission is distinct from false.
     pub encryption: Option<bool>,
+    /// Optional backend anonymization selector; omission is distinct from false.
+    pub anonymized: Option<bool>,
 }
 
 /// Binary agent support bundle.

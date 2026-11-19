@@ -99,6 +99,8 @@ pub(crate) struct AgentSupportBundleQueryParams {
     /// Request backend support-bundle encryption. Omission preserves the backend default and is
     /// distinct from explicit false.
     encryption: Option<bool>,
+    /// Request backend anonymization independently of encryption; omission preserves the server default.
+    anonymized: Option<bool>,
 }
 
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
@@ -152,6 +154,7 @@ struct AgentScheduleResponse {
     cron: String,
     #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
     #[schemars(range(min = 0, max = 2147483647))]
+    #[serde(default, deserialize_with = "deserialize_delay")]
     max_delay_seconds: Option<u32>,
 }
 
@@ -186,6 +189,12 @@ impl AgentScheduleRequest {
             max_delay_seconds: entry.max_delay_seconds,
         })
     }
+}
+
+fn deserialize_delay<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Option<u32>, D::Error> {
+    u32::deserialize(deserializer).map(Some)
 }
 
 fn validate_delay(value: Option<u32>) -> Result<(), GatewayError> {
@@ -546,6 +555,7 @@ struct AgentGroupResponse {
     scheduler_cron_time: Option<String>,
     #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
     #[schemars(range(min = 0, max = 2147483647))]
+    #[serde(default, deserialize_with = "deserialize_delay")]
     max_delay_seconds: Option<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     agents: Vec<ResourceRefResponse>,
@@ -594,6 +604,7 @@ struct CreateAgentGroupRequest {
     scheduler_cron_time: Option<String>,
     #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
     #[schemars(range(min = 0, max = 2147483647))]
+    #[serde(default, deserialize_with = "deserialize_delay")]
     max_delay_seconds: Option<u32>,
     comment: Option<String>,
     #[serde(rename = "agentIds", default)]
@@ -625,6 +636,7 @@ struct ModifyAgentGroupRequest {
     scheduler_cron_time: Option<String>,
     #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
     #[schemars(range(min = 0, max = 2147483647))]
+    #[serde(default, deserialize_with = "deserialize_delay")]
     max_delay_seconds: Option<u32>,
     name: Option<String>,
     comment: Option<String>,
@@ -688,6 +700,7 @@ fn parse_agent_group_query(raw: &str) -> Result<AgentGroupQuery, GatewayError> {
 fn parse_agent_support_bundle_query(raw: &str) -> Result<AgentSupportBundleQuery, GatewayError> {
     let mut days = None;
     let mut encryption = None;
+    let mut anonymized = None;
     for (key, value) in decoded_query_pairs(raw) {
         match key.as_ref() {
             "days" => {
@@ -701,6 +714,11 @@ fn parse_agent_support_bundle_query(raw: &str) -> Result<AgentSupportBundleQuery
                 }
                 days = Some(parsed_days);
             }
+            "anonymized" => {
+                anonymized = Some(value.parse::<bool>().map_err(|_| {
+                    GatewayError::InvalidInput("anonymized must be true or false".into())
+                })?);
+            }
             "encryption" => {
                 encryption = Some(value.parse::<bool>().map_err(|_| {
                     GatewayError::InvalidInput("encryption must be true or false".to_string())
@@ -709,7 +727,11 @@ fn parse_agent_support_bundle_query(raw: &str) -> Result<AgentSupportBundleQuery
             _ => {}
         }
     }
-    Ok(AgentSupportBundleQuery { days, encryption })
+    Ok(AgentSupportBundleQuery {
+        days,
+        encryption,
+        anonymized,
+    })
 }
 
 fn parse_agent_installer_instruction_query(
@@ -1461,8 +1483,11 @@ pub(crate) fn get_agent_inventory_token_docs(
         .tag("Agents")
         .summary("Issue a confidential agent inventory token")
         .security_requirement("bearerAuth")
-        .response_with::<200, Json<AgentInventoryTokenResponse>, _>(|response| {
-            response.description("Confidential backend-issued token; Cache-Control: no-store")
+        .response_with::<200, Json<AgentInventoryTokenResponse>, _>(|mut response| {
+                let mut value = serde_json::to_value(response.inner()).expect("response schema");
+                value["headers"]["Cache-Control"] = json!({"description":"Never cache inventory credentials", "schema":{"type":"string","const":"no-store"}});
+                *response.inner() = serde_json::from_value(value).expect("response header schema");
+                response.description("Confidential backend-issued token; Cache-Control: no-store")
         });
     let op = problem_response::<400>(op, "No body accepted");
     let op = problem_response::<401>(op, "Authentication required");

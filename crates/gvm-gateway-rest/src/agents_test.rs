@@ -209,6 +209,7 @@ fn scheduler_delay_rejects_invalid_ranges_and_types_before_dispatch() {
         serde_json::json!(-1),
         serde_json::json!(2147483648u64),
         serde_json::json!(1.5),
+        serde_json::Value::Null,
     ] {
         let parsed =
             serde_json::from_value::<AgentScriptExecutorConfigRequest>(serde_json::json!({
@@ -252,4 +253,27 @@ fn agent_os_metadata_is_shared_by_detail_and_list_projection() {
     .unwrap();
     assert_eq!(list["data"][0], detail);
     assert_eq!(detail["osStatus"], "new-status");
+}
+
+#[test]
+fn support_bundle_selectors_preserve_all_nine_independent_states() {
+    // Encryption is not anonymization: no default may collapse either selector.
+    for encryption in [None, Some(false), Some(true)] {
+        for anonymized in [None, Some(false), Some(true)] {
+            let mut parts = vec!["days=7".to_string()];
+            if let Some(value) = encryption {
+                parts.push(format!("encryption={value}"));
+            }
+            if let Some(value) = anonymized {
+                parts.push(format!("anonymized={value}"));
+            }
+            let query = parse_agent_support_bundle_query(&parts.join("&")).unwrap();
+            assert_eq!(query.days, Some(7));
+            assert_eq!(query.encryption, encryption);
+            assert_eq!(query.anonymized, anonymized);
+        }
+    }
+    for value in ["1", "0", "yes", "", "TRUE", "null"] {
+        assert!(parse_agent_support_bundle_query(&format!("anonymized={value}")).is_err());
+    }
 }

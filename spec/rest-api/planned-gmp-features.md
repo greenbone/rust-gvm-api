@@ -1,11 +1,10 @@
 # Planned REST contracts: GMP feature adoption (#727–736)
 
-> **Design supplement only — not implemented REST behavior.** This document
-> specifies downstream adoption work for rust-gvm #847–857. It does not add routes,
-> parameters or response fields to the shipped API, complete API issues #727–736,
-> or change the dependency pin. Clients must use the implemented
+> **Mixed implementation/design supplement.** Agent slices #730–733 are implemented in runtime and OpenAPI; other sections remain planned. This document
+> specifies downstream adoption work for rust-gvm #847–857. Planned sections do not add routes,
+> parameters or response fields to the shipped API. The dependency pin was adopted in the agent implementation prerequisite. Clients must use the implemented
 > [OpenAPI root](openapi.yaml) and [REST design](openspec.md) for current behavior.
-> In particular, `anonymized=true` is not currently an API anonymization guarantee.
+> Anonymization is forwarded to gvmd; it is not a promise that every bundle is safe to share.
 
 ## 1. Status, evidence and ownership
 
@@ -278,7 +277,7 @@ Tests: all four populated, unknown status/architecture preserved, independent
 absence, empty-to-absent normalization and list/detail serialization/schema
 coverage. This is a projection change, not a live agent compatibility claim.
 
-## 9. Support-bundle anonymization — #733
+## 9. Support-bundle anonymization — #733 (implemented)
 
 Add optional boolean query `anonymized` on the existing
 `GET /agents/{id}/support-bundle`; retain `days` and `encryption`. Map to typed
@@ -293,8 +292,7 @@ of archives, supplies the guarantee.
 
 Tests: all nine omitted/false/true encryption × anonymized combinations, days
 unchanged, malformed input rejection, typed command receives explicit true,
-unsupported/error propagation and confidential download/log handling. Current
-clients must not rely on this query until #733 is implemented and qualified.
+unsupported/error propagation and confidential download/log handling. The query is now implemented; real-backend anonymization qualification remains separate.
 
 ## 10. Report application counts — #734
 
