@@ -3569,3 +3569,30 @@ fn normalize_relative_path(path: PathBuf) -> PathBuf {
 fn op<'a>(doc: &'a Value, path: &str, method: &str) -> &'a Value {
     &doc["paths"][path][method]
 }
+
+#[tokio::test]
+async fn ad_search_generated_and_curated_cache_header_schemas_match() {
+    // Prevent a runtime/curated no-store guarantee from disappearing in generated clients.
+    let adapter = StaticGvmdAdapter::ready("22.7");
+    let (addr, handle) = spawn_server(adapter.clone(), adapter).await;
+    let generated: Value = Client::new()
+        .get(format!("http://{addr}/api/v1/openapi.json"))
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    handle.abort();
+    let curated = read_yaml(&rest_spec_dir().join("active-directory.yaml"));
+    let path = "/active-directory/object-searches";
+    let actual =
+        &generated["paths"][path]["post"]["responses"]["200"]["headers"]["Cache-Control"]["schema"];
+    let expected =
+        &curated["paths"][path]["post"]["responses"]["200"]["headers"]["Cache-Control"]["schema"];
+    assert_eq!(
+        expected,
+        &serde_json::json!({"type": "string", "const": "no-store"})
+    );
+    assert_eq!(actual, expected);
+}

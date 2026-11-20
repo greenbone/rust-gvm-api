@@ -9,7 +9,7 @@ use gvm_gateway_rest::router::build_router;
 use reqwest::{Client, StatusCode};
 use std::sync::{Arc, Mutex};
 use tokio::net::TcpListener;
-struct AdFixturePort(Arc<Mutex<Vec<VerifyActiveDirectoryInput>>>);
+struct AdFixturePort(Arc<Mutex<Vec<VerifyActiveDirectoryInput>>>, Option<u16>);
 #[async_trait]
 impl CredentialPort for AdFixturePort {
     async fn verify_active_directory(
@@ -18,7 +18,19 @@ impl CredentialPort for AdFixturePort {
         input: VerifyActiveDirectoryInput,
     ) -> Result<(), GatewayError> {
         self.0.lock().unwrap().push(input);
-        Ok(())
+        // Typed AD adapter errors have already removed upstream diagnostics.
+        match self.1 {
+            Some(409) => Err(GatewayError::Conflict(
+                "Active Directory operation failed".into(),
+            )),
+            Some(500) => Err(GatewayError::Internal(
+                "Active Directory operation failed".into(),
+            )),
+            Some(504) => Err(GatewayError::GatewayTimeout(
+                "Active Directory operation failed".into(),
+            )),
+            _ => Ok(()),
+        }
     }
 
     async fn list_credential_stores(&self, _: &str) -> Result<Vec<CredentialStore>, GatewayError> {
@@ -131,7 +143,7 @@ async fn ad_saved_and_inline_verification_are_status_only_and_do_not_expose_secr
     // The accepting test port models a typed status-only result, never a real bind.
     let calls = Arc::new(Mutex::new(Vec::new()));
     let (addr, token, handle) =
-        spawn_credential_server(Arc::new(AdFixturePort(calls.clone()))).await;
+        spawn_credential_server(Arc::new(AdFixturePort(calls.clone(), None))).await;
     let client = Client::new();
     let saved = client.post(format!("http://{addr}/api/v1/credentials/123e4567-e89b-12d3-a456-426614174000/actions/verify-active-directory")).bearer_auth(&token).send().await.unwrap();
     assert_eq!(saved.status(), StatusCode::NO_CONTENT);
@@ -157,7 +169,7 @@ async fn ad_saved_and_inline_verification_are_status_only_and_do_not_expose_secr
 async fn ad_invalid_combinations_fail_before_dispatch_without_payload_echo() {
     let calls = Arc::new(Mutex::new(Vec::new()));
     let (addr, token, handle) =
-        spawn_credential_server(Arc::new(AdFixturePort(calls.clone()))).await;
+        spawn_credential_server(Arc::new(AdFixturePort(calls.clone(), None))).await;
     for (path, body) in [
         (
             "/credentials/123e4567-e89b-12d3-a456-426614174000/actions/verify-active-directory",
@@ -189,4 +201,99 @@ async fn ad_invalid_combinations_fail_before_dispatch_without_payload_echo() {
     }
     assert!(calls.lock().unwrap().is_empty());
     handle.abort();
+}
+
+#[tokio::test]
+async fn ad_verification_generated_and_curated_errors_cover_runtime_categories() {
+    // Both published operations must advertise every typed AD failure, not only success.
+    let (addr, _, handle) = spawn_credential_server(Arc::new(AdFixturePort(
+        Arc::new(Mutex::new(Vec::new())),
+        None,
+    )))
+    .await;
+    let generated: serde_json::Value = Client::new()
+        .get(format!("http://{addr}/api/v1/openapi.json"))
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    handle.abort();
+    let curated: serde_json::Value =
+        serde_yaml::from_str(include_str!("../../../spec/rest-api/credentials.yaml")).unwrap();
+    for path in [
+        "/credentials/{id}/actions/verify-active-directory",
+        "/active-directory/credential-verifications",
+    ] {
+        let actual = &generated["paths"][path]["post"]["responses"];
+        let expected = &curated["paths"][path]["post"]["responses"];
+        let statuses = [
+            "204", "400", "401", "403", "404", "409", "500", "501", "502", "504",
+        ];
+        assert_eq!(actual.as_object().unwrap().len(), statuses.len(), "{path}");
+        assert_eq!(
+            expected.as_object().unwrap().len(),
+            statuses.len(),
+            "{path}"
+        );
+        for status in statuses {
+            assert!(actual.get(status).is_some(), "generated {path}: {status}");
+            assert!(expected.get(status).is_some(), "curated {path}: {status}");
+            if status != "204" {
+                assert!(actual[status]["content"]["application/problem+json"].is_object());
+            }
+        }
+    }
+}
+
+#[tokio::test]
+async fn ad_saved_and_inline_errors_preserve_status_without_sensitive_payloads() {
+    // Exercise the registered HTTP routes for conflict/internal/timeout typed failures.
+    for (status, code) in [
+        (409, "conflict"),
+        (500, "internal_server_error"),
+        (504, "gateway_timeout"),
+    ] {
+        let calls = Arc::new(Mutex::new(Vec::new()));
+        let (addr, token, handle) =
+            spawn_credential_server(Arc::new(AdFixturePort(calls.clone(), Some(status)))).await;
+        for path in [
+            "/credentials/123e4567-e89b-12d3-a456-426614174000/actions/verify-active-directory",
+            "/active-directory/credential-verifications",
+        ] {
+            let request = Client::new()
+                .post(format!("http://{addr}/api/v1{path}"))
+                .bearer_auth(&token);
+            let request = if path.starts_with("/active-directory/") {
+                request.json(&serde_json::json!({"activeDirectory":{"host":"private-host.invalid","bindDn":"CN=private-bind","baseDn":"DC=private-base","bindPassword":"http-unique-secret","tlsMode":"starttls"}}))
+            } else {
+                request
+            };
+            let response = request.send().await.unwrap();
+            assert_eq!(response.status().as_u16(), status);
+            assert_eq!(response.headers()["cache-control"], "no-store");
+            assert_eq!(
+                response.headers()["content-type"],
+                "application/problem+json"
+            );
+            assert!(!response.headers().contains_key("location"));
+            let text = response.text().await.unwrap();
+            for sensitive in [
+                "http-unique-secret",
+                "private-host.invalid",
+                "CN=private-bind",
+                "DC=private-base",
+                &token,
+            ] {
+                assert!(!text.contains(sensitive));
+            }
+            let problem: serde_json::Value = serde_json::from_str(&text).unwrap();
+            assert_eq!(problem["status"], status);
+            assert_eq!(problem["code"], code);
+            assert_eq!(problem["instance"], format!("/api/v1{path}"));
+        }
+        assert_eq!(calls.lock().unwrap().len(), 2);
+        handle.abort();
+    }
 }
