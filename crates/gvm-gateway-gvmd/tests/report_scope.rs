@@ -1,5 +1,5 @@
 //! Regression coverage for endpoint-owned report isolation (issue #741).
-use gvm_gateway_domain::{GatewayError, ReportPort, ResultQuery};
+use gvm_gateway_domain::{GatewayError, GetReportOpts, ReportPort, ResultQuery};
 use gvm_gateway_gvmd::GvmdAdapter;
 use gvm_mock_server::{GmpVersion, MockGmpServer, ServerMode};
 
@@ -10,10 +10,21 @@ async fn adapter_with_result(report_id: &str) -> (GvmdAdapter, MockGmpServer) {
     let response = format!(
         r#"<get_results_response status="200" status_text="OK"><result id="11111111-1111-4111-8111-111111111111"><name>Scoped result</name><severity>8.0</severity><report id="{report_id}"><name>Report</name></report></result><result_count>1<filtered>1</filtered></result_count></get_results_response>"#
     );
+    adapter_with_results_xml(&response, GmpVersion::V22_8).await
+}
+
+async fn adapter_with_results_xml(
+    response: &str,
+    version: GmpVersion,
+) -> (GvmdAdapter, MockGmpServer) {
+    let report_response = format!(
+        r#"<get_reports_response status="200" status_text="OK"><report id="{PATH_REPORT}"><name>Path report</name></report></get_reports_response>"#
+    );
     let server = MockGmpServer::builder()
         .mode(ServerMode::Fixture)
-        .version(GmpVersion::V22_8)
-        .override_response("get_results", &response)
+        .version(version)
+        .override_response("get_reports", &report_response)
+        .override_response("get_results", response)
         .unix_socket_auto()
         .build()
         .await
@@ -281,4 +292,52 @@ async fn real_quoted_filter_literals_still_reach_result_transport() {
             .any(|record| record.command_name() == "get_results"));
     }
     server.shutdown().await;
+}
+
+#[tokio::test]
+async fn missing_report_reference_is_rejected_for_scoped_and_embedded_results() {
+    // A successful payload is not proof of isolation. Without a report ID, no
+    // row can be verified against either endpoint's path-owned identity.
+    let response = r#"<get_results_response status="200" status_text="OK"><result id="11111111-1111-4111-8111-111111111111"><name>Unverifiable finding</name><severity>8.0</severity></result><result_count>1<filtered>1</filtered></result_count></get_results_response>"#;
+    for embedded in [false, true] {
+        // 22.7 exercises the supported older-backend read path: structured
+        // snapshot enrichment is unavailable, but result isolation still applies.
+        let (adapter, server) = adapter_with_results_xml(response, GmpVersion::V22_7).await;
+        let result = if embedded {
+            adapter
+                .get_report(
+                    "scope-session",
+                    PATH_REPORT,
+                    &GetReportOpts {
+                        page: 1,
+                        per_page: 25,
+                    },
+                )
+                .await
+                .map(|_| ())
+        } else {
+            adapter
+                .get_report_results(
+                    "scope-session",
+                    PATH_REPORT,
+                    &ResultQuery {
+                        page: 1,
+                        per_page: 25,
+                        ..Default::default()
+                    },
+                )
+                .await
+                .map(|_| ())
+        };
+        assert!(
+            matches!(result, Err(GatewayError::BackendUnavailable(ref detail))
+            if detail == "backend returned results outside the requested report"),
+            "embedded={embedded}: {result:?}"
+        );
+        assert!(server
+            .command_history()
+            .iter()
+            .any(|entry| entry.command_name() == "get_results"));
+        server.shutdown().await;
+    }
 }

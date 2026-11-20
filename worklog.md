@@ -134,3 +134,8 @@ Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/
 - Verification in progress using report-test-env and an isolated copy of the existing cache; no dependency changes.
 
 - Final verification: full REST suite 214 passed (including generated no-store schema), gateway contract 30 passed (including served-generated/curated header-schema parity); fmt check and required strict workspace/all-target/all-feature Clippy passed. Used an isolated copy of the existing report cache to avoid other worktree artifacts; no dependency changes.
+
+## 2026-11-20 — issue #741 review
+- Review correctly identified that successful rows missing their report association bypassed the response-side scope check.
+- Reject absent and mismatched report identities before conversion for both report-results and embedded-report paths; preserve case-equivalent UUID acceptance.
+- Added successful-response fixture coverage without a report association through both typed adapter paths. Updated the published report error contract to describe unverifiable rows.

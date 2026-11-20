@@ -148,7 +148,7 @@ paths:
         comparison operators retain GMP semantics; unsupported inclusive operators
         such as `severity>=7` or `severity<=7` return 400 rather than being silently
         ignored. Use supported strict or equality comparisons explicitly.
-        A backend response containing rows from another report fails as 502;
+        A backend response with missing or mismatched row report references fails as 502;
         the gateway never drops those rows while retaining misleading counts.
       parameters:
         - $ref: "./common.yaml#/components/parameters/FilterString"

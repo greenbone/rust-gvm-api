@@ -1338,7 +1338,7 @@ pub(crate) fn get_report_results_docs(op: TransformOperation<'_>) -> TransformOp
         .id("getReportResults")
         .tag("Reports")
         .summary("Get paginated results for a report")
-        .description("Returns results and counts scoped to the report in the path, including boolean filters. Reserved report/pagination controls and unsupported inclusive comparisons such as severity>=7 return 400. Cross-report backend rows fail as 502 rather than being returned or silently discarded.")
+        .description("Returns results and counts scoped to the report in the path, including boolean filters. Reserved report/pagination controls and unsupported inclusive comparisons such as severity>=7 return 400. Backend rows with missing or mismatched report references fail as 502 rather than being returned or silently discarded.")
         .security_requirement("bearerAuth")
         .input::<(Path<ResourceIdPathDoc>, Query<ReportResultsQueryDoc>)>()
         .response_with::<200, Json<ResultListResponse>, _>(ok_json("Paginated list of results"));

@@ -728,7 +728,7 @@ fn ensure_report_result_scope(
         result
             .report
             .as_ref()
-            .is_some_and(|report| !report.id.as_str().eq_ignore_ascii_case(report_id))
+            .is_none_or(|report| !report.id.as_str().eq_ignore_ascii_case(report_id))
     }) {
         return Err(GatewayError::BackendUnavailable(
             "backend returned results outside the requested report".into(),

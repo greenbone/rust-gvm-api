@@ -381,7 +381,8 @@ and typed library contracts; absence is never a synthetic negative observation.
   reject attempts to replace report identity or endpoint-owned pagination.
 - Unsupported inclusive `>=`/`<=` comparators outside quoted literal values
   return 400 before the results operation, never silently ignored success.
-- A deliberately inconsistent successful backend response containing another
-  report ID returns a sanitized 502, not partial data with unadjusted counts.
+- A successful backend response with a missing report association or another
+  report ID returns a sanitized 502 for both scoped-result and embedded-report
+  loading, not partial data with unadjusted counts.
 - Upper/lowercase UUID spellings identify the same report. Keep returned payload
   spelling and optional source metadata unchanged.
