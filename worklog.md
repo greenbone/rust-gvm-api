@@ -64,6 +64,8 @@
 - #734: preserve typed optional counts/threat and server severity. Dependency baseline pending.
 
 - #734 slice-boundary correction: explicit u32 schema bounds now live with application counts, not the later reference slice. Added generated schema regression; preserved curated limits.
+- #735: open JSON type on full/summary result NVTs; typed note/override references no longer mislabel discriminator as family. Aggregate sources retain absence.
+- #735 acceptance review: typed classic/nonclassic/future/empty/absent discriminator projections qualified; description comments corrected.
 ## Review correction #730 (2026-11-20)
 
 Reject explicit null maxDelaySeconds on all agent schedule and group inputs; preserve omission, zero and GMP bounds. Add HTTP 400/no-backend-dispatch regressions and REST boundary coverage.

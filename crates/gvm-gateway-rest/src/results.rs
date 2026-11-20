@@ -57,8 +57,10 @@ pub(crate) struct NvtRefResponse {
     cves: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     tags: Option<String>,
-    /// Source-shaped NVT type metadata supplied by gvmd. The gateway preserves this value without
-    /// parsing or narrowing its schema.
+    /// Open backend NVT discriminator; unknown values are preserved.
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    type_: Option<String>,
+    /// Opaque backend type metadata, preserved without interpretation.
     #[serde(rename = "typeMetadata", skip_serializing_if = "Option::is_none")]
     type_metadata: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -74,6 +76,7 @@ impl From<gvm_gateway_domain::NvtRef> for NvtRefResponse {
             cvss_base: n.cvss_base,
             cves: n.cves,
             tags: n.tags,
+            type_: n.type_,
             type_metadata: n.type_metadata,
             epss: n.epss.map(EpssResponse::from),
         }
@@ -141,6 +144,9 @@ pub(crate) struct NvtRefSummaryResponse {
     cves: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     tags: Option<String>,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    type_: Option<String>,
+    /// Opaque backend type metadata, preserved without interpretation.
     #[serde(rename = "typeMetadata", skip_serializing_if = "Option::is_none")]
     type_metadata: Option<String>,
 }
@@ -154,6 +160,7 @@ impl From<gvm_gateway_domain::NvtRef> for NvtRefSummaryResponse {
             cvss_base: nvt.cvss_base,
             cves: nvt.cves,
             tags: nvt.tags,
+            type_: nvt.type_,
             type_metadata: nvt.type_metadata,
         }
     }
