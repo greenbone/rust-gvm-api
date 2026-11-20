@@ -298,6 +298,7 @@ Policy creation likewise requires an explicit active policy base in
 | `POST` | `/api/v1/credential-stores/{id}/actions/verify` | Verify the credential-store connection |
 | `POST` | `/api/v1/credentials/{id}/actions/verify-active-directory` | Verify a saved AD credential without persisting changes |
 | `POST` | `/api/v1/active-directory/credential-verifications` | Verify inline AD connection settings without saving a credential |
+| `POST` | `/api/v1/active-directory/object-searches` | Read-only bounded AD discovery using a saved credential; no-store, no persistence |
 | `GET` | `/api/v1/credentials` | List credentials |
 | `POST` | `/api/v1/credentials` | Create credential |
 | `GET` | `/api/v1/credentials/{id}` | Get credential |
@@ -626,3 +627,14 @@ destination, TLS and permission policy, including explicit AD write permissions.
 Positive help discovery is required; missing support returns 501, never an LDAP
 workaround. Backend diagnostics are sanitized. Deterministic tests are not live
 AD/TLS interoperability qualification.
+
+### Active Directory discovery
+
+`POST /active-directory/object-searches` is an authenticated, read-only controller
+search using a saved credentialId. Optional scope, limit, disabled-computer,
+expansion and DN selectors preserve backend defaults. tasks=true requires explicit
+targets=true; maxResults is bounded to 1–1000. No target, task or stored search is
+created. Directory DNs stay in the JSON body, never URL selectors or telemetry.
+Responses use Cache-Control: no-store and preserve absent versus empty collections,
+fetched-subset counts, truncation, optional SPN/target/task arrays and authorized
+configuration references. No invented pagination or completeness guarantee.

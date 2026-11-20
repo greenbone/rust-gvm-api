@@ -1,6 +1,6 @@
 # Planned REST contracts: GMP feature adoption (#727–736)
 
-> **Mixed implementation/design supplement.** Agent slices #730–733 and AD credentials #727 are implemented in runtime and OpenAPI; other sections remain planned. This document
+> **Mixed implementation/design supplement.** Agent slices #730–733 and AD credential/discovery slices #727–728 are implemented in runtime and OpenAPI; other sections remain planned. This document
 > specifies downstream adoption work for rust-gvm #847–857. Planned sections do not add routes,
 > parameters or response fields to the shipped API. The immutable typed dependency is adopted in this stack. Clients must use the implemented
 > [OpenAPI root](openapi.yaml) and [REST design](openspec.md) for current behavior.
@@ -157,9 +157,9 @@ status-only success, denied/disabled/destination/TLS failures, and password
 redaction through capture of gateway requests, responses and diagnostics. No
 built-in mock success should be represented as a real LDAP bind.
 
-## 4. AD object discovery — #728
+## 4. AD object discovery — #728 (implemented)
 
-Proposed `POST /active-directory/object-searches` accepts a bounded JSON search
+Implemented `POST /active-directory/object-searches` accepts a bounded JSON search
 body; this avoids sensitive DN selectors in access-log query strings. It is a
 read-only controller search (no stored search/target/task), returning `200` and
 no Location. This is an explicit proposed action-style exception, not a reason
@@ -180,7 +180,7 @@ handling, destination and visibility policy. No DN normalization or local
 comparison. No implicit persistence, client-side completeness claim or invented
 page cursor; this is a limited fetched subset, not REST page/perPage pagination.
 
-Proposed response: `{ "objects": { "truncated": false, "counts": { "ou": 0,
+Response: `{ "objects": { "truncated": false, "counts": { "ou": 0,
 "container": 0, "group": 0, "computer": { "total": 0 } }, "items": [] } }`.
 The `objects` envelope itself is optional because the typed response permits
 absence: preserve absence rather than inventing an empty successful collection.

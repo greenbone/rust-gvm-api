@@ -57,6 +57,11 @@
 - Adopted parent-owned immutable dependency baseline b6b901b (local cherry-pick a0b2e1b).
 - Implementing #727 credential writes/read metadata + saved/inline verification; #728 search and #729 provenance isolated in parallel file scopes.
 - Native compiler inherited from /workspace/api-agent-env; target /workspace/.cache/api-ad-target. Initial compile exposed REST DTO omissions, fixed; focused test build underway.
+- #727 includes credential read/write AD metadata, validation, saved/inline verification, sanitized typed failures and discovery. Credential REST tests: 15 passed. Typed verification fixture: passed (scripted only, not LDAP). OpenAPI enum-inventory assertions were updated after initial failures.
+- #728 bounded read-only search implemented with optional envelope/count/expansion preservation and no-store; no write fallback. Shared strict all-target/all-feature clippy passed; complete REST suite and HTTP AD credential fixtures are running after final tests/schema refinements.
+
+- #729 target provenance implemented with closed writes, open optional reads, omission/default preservation and server-owned cloning/filtering. Independent focused tests passed: HTTP 2, REST 10, typed conversion 1.
+- Parent integration follow-up: added missing human API-reference rows and behavior notes in issue-specific #727/#728 docs corrections. AD worktree curated contract has 124 paths/202 operations; combined parent stack has an additional non-AD route (125/203), so preserve the parent inventory increment while cherry-picking these docs corrections.
 ## Review correction #730 (2026-11-20)
 
 Reject explicit null maxDelaySeconds on all agent schedule and group inputs; preserve omission, zero and GMP bounds. Add HTTP 400/no-backend-dispatch regressions and REST boundary coverage.
@@ -76,6 +81,14 @@ Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/
 
 - Final verification: saved/inline HTTP + published-status parity 4 passed (six 409/500/504 HTTP combinations), REST 206 passed, gateway contract 27 passed, two focused typed AD adapter regressions passed; fmt check and required strict workspace/all-target/all-feature Clippy passed.
 - Shared-target concurrency initially produced stale cross-head artifacts; isolated copied cache and source freshness resolved it without dependency or parent-stack changes.
+
+## PR #748 review correction (2026-11-20)
+
+- Isolated at manifest head cc9e750e901c84ae416b8793b395287251964b1f; parent stack untouched.
+- Authenticated review confirms generated AD search 200 lacks the runtime/curated Cache-Control header. Added a machine-readable string const no-store header, a REST schema assertion, and served-generated/curated header-schema parity.
+- Verification in progress using report-test-env and an isolated copy of the existing cache; no dependency changes.
+
+- Final verification: full REST suite 214 passed (including generated no-store schema), gateway contract 30 passed (including served-generated/curated header-schema parity); fmt check and required strict workspace/all-target/all-feature Clippy passed. Used an isolated copy of the existing report cache to avoid other worktree artifacts; no dependency changes.
 
 
 ## PR #743 response delay review (2026-11-20)
@@ -98,3 +111,6 @@ Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/
 - Removed the not-yet-implemented object-search row from the #727/PR747 Credentials inventory and added both implemented saved/inline verification rows.
 - Added a documentation gate comparing that inventory with the exact slice's curated route/method contract, plus three regression tests covering the reported drift and the later search introduction.
 - Verified documentation at124paths/202operations, all three documentation regressions, Rust formatting and diff checks.
+## 2026-11-20 — Search inventory boundary
+- Added the object-search inventory row in its owning #728/PR748 slice, after verification routes are introduced in747.
+- The new slice-aware documentation gate passes at125paths/203operations.
