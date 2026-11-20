@@ -495,6 +495,13 @@ fn documented_router() -> ApiRouter<GatewayService> {
         )
         // Credentials
         .api_route(
+            "/api/v1/active-directory/object-searches",
+            post_with(
+                crate::active_directory::search_active_directory_objects,
+                crate::active_directory::search_active_directory_objects_docs,
+            ),
+        )
+        .api_route(
             "/api/v1/credentials/{id}/actions/verify-active-directory",
             post_with(
                 verify_active_directory_saved,

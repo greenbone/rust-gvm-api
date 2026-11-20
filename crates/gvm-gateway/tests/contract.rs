@@ -3201,6 +3201,24 @@ fn compare_schema_like(
     let (generated_doc, generated) = resolve_ref(docs, generated_doc, generated);
     let (curated_doc, curated) = resolve_ref(docs, curated_doc, curated);
 
+    // Schemars preserves enum variant documentation as oneOf string consts.
+    // Normalize only provably closed string choices, so comparison still rejects
+    // unconstrained branches and unexpected generated enum values.
+    let mut normalized_generated;
+    let generated = if curated.get("enum").is_some() && generated.get("enum").is_none() {
+        if let Some(values) = closed_string_choices(docs, &generated_doc, generated) {
+            normalized_generated = generated.clone();
+            normalized_generated["type"] = Value::String("string".to_string());
+            normalized_generated["enum"] =
+                Value::Array(values.into_iter().map(Value::String).collect());
+            &normalized_generated
+        } else {
+            generated
+        }
+    } else {
+        generated
+    };
+
     match (generated, curated) {
         (Value::Null, Value::Null) => {}
         (_, Value::Null) | (Value::Null, _) => panic!("schema presence drift for {context}"),
@@ -3213,9 +3231,9 @@ fn compare_schema_like(
                     continue;
                 }
 
-                let generated_value = generated
-                    .get(key)
-                    .unwrap_or_else(|| panic!("missing `{key}` in {context}"));
+                let generated_value = generated.get(key).unwrap_or_else(|| {
+                    panic!("missing `{key}` in {context}: generated={generated:?}")
+                });
 
                 match key.as_str() {
                     "required" if curated_value.is_boolean() => assert_required_flag(
@@ -3279,6 +3297,89 @@ fn compare_schema_like(
         }
         _ => assert_eq!(generated, curated, "value drift for {context}"),
     }
+}
+
+#[test]
+fn closed_string_choices_resolve_refs_without_accepting_open_branches() {
+    // The parity check must accept Schemars' documented const variants while
+    // retaining the curated contract's closed-enum constraint.
+    let generated = serde_json::json!({
+        "components": {"schemas": {"Kind": {"oneOf": [
+            {"const": "ou", "type": "string"},
+            {"const": "group", "type": "string"}
+        ]}}}
+    });
+    let docs = SpecDocs::load(&generated);
+    assert_eq!(
+        closed_string_choices(
+            &docs,
+            &SpecDocRef::Generated,
+            &serde_json::json!({"$ref": "#/components/schemas/Kind"}),
+        ),
+        Some(BTreeSet::from(["ou".to_string(), "group".to_string()]))
+    );
+    for schema in [
+        serde_json::json!({"anyOf": [{"const": "ou"}, {"type": "string"}]}),
+        serde_json::json!({"oneOf": [{"const": "ou"}, {"const": 1}]}),
+        serde_json::json!({"oneOf": []}),
+    ] {
+        assert!(closed_string_choices(&docs, &SpecDocRef::Generated, &schema).is_none());
+    }
+}
+
+#[test]
+fn annotated_singleton_reference_resolution_preserves_validation_siblings() {
+    // Resolve equivalent field-documentation wrappers, but do not hide extra
+    // validation constraints when walking the generated/curated contract.
+    let generated = serde_json::json!({
+        "components": {"schemas": {"Counts": {"type": "object", "properties": {}}}}
+    });
+    let docs = SpecDocs::load(&generated);
+    let wrapped = serde_json::json!({
+        "description": "Fetched subset counts",
+        "allOf": [{"$ref": "#/components/schemas/Counts"}]
+    });
+    assert_eq!(
+        resolve_ref(&docs, &SpecDocRef::Generated, &wrapped).1,
+        &generated["components"]["schemas"]["Counts"]
+    );
+    let constrained = serde_json::json!({
+        "minProperties": 1,
+        "allOf": [{"$ref": "#/components/schemas/Counts"}]
+    });
+    assert_eq!(
+        resolve_ref(&docs, &SpecDocRef::Generated, &constrained).1,
+        &constrained
+    );
+}
+
+fn closed_string_choices(
+    docs: &SpecDocs<'_>,
+    doc: &SpecDocRef,
+    schema: &Value,
+) -> Option<BTreeSet<String>> {
+    let (doc, schema) = resolve_ref(docs, doc, schema);
+    if let Some(value) = schema.get("const").and_then(Value::as_str) {
+        return Some(BTreeSet::from([value.to_string()]));
+    }
+    if let Some(values) = schema.get("enum").and_then(Value::as_array) {
+        return values
+            .iter()
+            .map(|value| value.as_str().map(str::to_string))
+            .collect();
+    }
+    let branches = schema
+        .get("oneOf")
+        .or_else(|| schema.get("anyOf"))?
+        .as_array()?;
+    if branches.is_empty() {
+        return None;
+    }
+    let mut values = BTreeSet::new();
+    for branch in branches {
+        values.extend(closed_string_choices(docs, &doc, branch)?);
+    }
+    Some(values)
 }
 
 fn assert_required_flag(generated: Option<&Value>, curated: Option<&Value>, context: &str) {
@@ -3377,13 +3478,32 @@ fn resolve_ref<'a>(
     mut value: &'a Value,
 ) -> (SpecDocRef, &'a Value) {
     let mut current_doc = current_doc.clone();
-    while let Some(reference) = value.get("$ref").and_then(Value::as_str) {
-        let (next_doc, pointer) = parse_ref(&current_doc, reference);
-        current_doc = next_doc;
-        value = docs
-            .doc(&current_doc)
-            .pointer(&pointer)
-            .unwrap_or_else(|| panic!("missing ref target `{reference}`"));
+    loop {
+        if let Some(reference) = value.get("$ref").and_then(Value::as_str) {
+            let (next_doc, pointer) = parse_ref(&current_doc, reference);
+            current_doc = next_doc;
+            value = docs
+                .doc(&current_doc)
+                .pointer(&pointer)
+                .unwrap_or_else(|| panic!("missing ref target `{reference}`"));
+            continue;
+        }
+        // Schemars wraps a documented reference in a singleton allOf. Only
+        // unwrap annotation-only siblings; never discard validation constraints.
+        if let Some(branches) = value.get("allOf").and_then(Value::as_array) {
+            if branches.len() == 1
+                && value.as_object().unwrap().keys().all(|key| {
+                    matches!(
+                        key.as_str(),
+                        "allOf" | "description" | "title" | "example" | "examples"
+                    )
+                })
+            {
+                value = &branches[0];
+                continue;
+            }
+        }
+        break;
     }
 
     (current_doc, value)
@@ -3441,4 +3561,31 @@ fn normalize_relative_path(path: PathBuf) -> PathBuf {
 
 fn op<'a>(doc: &'a Value, path: &str, method: &str) -> &'a Value {
     &doc["paths"][path][method]
+}
+
+#[tokio::test]
+async fn ad_search_generated_and_curated_cache_header_schemas_match() {
+    // Prevent a runtime/curated no-store guarantee from disappearing in generated clients.
+    let adapter = StaticGvmdAdapter::ready("22.7");
+    let (addr, handle) = spawn_server(adapter.clone(), adapter).await;
+    let generated: Value = Client::new()
+        .get(format!("http://{addr}/api/v1/openapi.json"))
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    handle.abort();
+    let curated = read_yaml(&rest_spec_dir().join("active-directory.yaml"));
+    let path = "/active-directory/object-searches";
+    let actual =
+        &generated["paths"][path]["post"]["responses"]["200"]["headers"]["Cache-Control"]["schema"];
+    let expected =
+        &curated["paths"][path]["post"]["responses"]["200"]["headers"]["Cache-Control"]["schema"];
+    assert_eq!(
+        expected,
+        &serde_json::json!({"type": "string", "const": "no-store"})
+    );
+    assert_eq!(actual, expected);
 }

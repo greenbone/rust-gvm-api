@@ -300,6 +300,8 @@ paths:
     $ref: "./credentials.yaml#/paths/~1credentials~1{id}~1actions~1verify-active-directory"
   /active-directory/credential-verifications:
     $ref: "./credentials.yaml#/paths/~1active-directory~1credential-verifications"
+  /active-directory/object-searches:
+    $ref: './active-directory.yaml#/paths/~1active-directory~1object-searches'
   /credentials:
     $ref: './credentials.yaml#/paths/~1credentials'
   /credentials/{id}:

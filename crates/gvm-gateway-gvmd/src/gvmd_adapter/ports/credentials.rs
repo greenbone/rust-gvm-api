@@ -11,6 +11,14 @@ pub(in crate::gvmd_adapter) struct CredentialStoreProbeOutcome {
 
 #[async_trait]
 impl CredentialPort for GvmdAdapter {
+    async fn search_active_directory_objects(
+        &self,
+        token: &str,
+        input: gvm_gateway_domain::ActiveDirectorySearchInput,
+    ) -> Result<gvm_gateway_domain::ActiveDirectorySearchResult, GatewayError> {
+        super::active_directory::search(self, token, input).await
+    }
+
     async fn verify_active_directory(
         &self,
         session_token: &str,
