@@ -13,6 +13,7 @@ use gvm_gateway_domain::{Credential, CredentialStore, GatewayError, ModifyCreden
 
 fn credential_with_type(credential_type: &str) -> Credential {
     Credential {
+        active_directory: None,
         id: "123e4567-e89b-12d3-a456-426614174000".to_string(),
         name: "Credential".to_string(),
         comment: None,
@@ -141,6 +142,7 @@ fn credential_request_debug_redacts_secrets() {
     // Request DTOs carry write-only credential secrets; debug output must
     // only expose their presence, never their submitted values.
     let create = CreateCredentialRequest {
+        active_directory: None,
         name: "Credential".to_string(),
         comment: Some("visible comment".to_string()),
         credential_type: serde_json::from_value(json!("snmpv3"))
@@ -158,6 +160,7 @@ fn credential_request_debug_redacts_secrets() {
         host_identifier: Some("create-host-secret".to_string()),
     };
     let modify = ModifyCredentialRequest {
+        active_directory: None,
         name: Some("Credential".to_string()),
         comment: Some("visible comment".to_string()),
         login: Some("visible-login".to_string()),
@@ -222,6 +225,7 @@ fn credential_requests_preserve_supported_secret_and_type_fields() {
     // supported secret-bearing fields and public type values for the typed
     // gvmd adapter instead of rejecting or collapsing them locally.
     let create = CreateCredentialRequest {
+        active_directory: None,
         name: "Credential".to_string(),
         comment: None,
         credential_type: serde_json::from_value(json!("snmpv3"))
@@ -241,6 +245,7 @@ fn credential_requests_preserve_supported_secret_and_type_fields() {
     .validate()
     .expect("credential create request should preserve supported secrets");
     let modify = ModifyCredentialRequest {
+        active_directory: None,
         name: Some("Renamed Credential".to_string()),
         comment: None,
         login: Some("snmp-user".to_string()),
@@ -341,4 +346,80 @@ fn credential_store_preference_debug_and_domain_input_redact_values() {
     let debug = format!("{input:?}");
     assert!(!debug.contains("preference-secret"));
     assert_eq!(input.preferences[0].name, "token");
+}
+
+// AD validation must reject invalid options before obtaining a backend session.
+#[test]
+fn ad_create_validation_preserves_defaults_and_rejects_incomplete_fields() {
+    let valid = json!({"name":"directory", "type":"ad", "activeDirectory": {
+        "host":"dc.example", "bindDn":"CN=bind<&>", "baseDn":"DC=example",
+        "bindPassword":"unique-bind-secret", "tlsMode":"ldaps"
+    }});
+    let input = serde_json::from_value::<CreateCredentialRequest>(valid.clone())
+        .unwrap()
+        .validate()
+        .unwrap();
+    let ad = input.active_directory.as_ref().unwrap();
+    assert_eq!(ad.port, None);
+    assert!(!format!("{input:?}").contains("unique-bind-secret"));
+    assert!(!format!("{input:?}").contains("dc.example"));
+    for (field, value) in [
+        ("port", json!(0)),
+        ("clearPort", json!(true)),
+        ("tlsMode", json!("ldap")),
+        ("bindDn", json!("")),
+        ("host", json!(null)),
+    ] {
+        let mut body = valid.clone();
+        body["activeDirectory"][field] = value;
+        let result = serde_json::from_value::<CreateCredentialRequest>(body).map(|v| v.validate());
+        assert!(matches!(result, Err(_) | Ok(Err(_))), "accepted {field}");
+    }
+    let mut wrong_type = valid;
+    wrong_type["type"] = json!("up");
+    assert!(
+        serde_json::from_value::<CreateCredentialRequest>(wrong_type)
+            .unwrap()
+            .validate()
+            .is_err()
+    );
+}
+
+// Partial modify retains omission and allows explicit CA/port resets only.
+#[test]
+fn ad_modify_preserves_omission_and_clear_operations() {
+    let input = serde_json::from_value::<ModifyCredentialRequest>(
+        json!({"activeDirectory":{"caCertificate":"", "clearPort":true}}),
+    )
+    .unwrap()
+    .validate_into()
+    .unwrap();
+    let ad = input.active_directory.unwrap();
+    assert_eq!(ad.ca_certificate.as_deref(), Some(""));
+    assert_eq!(ad.host, None);
+    assert_eq!(ad.port, None);
+    assert!(ad.clear_port);
+    assert!(serde_json::from_value::<ModifyCredentialRequest>(
+        json!({"activeDirectory":{"port":636,"clearPort":true}})
+    )
+    .unwrap()
+    .validate_into()
+    .is_err());
+}
+
+// Responses carry only observed authorized metadata and never bind secrets.
+#[test]
+fn ad_read_metadata_is_open_and_redacted() {
+    let mut credential = credential_with_type("ad");
+    credential.active_directory = Some(gvm_gateway_domain::ActiveDirectoryMetadata {
+        tls_mode: Some("future_tls".into()),
+        base_dn: Some("DC=sensitive".into()),
+        ..Default::default()
+    });
+    let response = CredentialResponse::from(credential);
+    assert!(!format!("{response:?}").contains("sensitive"));
+    let json = serde_json::to_value(response).unwrap();
+    assert_eq!(json["activeDirectory"]["tlsMode"], "future_tls");
+    assert!(json["activeDirectory"].get("port").is_none());
+    assert!(json["activeDirectory"].get("bindPassword").is_none());
 }

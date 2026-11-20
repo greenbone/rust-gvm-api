@@ -271,4 +271,4 @@ verify_report_format	deferred	Report-format administration requires a dedicated 
 verify_scanner	deferred	Scanner administration and verification require a dedicated appliance-ownership and secret-handling contract.	docs/upstream-surface-dispositions.md scanner-administration family; #401
 get_agent_inventory_token	exposed	Confidential authenticated POST issuance with no-store and sanitized errors.	spec/rest-api/emerging.yaml /agents/inventory-token
 get_active_directory_objects	blocked	Typed prerequisite adopted; REST adoption tracked by #727, #728 and #731.	spec/rest-api/planned-gmp-features.md
-verify_active_directory_credential	blocked	Typed prerequisite adopted; REST adoption tracked by #727, #728 and #731.	spec/rest-api/planned-gmp-features.md
+verify_active_directory_credential	exposed	Saved and inline verification return status-only success without persistence.	spec/rest-api/credentials.yaml; crates/gvm-gateway-gvmd/src/gvmd_adapter/ports/credentials.rs

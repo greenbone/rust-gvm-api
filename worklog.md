@@ -1,4 +1,4 @@
-# Agent API implementation stack
+# AD API implementation stack
 
 ## 2026-11-19
 
@@ -46,6 +46,12 @@
 - Earlier whole-workspace attempt still has an unrelated report application fixture contract mismatch (3 keys versus 2); parent confirms combined report/#741 workspace suite passes. No live gvmd qualification claimed.
 - Final slice includes acceptance-hardening followups for preceding agent slices (non-null delay validation, group delay lifecycle assertions, no-body/cache/error OpenAPI fidelity). Earlier published slice commits are unchanged.
 
+## AD implementation
+
+- Created b02/api-ad-impl at PR740 9a5664f.
+- Adopted parent-owned immutable dependency baseline b6b901b (local cherry-pick a0b2e1b).
+- Implementing #727 credential writes/read metadata + saved/inline verification; #728 search and #729 provenance isolated in parallel file scopes.
+- Native compiler inherited from /workspace/api-agent-env; target /workspace/.cache/api-ad-target. Initial compile exposed REST DTO omissions, fixed; focused test build underway.
 ## Review correction #730 (2026-11-20)
 
 Reject explicit null maxDelaySeconds on all agent schedule and group inputs; preserve omission, zero and GMP bounds. Add HTTP 400/no-backend-dispatch regressions and REST boundary coverage.
@@ -56,6 +62,15 @@ Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/
 Publish the inventory-token 200 Cache-Control header with const no-store in generated OpenAPI; assert generated/curated header parity.
 
 Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/api-agent-target): cargo test -p gvm-gateway-rest --lib (201 passed, including inventory-token generated/curated header parity); cargo test -p gvm-gateway --test agents (5 passed, including runtime inventory-token no-store success/rejection behavior); cargo fmt --all -- --check; cargo clippy --workspace --all-targets --all-features -- -D warnings. All passed. Reused the existing target cache; refreshed local source mtimes after cross-worktree stale dependency artifacts initially hid this slice's token service/error additions.
+
+## PR #747 review correction (2026-11-20)
+
+- Isolated at manifest head 4c5a82f63c84693c2e16ba071471b800014fd176; parent stack untouched.
+- Authenticated review confirms missing runtime 409/500/504 outcomes in both AD verification contracts. Added generated and curated problem responses, explicit status parity, six saved/inline HTTP error cases with no-store and sensitive-payload exclusion, plus typed adapter conflict/timeout sanitization coverage.
+- Verification in progress using report-test-env and an isolated copy of the existing cache; no dependency changes.
+
+- Final verification: saved/inline HTTP + published-status parity 4 passed (six 409/500/504 HTTP combinations), REST 206 passed, gateway contract 27 passed, two focused typed AD adapter regressions passed; fmt check and required strict workspace/all-target/all-feature Clippy passed.
+- Shared-target concurrency initially produced stale cross-head artifacts; isolated copied cache and source freshness resolved it without dependency or parent-stack changes.
 
 
 ## PR #743 response delay review (2026-11-20)
@@ -74,3 +89,7 @@ Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/
 - Verification passed: adapter inventory-token tests 4/4; actual HTTP inventory-token tests 2/2 (six malformed payload shapes plus valid issuance/auth/body checks); REST cache/OpenAPI tests 2/2; architecture guards 22/22; cargo clippy --workspace --all-targets --all-features -- -D warnings; cargo fmt --all -- --check; git diff --check. Existing manifest-only unused-dependency warnings remain.
 - The reviewed client facade source is unchanged between old pin and bcac054, so the existing 270-method inventory/dispositions remain valid; updated snapshot, ledger and adoption-note revision metadata atomically. Specifications left unchanged.
 - API branch fix/744-adopt-876 is based exactly on a8c84cb0bd22d0ab48190a92fb984a80dfef24cc; local commit only, no API push/comment/merge. Parent must retain bcac054 when restacking #744/#754 rather than reverting to #754's older fa990ad pin.
+## 2026-11-20 — Credentials route-inventory review
+- Removed the not-yet-implemented object-search row from the #727/PR747 Credentials inventory and added both implemented saved/inline verification rows.
+- Added a documentation gate comparing that inventory with the exact slice's curated route/method contract, plus three regression tests covering the reported drift and the later search introduction.
+- Verified documentation at124paths/202operations, all three documentation regressions, Rust formatting and diff checks.

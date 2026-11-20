@@ -11,6 +11,27 @@ use gvm_gateway_domain::{
 use crate::GatewayService;
 
 impl GatewayService {
+    /// Verify a saved or inline AD credential under session serialization.
+    pub async fn verify_active_directory(
+        &self,
+        session_token: &str,
+        input: gvm_gateway_domain::VerifyActiveDirectoryInput,
+    ) -> Result<(), GatewayError> {
+        self.execute_with_resource(
+            "credentials.ad.verify",
+            session_token,
+            "verify",
+            "credential",
+            None,
+            |session| async move {
+                self.credentials
+                    .verify_active_directory(&session.token, input)
+                    .await
+            },
+        )
+        .await
+    }
+
     /// Lists backend credential stores for an authenticated session.
     pub async fn list_credential_stores(
         &self,
