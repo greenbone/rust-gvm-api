@@ -102,6 +102,7 @@ impl TargetPort for GvmdAdapter {
             .map(TargetPortSelection::PortList)
             .unwrap_or_else(default_target_ports);
         let mut request = CreateTargetRequest::new(input.name, hosts, ports);
+        request.source = input.source;
         request.comment = input.comment;
         request.alive_test = input
             .alive_test
@@ -184,6 +185,7 @@ impl TargetPort for GvmdAdapter {
         };
         let mut request = ModifyTargetRequest::new(target_id);
         request.name = input.name;
+        request.source = input.source;
         request.comment = input.comment;
         request.hosts = hosts;
         request.reverse_lookup_only = input.reverse_lookup_only;

@@ -1,6 +1,6 @@
 # Planned REST contracts: GMP feature adoption (#727–736)
 
-> **Mixed implementation/design supplement.** Agent slices #730–733 and AD credential/discovery slices #727–728 are implemented in runtime and OpenAPI; other sections remain planned. This document
+> **Mixed implementation/design supplement.** Agent slices #730–733 and AD credential/discovery/provenance slices #727–729 are implemented in runtime and OpenAPI; other sections remain planned. This document
 > specifies downstream adoption work for rust-gvm #847–857. Planned sections do not add routes,
 > parameters or response fields to the shipped API. The immutable typed dependency is adopted in this stack. Clients must use the implemented
 > [OpenAPI root](openapi.yaml) and [REST design](openspec.md) for current behavior.
@@ -202,7 +202,7 @@ counts, excluded disabled count, populated/details/empty expansions and unreadab
 config omission; denial/unavailability/policy failures must not become empty
 results. Prove no target/task creation occurs.
 
-## 5. Target provenance — #729
+## 5. Target provenance — #729 (implemented)
 
 Add optional `source` to existing target create/modify and list/detail
 representations, mapping typed request/response `source`. Write values are

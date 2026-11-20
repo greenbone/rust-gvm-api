@@ -528,6 +528,7 @@ impl TargetPort for MockTargetPort {
             return Err(GatewayError::NotFound(format!("target {id} not found")));
         }
         Ok(Target {
+            source: None,
             id: id.to_string(),
             name: "Mock Target".to_string(),
             comment: None,
@@ -556,6 +557,7 @@ impl TargetPort for MockTargetPort {
             return Err(GatewayError::NotFound(format!("target {id} not found")));
         }
         Ok(Target {
+            source: None,
             id: id.to_string(),
             name: input.name.unwrap_or_else(|| "Modified Target".to_string()),
             comment: input.comment,
