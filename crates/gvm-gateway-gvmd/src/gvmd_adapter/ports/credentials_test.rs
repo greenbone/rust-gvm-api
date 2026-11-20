@@ -77,6 +77,7 @@ fn ad_errors_are_classified_and_sanitized() {
         (404, "Not found: CN=secret", "not_found"),
         (400, "LDAP bind failed: secret", "backend_unavailable"),
         (500, "Internal error: secret", "internal_server_error"),
+        (409, "Conflict: CN=secret bindPassword=secret", "conflict"),
     ] {
         let error = super::credentials::map_ad_error(gvm_client::GvmError::Server {
             status,
@@ -85,4 +86,14 @@ fn ad_errors_are_classified_and_sanitized() {
         assert_eq!(error.code().as_str(), expected);
         assert!(!format!("{error:?}").contains("secret"));
     }
+}
+
+#[test]
+fn ad_timeout_keeps_its_category_with_sanitized_detail() {
+    // The route can publish 504 without exposing transport diagnostics.
+    let error = super::credentials::map_ad_error(gvm_client::GvmError::Timeout(
+        std::time::Duration::from_secs(5),
+    ));
+    assert!(matches!(error, GatewayError::GatewayTimeout(_)));
+    assert_eq!(error.detail(), "Active Directory operation failed");
 }
