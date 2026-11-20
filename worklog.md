@@ -62,3 +62,12 @@ Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/
 Publish the inventory-token 200 Cache-Control header with const no-store in generated OpenAPI; assert generated/curated header parity.
 
 Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/api-agent-target): cargo test -p gvm-gateway-rest --lib (201 passed, including inventory-token generated/curated header parity); cargo test -p gvm-gateway --test agents (5 passed, including runtime inventory-token no-store success/rejection behavior); cargo fmt --all -- --check; cargo clippy --workspace --all-targets --all-features -- -D warnings. All passed. Reused the existing target cache; refreshed local source mtimes after cross-worktree stale dependency artifacts initially hid this slice's token service/error additions.
+
+## PR #747 review correction (2026-11-20)
+
+- Isolated at manifest head 4c5a82f63c84693c2e16ba071471b800014fd176; parent stack untouched.
+- Authenticated review confirms missing runtime 409/500/504 outcomes in both AD verification contracts. Added generated and curated problem responses, explicit status parity, six saved/inline HTTP error cases with no-store and sensitive-payload exclusion, plus typed adapter conflict/timeout sanitization coverage.
+- Verification in progress using report-test-env and an isolated copy of the existing cache; no dependency changes.
+
+- Final verification: saved/inline HTTP + published-status parity 4 passed (six 409/500/504 HTTP combinations), REST 206 passed, gateway contract 27 passed, two focused typed AD adapter regressions passed; fmt check and required strict workspace/all-target/all-feature Clippy passed.
+- Shared-target concurrency initially produced stale cross-head artifacts; isolated copied cache and source freshness resolved it without dependency or parent-stack changes.
