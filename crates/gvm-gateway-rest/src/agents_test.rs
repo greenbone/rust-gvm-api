@@ -209,6 +209,7 @@ fn scheduler_delay_rejects_invalid_ranges_and_types_before_dispatch() {
         serde_json::Value::Null,
         serde_json::json!(-1),
         serde_json::json!(2147483648u64),
+        serde_json::json!(u32::MAX),
         serde_json::json!(1.5),
     ] {
         let parsed =
@@ -248,6 +249,7 @@ fn group_delay_omission_zero_and_bounds_match_the_schedule_contract() {
         serde_json::Value::Null,
         serde_json::json!(-1),
         serde_json::json!(2147483648u64),
+        serde_json::json!(u32::MAX),
         serde_json::json!(1.5),
     ] {
         let body = serde_json::json!({"name":"group","schedulerCronTime":"* * * * *","maxDelaySeconds":delay});
@@ -259,5 +261,68 @@ fn group_delay_omission_zero_and_bounds_match_the_schedule_contract() {
         assert!(serde_json::from_value::<ModifyAgentGroupRequest>(body)
             .map(|request| request.validate_into().is_err())
             .unwrap_or(true));
+    }
+}
+
+#[test]
+fn response_delay_observations_validate_without_write_range_truncation() {
+    // A typed backend observation is not a write: project and serialize full
+    // agent/group responses, then validate them against both public contracts.
+    let generated = crate::router::build_openapi();
+    let spec_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../spec/rest-api");
+    let mut curated: serde_json::Value =
+        serde_yaml::from_str(&std::fs::read_to_string(spec_dir.join("emerging.yaml")).unwrap())
+            .unwrap();
+    let common: serde_json::Value =
+        serde_yaml::from_str(&std::fs::read_to_string(spec_dir.join("common.yaml")).unwrap())
+            .unwrap();
+    for (name, schema) in common["components"]["schemas"].as_object().unwrap() {
+        curated["components"]["schemas"]
+            .as_object_mut()
+            .unwrap()
+            .entry(name.clone())
+            .or_insert_with(|| schema.clone());
+    }
+    // Bundle the shared resource references used by agent/group response objects.
+    let curated: serde_json::Value =
+        serde_json::from_str(&serde_json::to_string(&curated).unwrap().replace(
+            "./common.yaml#/components/schemas/",
+            "#/components/schemas/",
+        ))
+        .unwrap();
+    for delay in [0, 2147483648u32, u32::MAX] {
+        let agent: gvm_gateway_domain::Agent = serde_json::from_value(serde_json::json!({
+            "id": RESOURCE_ID, "name": "observed", "writable": true, "inUse": false,
+            "config": {"agentScriptExecutor": {"schedulerCronTime": [
+                {"cron": "* * * * *", "maxDelaySeconds": delay}
+            ]}}
+        }))
+        .unwrap();
+        let group: gvm_gateway_domain::AgentGroup = serde_json::from_value(serde_json::json!({
+            "id": RESOURCE_ID, "name": "observed", "writable": true, "inUse": false,
+            "schedulerCronTime": "* * * * *", "maxDelaySeconds": delay
+        }))
+        .unwrap();
+        let agent = serde_json::to_value(AgentResponse::from(agent)).unwrap();
+        let group = serde_json::to_value(AgentGroupResponse::from(group)).unwrap();
+        assert_eq!(
+            agent["config"]["agentScriptExecutor"]["schedulerCronTime"][0]["maxDelaySeconds"],
+            delay
+        );
+        assert_eq!(group["maxDelaySeconds"], delay);
+        for document in [&generated, &curated] {
+            for (name, body) in [("Agent", &agent), ("AgentGroup", &group)] {
+                let schema = serde_json::json!({
+                    "$ref": format!("#/components/schemas/{name}"),
+                    "components": document["components"]
+                });
+                let validator = jsonschema::validator_for(&schema).unwrap();
+                assert!(
+                    validator.is_valid(body),
+                    "{name}: {:?}",
+                    validator.iter_errors(body).collect::<Vec<_>>()
+                );
+            }
+        }
     }
 }
