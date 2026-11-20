@@ -76,3 +76,11 @@ Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/
 
 - Final verification: saved/inline HTTP + published-status parity 4 passed (six 409/500/504 HTTP combinations), REST 206 passed, gateway contract 27 passed, two focused typed AD adapter regressions passed; fmt check and required strict workspace/all-target/all-feature Clippy passed.
 - Shared-target concurrency initially produced stale cross-head artifacts; isolated copied cache and source freshness resolved it without dependency or parent-stack changes.
+
+## PR #748 review correction (2026-11-20)
+
+- Isolated at manifest head cc9e750e901c84ae416b8793b395287251964b1f; parent stack untouched.
+- Authenticated review confirms generated AD search 200 lacks the runtime/curated Cache-Control header. Added a machine-readable string const no-store header, a REST schema assertion, and served-generated/curated header-schema parity.
+- Verification in progress using report-test-env and an isolated copy of the existing cache; no dependency changes.
+
+- Final verification: full REST suite 214 passed (including generated no-store schema), gateway contract 30 passed (including served-generated/curated header-schema parity); fmt check and required strict workspace/all-target/all-feature Clippy passed. Used an isolated copy of the existing report cache to avoid other worktree artifacts; no dependency changes.
