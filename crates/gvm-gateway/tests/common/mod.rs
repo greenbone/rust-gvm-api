@@ -421,7 +421,7 @@ pub async fn specialized_target_harness_with_fault(
     specialized_target_harness_from_server(server).await
 }
 
-async fn specialized_target_harness_from_server(server: MockGmpServer) -> TargetHarness {
+pub async fn specialized_target_harness_from_server(server: MockGmpServer) -> TargetHarness {
     let target_adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
     let sessions = Arc::new(SessionManager::default());
     let service = live_gateway_service(target_adapter.clone(), Arc::clone(&sessions));
