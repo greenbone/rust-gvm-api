@@ -55,6 +55,49 @@ fn agent_schedule_input_union_preserves_disjoint_branches_and_constraints() {
 }
 
 #[test]
+fn scheduler_read_and_write_schemas_publish_distinct_non_nullable_ranges() {
+    // Backend u32 observations must not inherit signed command constraints.
+    // Validate actual public field schemas, including group create/modify inputs.
+    let generated = build_openapi();
+    let spec_path = root_spec_path();
+    let curated = read_yaml(&spec_path.parent().unwrap().join("emerging.yaml"));
+    for document in [&generated, &curated] {
+        let schemas = &document["components"]["schemas"];
+        let response_items = resolve_local_schema_ref(
+            schemas,
+            &schemas["AgentScriptExecutorConfig"]["properties"]["schedulerCronTime"]["items"],
+        );
+        assert_eq!(response_items, &schemas["AgentScheduleResponse"]);
+        for (name, maximum) in [
+            ("AgentScheduleResponse", u32::MAX),
+            ("AgentGroup", u32::MAX),
+            ("AgentScheduleInput", i32::MAX as u32),
+            ("CreateAgentGroup", i32::MAX as u32),
+            ("ModifyAgentGroup", i32::MAX as u32),
+        ] {
+            let delay = &schemas[name]["properties"]["maxDelaySeconds"];
+            assert_eq!(delay["minimum"].as_f64(), Some(0.0), "{name}");
+            assert_eq!(
+                delay["maximum"].as_f64(),
+                Some(f64::from(maximum)),
+                "{name}"
+            );
+            let validator = jsonschema::validator_for(delay).unwrap();
+            assert!(validator.is_valid(&json!(0)), "{name}");
+            assert!(validator.is_valid(&json!(maximum)), "{name}");
+            for invalid in [
+                Value::Null,
+                json!(-1),
+                json!(1.5),
+                json!(u64::from(maximum) + 1),
+            ] {
+                assert!(!validator.is_valid(&invalid), "{name} accepted {invalid}");
+            }
+        }
+    }
+}
+
+#[test]
 fn generated_openapi_matches_curated_spec() {
     let generated = build_openapi();
     let curated = root_spec();

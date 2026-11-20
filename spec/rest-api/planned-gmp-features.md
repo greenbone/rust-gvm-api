@@ -226,12 +226,14 @@ The current REST `config.agentScriptExecutor.schedulerCronTime` is an array of
 strings. Planned entries are `{ "cron": "0 */6 * * *", "maxDelaySeconds": 30 }`,
 mapping `AgentSchedule { cron, max_delay_seconds }` for reads and agent/default
 updates. `cron` is a required string; cron interpretation remains backend-owned.
-`maxDelaySeconds` is optional integer 0–2147483647. Omission delegates the request
-default (zero) to gvmd but remains absent on reads; explicit zero stays zero.
+`maxDelaySeconds` is an optional, non-null integer: writes accept 0–2147483647,
+while read observations preserve the full typed 0–4294967295 range. Omission
+delegates the request default (zero) to gvmd but remains absent on reads; explicit
+zero stays zero.
 Agent-group `schedulerCronTime` remains a **single string**, not this array;
 add optional top-level `maxDelaySeconds` to create/modify/read with the same
-range and omission rules. Do not conflate group synchronization and agent
-executor schedules.
+read/write ranges and omission rules. Do not conflate group synchronization and
+agent executor schedules.
 
 Implemented Tech Preview migration: accept legacy string entries on writes as `{cron: value}`
 with omitted delay (as supported by upstream deserialization), while publishing
