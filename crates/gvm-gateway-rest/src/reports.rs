@@ -82,13 +82,34 @@ impl From<gvm_gateway_domain::ResultCount> for ResultCountResponse {
     }
 }
 
+/// Task reference from a report snapshot, distinct from generic task references.
+#[derive(Clone, Debug, Serialize, JsonSchema)]
+#[schemars(rename = "ReportTaskRef")]
+pub(crate) struct ReportTaskRefResponse {
+    id: Uuid,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    name: Option<String>,
+    #[serde(rename = "scanConfig", skip_serializing_if = "Option::is_none")]
+    scan_config: Option<ResourceRefResponse>,
+}
+
+impl From<gvm_gateway_domain::ReportTaskRef> for ReportTaskRefResponse {
+    fn from(task: gvm_gateway_domain::ReportTaskRef) -> Self {
+        Self {
+            id: parse_uuid(&task.id),
+            name: task.name,
+            scan_config: task.scan_config.map(ResourceRefResponse::from),
+        }
+    }
+}
+
 /// JSON body returned for a single report.
 #[derive(Clone, Debug, Serialize, JsonSchema)]
 #[schemars(rename = "Report")]
 pub(crate) struct ReportResponse {
     id: Uuid,
     #[serde(skip_serializing_if = "Option::is_none")]
-    task: Option<ResourceRefResponse>,
+    task: Option<ReportTaskRefResponse>,
     #[serde(rename = "scanStart", skip_serializing_if = "Option::is_none")]
     #[schemars(schema_with = "datetime_schema")]
     scan_start: Option<String>,
@@ -108,7 +129,7 @@ impl From<gvm_gateway_domain::Report> for ReportResponse {
     fn from(r: gvm_gateway_domain::Report) -> Self {
         Self {
             id: parse_uuid(&r.id),
-            task: r.task.map(ResourceRefResponse::from),
+            task: r.task.map(ReportTaskRefResponse::from),
             scan_start: r.scan_start,
             scan_end: r.scan_end,
             severity: r.severity,

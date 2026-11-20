@@ -1682,6 +1682,44 @@ fn typed_result_and_nested_reference_types_remain_open_and_optional() {
         .is_none());
 }
 
+// Intent: historical config identity/name must come from a typed report snapshot, not current task state.
+#[test]
+fn snapshot_config_preserves_identity_name_and_absence() {
+    for (config, expected) in [
+        (
+            r#"<scan_config id="11111111-1111-1111-1111-111111111111"><name>Old &amp; frozen</name></scan_config>"#,
+            true,
+        ),
+        ("", false),
+    ] {
+        let xml = format!(
+            r#"<get_scan_report_response status="200" status_text="OK"><report id="22222222-2222-2222-2222-222222222222"><name>Report</name><task id="33333333-3333-3333-3333-333333333333"><name>Task</name>{config}</task></report></get_scan_report_response>"#
+        );
+        let parsed = gvm_gmp::responses::GetScanReportResponse::from_response(&GmpResponse::from(
+            xml.as_str(),
+        ))
+        .unwrap();
+        let task = report_task_from_snapshot(parsed.report.task.unwrap()).unwrap();
+        assert_eq!(task.scan_config.is_some(), expected);
+        if let Some(config) = task.scan_config {
+            assert_eq!(config.id, "11111111-1111-1111-1111-111111111111");
+            assert_eq!(config.name.as_deref(), Some("Old & frozen"));
+        }
+    }
+}
+
+#[test]
+fn snapshot_task_omits_unavailable_name_like_generic_report_task() {
+    // Intent (#736): snapshot enrichment must retain the generic reference's
+    // optional-name convention when gvmd does not provide a task name.
+    let parsed = gvm_gmp::responses::GetScanReportResponse::from_response(&GmpResponse::from(
+        r#"<get_scan_report_response status="200" status_text="OK"><report id="22222222-2222-2222-2222-222222222222"><name>Report</name><task id="33333333-3333-3333-3333-333333333333"/></report></get_scan_report_response>"#,
+    )).unwrap();
+    let task = report_task_from_snapshot(parsed.report.task.unwrap()).unwrap();
+    assert!(task.name.is_none());
+    assert!(task.scan_config.is_none());
+}
+
 #[test]
 fn typed_agent_and_group_delay_observations_preserve_full_u32_range() {
     // Exercise the real typed-to-domain projections independently of write builders:

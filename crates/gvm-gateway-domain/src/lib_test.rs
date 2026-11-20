@@ -308,9 +308,10 @@ fn target_serializes_exclude_hosts_only_when_nonempty() {
 fn report_serializes_camel_case() {
     let report = Report {
         id: "550e8400-e29b-41d4-a716-446655440000".to_string(),
-        task: Some(ResourceRef {
+        task: Some(ReportTaskRef {
             id: "task-1".to_string(),
             name: Some("Scan".to_string()),
+            scan_config: None,
         }),
         scan_start: Some("2026-01-01T00:00:00Z".to_string()),
         scan_end: None,

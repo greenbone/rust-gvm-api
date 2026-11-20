@@ -433,7 +433,7 @@ components:
           type: string
           format: uuid
         task:
-          $ref: "./common.yaml#/components/schemas/ResourceRef"
+          $ref: "#/components/schemas/ReportTaskRef"
         scanStart:
           type: string
           format: date-time
@@ -452,6 +452,19 @@ components:
           items:
             $ref: "./results.yaml#/components/schemas/Result"
           description: Embedded results from the requested page when fetching a single report.
+
+    ReportTaskRef:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        scanConfig:
+          $ref: "./common.yaml#/components/schemas/ResourceRef"
+          description: Historical configuration from the structured report snapshot; absent on report lists.
 
     ResultCount:
       type: object
