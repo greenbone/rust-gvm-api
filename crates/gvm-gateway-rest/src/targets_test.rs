@@ -28,6 +28,7 @@ fn target_list_query_decodes_filter_and_encoded_filter_id() {
 #[test]
 fn target_response_preserves_unknown_alive_test() {
     let response = TargetResponse::from(Target {
+        source: None,
         id: "123e4567-e89b-12d3-a456-426614174000".to_string(),
         name: "Example".to_string(),
         comment: None,
@@ -81,4 +82,113 @@ fn target_requests_reject_unknown_fields() {
         "portListId": "123e4567-e89b-12d3-a456-426614174000"
     }))
     .expect("documented create-target fields should still parse");
+}
+
+/// Optional writes must preserve omission, reject unknown selectors and disallow null.
+#[test]
+fn target_source_write_contract() {
+    for source in ["manual", "active_directory"] {
+        let create = serde_json::from_value::<CreateTargetRequest>(json!({
+            "name": "Example", "hosts": ["192.0.2.1"], "source": source
+        }))
+        .unwrap()
+        .validate()
+        .unwrap();
+        assert_eq!(create.source.as_deref(), Some(source));
+        let modify = serde_json::from_value::<ModifyTargetRequest>(json!({"source": source}))
+            .unwrap()
+            .validate()
+            .unwrap();
+        assert_eq!(modify.source.as_deref(), Some(source));
+    }
+    for source in [
+        json!(""),
+        json!("ad"),
+        json!("future_source"),
+        json!(" manual"),
+        json!(null),
+        json!(7),
+    ] {
+        let create = serde_json::from_value::<CreateTargetRequest>(json!({
+            "name": "Example", "hosts": ["192.0.2.1"], "source": source
+        }));
+        assert!(create.is_err() || create.unwrap().validate().is_err());
+        let modify = serde_json::from_value::<ModifyTargetRequest>(json!({"source": source}));
+        assert!(modify.is_err() || modify.unwrap().validate().is_err());
+    }
+    let create = serde_json::from_value::<CreateTargetRequest>(json!({
+        "name": "Example", "hosts": ["192.0.2.1"]
+    }))
+    .unwrap()
+    .validate()
+    .unwrap();
+    assert_eq!(create.source, None);
+    let modify = serde_json::from_value::<ModifyTargetRequest>(json!({}))
+        .unwrap()
+        .validate()
+        .unwrap();
+    assert_eq!(modify.source, None);
+}
+
+/// Read selectors are open, and older payloads must not acquire fabricated provenance.
+#[test]
+fn target_source_read_contract() {
+    for source in [
+        None,
+        Some("active_directory"),
+        Some("manual"),
+        Some("future_directory"),
+    ] {
+        let target = Target {
+            id: "123e4567-e89b-12d3-a456-426614174000".into(),
+            name: "Example".into(),
+            source: source.map(str::to_owned),
+            comment: None,
+            hosts: vec![],
+            exclude_hosts: vec![],
+            alive_test: None,
+            port_list: None,
+            reverse_lookup_only: false,
+            reverse_lookup_unify: false,
+            ssh_credential: None,
+            smb_credential: None,
+            esxi_credential: None,
+            snmp_credential: None,
+            in_use: false,
+            writable: true,
+        };
+        let list = super::TargetListResponse::from(super::TargetPage {
+            data: vec![target.clone()],
+            pagination: super::Pagination {
+                page: 1,
+                per_page: 25,
+                total: 1,
+                total_pages: 1,
+            },
+        });
+        let list_value = serde_json::to_value(list).unwrap();
+        let value = serde_json::to_value(TargetResponse::from(target)).unwrap();
+        assert_eq!(list_value["data"][0], value);
+        match source {
+            Some(source) => assert_eq!(value["source"], source),
+            None => assert!(value.get("source").is_none()),
+        }
+    }
+}
+
+/// Source selectors remain ordinary GMP filter text; the REST layer adds no grammar.
+#[test]
+fn target_source_filter_is_forwarded_without_rewriting() {
+    let query = TargetListQuery::try_from_query_string(
+        "filter=source%3Dactive_directory%20and%20name~%22AD%22",
+    )
+    .unwrap();
+    assert_eq!(
+        query.filter_string.as_deref(),
+        Some("source=active_directory and name~\"AD\"")
+    );
+    assert_eq!(
+        super::build_gmp_filter(query.filter_string, query.filter_id).as_deref(),
+        Some("source=active_directory and name~\"AD\"")
+    );
 }

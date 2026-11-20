@@ -2503,6 +2503,7 @@ fn filter_to_gmp_string() {
 fn uuid_validation() {
     assert!(TargetListQuery::try_from_query_string("filterId=not-a-uuid").is_err());
     assert!(CreateTargetRequest {
+        source: None,
         name: Some("target".to_string()),
         comment: None,
         hosts: vec!["127.0.0.1".to_string()],
@@ -2521,6 +2522,7 @@ fn uuid_validation() {
     // Modify-target credential IDs use the same UUID validation contract as
     // create-target credential IDs, preserving symmetry between both paths.
     assert!(ModifyTargetRequest {
+        source: None,
         name: None,
         comment: None,
         hosts: None,
@@ -2537,6 +2539,7 @@ fn uuid_validation() {
     .validate()
     .is_err());
     assert!(ModifyTargetRequest {
+        source: None,
         name: None,
         comment: None,
         hosts: None,
@@ -2557,6 +2560,7 @@ fn uuid_validation() {
 #[test]
 fn modify_requests_map_mutable_fields() {
     let target_input = ModifyTargetRequest {
+        source: None,
         name: None,
         comment: None,
         hosts: None,

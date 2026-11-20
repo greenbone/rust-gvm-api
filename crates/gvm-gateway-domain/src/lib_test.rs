@@ -271,6 +271,7 @@ fn user_setting_debug_redacts_values() {
 #[test]
 fn target_serializes_exclude_hosts_only_when_nonempty() {
     let target_with_excludes = Target {
+        source: None,
         id: "123".to_string(),
         name: "test".to_string(),
         comment: None,

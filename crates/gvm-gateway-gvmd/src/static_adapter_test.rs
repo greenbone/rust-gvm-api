@@ -54,6 +54,7 @@ async fn static_adapter_list_targets_unsupported() {
 async fn static_adapter_create_target_unsupported() {
     let adapter = StaticGvmdAdapter::ready("22.7");
     let input = CreateTargetInput {
+        source: None,
         name: "test".to_string(),
         comment: None,
         hosts: vec![],
