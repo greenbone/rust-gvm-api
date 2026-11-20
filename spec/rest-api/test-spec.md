@@ -370,3 +370,19 @@ raw result/catalog refs with unknown types and escaped opaque identifiers.
 Generated/curated OpenAPI parity remains required. These fixtures are not live
 Agent/gvmd or KEV-feed qualification. KEV-specific tests await actual producer
 and typed library contracts; absence is never a synthetic negative observation.
+
+
+## Report-result scope and comparison contract (#741)
+
+- Seed two reports with overlapping high/low severities. Both strict severity
+  predicates and explicit boolean alternatives must return only path-report rows,
+  with counts and pagination computed in that scope.
+- Compose saved and inline filters through the typed upstream scope helper;
+  reject attempts to replace report identity or endpoint-owned pagination.
+- Unsupported inclusive `>=`/`<=` comparators outside quoted literal values
+  return 400 before the results operation, never silently ignored success.
+- A successful backend response with a missing report association or another
+  report ID returns a sanitized 502 for both scoped-result and embedded-report
+  loading, not partial data with unadjusted counts.
+- Upper/lowercase UUID spellings identify the same report. Keep returned payload
+  spelling and optional source metadata unchanged.
