@@ -9,6 +9,7 @@ fn nvt_response_preserves_discovery_false() {
     // Explicit false is backend information, not absence, and must remain in
     // the additive public response field.
     let response = NvtResponse::from(Nvt {
+        refs: vec![],
         oid: "1.3.6.1".to_string(),
         name: "Non-discovery check".to_string(),
         family: None,
@@ -29,6 +30,7 @@ fn nvt_response_omits_absent_discovery() {
     // Compatibility requires older backend responses to omit the new field
     // instead of adding a null value.
     let response = NvtResponse::from(Nvt {
+        refs: vec![],
         oid: "1.3.6.1".to_string(),
         name: "Unclassified check".to_string(),
         family: None,
@@ -50,6 +52,7 @@ fn nvt_response_exposes_optional_epss() {
     // Catalog list/detail DTOs expose both selections with their distinct CVEs
     // and retain optional severity exactly as represented by the domain model.
     let response = NvtResponse::from(Nvt {
+        refs: vec![],
         oid: "1.3.6.1".to_string(),
         name: "EPSS check".to_string(),
         family: None,

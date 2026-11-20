@@ -451,6 +451,7 @@ fn scan_result_serializes_camel_case() {
         threat: Some("High".to_string()),
         qod: None,
         nvt: Some(NvtRef {
+            refs: vec![],
             oid: Some("1.3.6.1.4.1.25623.1.0.12345".to_string()),
             name: Some("Test NVT".to_string()),
             family: Some("Test Family".to_string()),
@@ -519,6 +520,7 @@ fn scan_result_qod_preserves_complete_partial_and_absent_shapes() {
 #[test]
 fn nvt_ref_omits_empty_cves() {
     let nvt = NvtRef {
+        refs: vec![],
         oid: Some("1.2.3".to_string()),
         name: None,
         family: None,
