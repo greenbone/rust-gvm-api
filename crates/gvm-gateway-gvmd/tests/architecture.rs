@@ -18,13 +18,13 @@ const RUST_GVM_COMPONENTS: &[&str] = &[
 // immutable upstream stack commit; this is not a released tag.
 const RUST_GVM_DEPENDENCY_URL: &str = "https://github.com/greenbone/rust-gvm";
 const RUST_GVM_DEPENDENCY_VERSION: &str = "0.11.1";
-const RUST_GVM_DEPENDENCY_REVISION: &str = "b6f33da1224aa4950f39dc3db0e6d5607e0e0f89";
+const RUST_GVM_DEPENDENCY_REVISION: &str = "bcac05492244f55df51b971184cc63ddc7bd7bed";
 // The feature stack adds AD verification/discovery and inventory-token helpers
 // to the previous 267-method baseline. All 270 helpers are deliberately reviewed
 // in the matching snapshot and disposition ledger.
 const RUST_GVM_PIN_REFERENCE: &str = "stack-commit";
 const RUST_GVM_FACADE_TAG: &str = "gmp-feature-stack";
-const RUST_GVM_FACADE_REVISION: &str = "b6f33da1224aa4950f39dc3db0e6d5607e0e0f89";
+const RUST_GVM_FACADE_REVISION: &str = "bcac05492244f55df51b971184cc63ddc7bd7bed";
 const RUST_GVM_TYPED_FACADE_METHOD_COUNT: usize = 270;
 const RUST_GVM_TYPED_FACADE_SNAPSHOT: &str = "tests/fixtures/rust-gvm-v0.11.0-typed-facade.tsv";
 const RUST_GVM_DISPOSITION_LEDGER: &str = "../../docs/upstream-surface-dispositions.tsv";
