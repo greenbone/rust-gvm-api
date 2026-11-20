@@ -12,6 +12,8 @@ use crate::{hide_optional_value, Pagination};
 /// Domain credential representation.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Credential {
+    /// Optional directory metadata; never includes the bind password.
+    pub active_directory: Option<ActiveDirectoryMetadata>,
     /// Credential identifier.
     pub id: String,
     /// Credential name.
@@ -120,6 +122,8 @@ pub struct CredentialQuery {
 /// Credential create command.
 #[derive(Clone, Default, Eq, PartialEq)]
 pub struct CreateCredentialInput {
+    /// Optional AD connector fields.
+    pub active_directory: Option<ActiveDirectoryInput>,
     /// Credential name.
     pub name: String,
     /// Optional comment.
@@ -153,6 +157,8 @@ pub struct CreateCredentialInput {
 /// Credential update command.
 #[derive(Clone, Default, Eq, PartialEq)]
 pub struct ModifyCredentialInput {
+    /// Partial AD connector fields.
+    pub active_directory: Option<ActiveDirectoryInput>,
     /// Optional name.
     pub name: Option<String>,
     /// Optional comment.
@@ -185,6 +191,7 @@ impl fmt::Debug for CreateCredentialInput {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("CreateCredentialInput")
+            .field("active_directory", &self.active_directory)
             .field("name", &self.name)
             .field("comment", &self.comment)
             .field("credential_type", &self.credential_type)
@@ -213,6 +220,7 @@ impl fmt::Debug for ModifyCredentialInput {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("ModifyCredentialInput")
+            .field("active_directory", &self.active_directory)
             .field("name", &self.name)
             .field("comment", &self.comment)
             .field("login", &self.login)
@@ -234,4 +242,66 @@ impl fmt::Debug for ModifyCredentialInput {
             )
             .finish()
     }
+}
+
+/// Directory connector write fields. All values are excluded from diagnostics.
+#[derive(Clone, Default, Eq, PartialEq)]
+pub struct ActiveDirectoryInput {
+    /// Directory host.
+    pub host: Option<String>,
+    /// Optional explicit port.
+    pub port: Option<u16>,
+    /// Restore server port default on modify.
+    pub clear_port: bool,
+    /// Bind DN.
+    pub bind_dn: Option<String>,
+    /// Write-only bind password.
+    pub bind_password: Option<String>,
+    /// Search root DN.
+    pub base_dn: Option<String>,
+    /// Secure transport: ldaps or starttls.
+    pub tls_mode: Option<String>,
+    /// Optional CA, empty clears on modify.
+    pub ca_certificate: Option<String>,
+}
+impl fmt::Debug for ActiveDirectoryInput {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("ActiveDirectoryInput(<redacted>)")
+    }
+}
+/// Authorized directory metadata. No secret is projected.
+#[derive(Clone, Default, Deserialize, Serialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct ActiveDirectoryMetadata {
+    /// Optional observed value.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub host: Option<String>,
+    /// Optional observed value.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub port: Option<u16>,
+    /// Optional observed value.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bind_dn: Option<String>,
+    /// Optional observed value.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base_dn: Option<String>,
+    /// Optional observed value.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tls_mode: Option<String>,
+    /// Optional observed value.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ca_certificate: Option<String>,
+}
+impl fmt::Debug for ActiveDirectoryMetadata {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("ActiveDirectoryMetadata(<redacted>)")
+    }
+}
+/// Mutually exclusive verification inputs.
+#[derive(Clone, Debug)]
+pub enum VerifyActiveDirectoryInput {
+    /// Verify saved credential.
+    Saved(String),
+    /// Verify inline fields without persistence.
+    Inline(ActiveDirectoryInput),
 }

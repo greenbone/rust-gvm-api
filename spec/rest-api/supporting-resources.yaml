@@ -1869,6 +1869,11 @@ components:
         - oid
         - name
       properties:
+        refs:
+          type: array
+          items:
+            $ref: "./results.yaml#/components/schemas/NvtReference"
+          description: Generic backend references, including unknown types; omitted when unavailable.
         oid:
           type: string
         name:

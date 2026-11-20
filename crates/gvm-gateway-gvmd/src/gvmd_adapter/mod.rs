@@ -386,7 +386,7 @@ impl GvmdAdapter {
     ) -> Result<R::Response, GatewayError>
     where
         R: GmpRequest,
-        F: FnOnce(GvmError) -> GatewayError,
+        F: Fn(GvmError) -> GatewayError,
     {
         let client = self.session_client(session_token)?;
         let span = info_span!(
@@ -399,12 +399,13 @@ impl GvmdAdapter {
         );
 
         async move {
-            let response = client
-                .lock()
-                .await?
-                .execute(request)
-                .await
-                .map_err(map_error)?;
+            let mut client = client.lock().await?;
+            if request.command().is_some_and(|command| {
+                client.command_support(command.wire_name()) == CommandSupport::RequiresDiscovery
+            }) {
+                client.discover_commands().await.map_err(&map_error)?;
+            }
+            let response = client.execute(request).await.map_err(map_error)?;
             tracing::Span::current().record("gvmd_status", field::display("ok"));
             Ok(response)
         }

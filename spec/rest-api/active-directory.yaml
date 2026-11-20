@@ -1,0 +1,176 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Greenbone AG
+openapi: 3.1.0
+paths:
+  /active-directory/object-searches:
+    post:
+      operationId: searchActiveDirectoryObjects
+      tags: [Credentials]
+      summary: Search live Active Directory objects
+      description: |
+        Read-only controller search using a saved AD credential. No search,
+        target or task is persisted; returns no Location. Requires positive
+        backend XML-help discovery, with no guessed GMP version gate. Uses the
+        existing Basic-or-Bearer session authorization and serialization.
+        DNs are opaque: gvmd enforces containment, case, direct group membership,
+        destination/TLS policy and visibility. There is no local LDAP fallback.
+        All responses use Cache-Control: no-store; payloads are excluded from
+        diagnostics. Failures never become an empty successful result.
+        Omitted options retain backend defaults (scope onelevel, disabled
+        computers included, expansions false, OU/computer/group selection).
+        A bounded fetched subset is not directory-wide completeness or REST
+        pagination; there is no synthesized cursor. Live AD/TLS qualification
+        remains required before claiming environment interoperability.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActiveDirectorySearchInput'
+      responses:
+        '200':
+          description: Fetched directory subset; objects envelope may be absent
+          headers:
+            Cache-Control:
+              schema: {type: string, const: no-store}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActiveDirectorySearchResult'
+        '400':
+          $ref: './common.yaml#/components/responses/BadRequest'
+        '401':
+          $ref: './common.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: './common.yaml#/components/responses/Forbidden'
+        '404':
+          $ref: './common.yaml#/components/responses/NotFound'
+        '409':
+          $ref: './common.yaml#/components/responses/Conflict'
+        '500':
+          description: Backend directory operation failed (sanitized)
+          content:
+            application/problem+json:
+              schema:
+                $ref: './common.yaml#/components/schemas/ProblemDetail'
+        '501':
+          $ref: './common.yaml#/components/responses/NotImplemented'
+        '502':
+          $ref: './common.yaml#/components/responses/BadGateway'
+        '504':
+          $ref: './common.yaml#/components/responses/GatewayTimeout'
+components:
+  schemas:
+    ActiveDirectorySearchScope:
+      type: string
+      enum: [base, onelevel, subtree]
+    ActiveDirectoryObjectType:
+      type: string
+      enum: [ou, container, computer, group]
+    ActiveDirectorySearchInput:
+      type: object
+      additionalProperties: false
+      required: [credentialId]
+      properties:
+        credentialId: {type: string, format: uuid}
+        scope:
+          $ref: '#/components/schemas/ActiveDirectorySearchScope'
+        maxResults: {type: integer, minimum: 1, maximum: 1000}
+        includeDisabledComputers: {type: boolean}
+        targets: {type: boolean}
+        tasks:
+          type: boolean
+          description: true requires explicit targets=true
+        details: {type: boolean}
+        baseDn: {type: string, minLength: 1}
+        groupDn:
+          type: string
+          minLength: 1
+          description: Select direct group members, not recursive expansion
+        objectTypes:
+          type: array
+          minItems: 1
+          description: Selection has set semantics; duplicate kinds are accepted
+          items:
+            $ref: '#/components/schemas/ActiveDirectoryObjectType'
+    ActiveDirectorySearchResult:
+      type: object
+      properties:
+        objects:
+          $ref: '#/components/schemas/ActiveDirectoryObjects'
+    ActiveDirectoryObjects:
+      type: object
+      required: [truncated, counts, items]
+      properties:
+        truncated: {type: boolean}
+        counts:
+          $ref: '#/components/schemas/ActiveDirectoryObjectCounts'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActiveDirectoryObject'
+    ActiveDirectoryObjectCounts:
+      type: object
+      description: Counts within the fetched subset, not global directory totals
+      required: [ou, container, group, computer]
+      properties:
+        ou: {type: integer, minimum: 0, maximum: 4294967295}
+        container: {type: integer, minimum: 0, maximum: 4294967295}
+        group: {type: integer, minimum: 0, maximum: 4294967295}
+        computer:
+          $ref: '#/components/schemas/ActiveDirectoryComputerCounts'
+    ActiveDirectoryComputerCounts:
+      type: object
+      required: [total]
+      properties:
+        total: {type: integer, minimum: 0, maximum: 4294967295}
+        disabled:
+          type: integer
+          minimum: 0
+          maximum: 4294967295
+          description: Absent when excluded or unavailable; not defaulted to zero
+    ActiveDirectoryObject:
+      type: object
+      required: [objectType, name, distinguishedName, parentDn, description]
+      properties:
+        objectType:
+          $ref: '#/components/schemas/ActiveDirectoryObjectType'
+        name: {type: string}
+        distinguishedName: {type: string}
+        parentDn: {type: string}
+        description: {type: string}
+        dnsHostname: {type: string}
+        operatingSystem: {type: string}
+        operatingSystemVersion: {type: string}
+        servicePrincipalNames:
+          type: array
+          items: {type: string}
+        disabled: {type: boolean}
+        targets:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActiveDirectoryTarget'
+    ActiveDirectoryTarget:
+      type: object
+      required: [id, name]
+      properties:
+        id: {type: string}
+        name: {type: string}
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActiveDirectoryTask'
+    ActiveDirectoryTask:
+      type: object
+      required: [id, name]
+      properties:
+        id: {type: string}
+        name: {type: string}
+        config:
+          $ref: '#/components/schemas/ActiveDirectoryConfig'
+    ActiveDirectoryConfig:
+      type: object
+      required: [id, name]
+      properties:
+        id: {type: string}
+        name: {type: string}

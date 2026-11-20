@@ -151,6 +151,28 @@ pub trait SchedulePort: Send + Sync + 'static {
 /// Port for credential CRUD operations.
 #[async_trait]
 pub trait CredentialPort: Send + Sync + 'static {
+    /// Read-only directory discovery; static backends do not emulate LDAP.
+    async fn search_active_directory_objects(
+        &self,
+        _session_token: &str,
+        _input: crate::ActiveDirectorySearchInput,
+    ) -> Result<crate::ActiveDirectorySearchResult, GatewayError> {
+        Err(GatewayError::NotImplemented(
+            "Active Directory search unavailable".into(),
+        ))
+    }
+
+    /// Verify an AD credential without creating resources.
+    async fn verify_active_directory(
+        &self,
+        _session_token: &str,
+        _input: crate::VerifyActiveDirectoryInput,
+    ) -> Result<(), GatewayError> {
+        Err(GatewayError::NotImplemented(
+            "Active Directory verification unavailable".into(),
+        ))
+    }
+
     /// List credential stores available to the backend.
     async fn list_credential_stores(
         &self,
@@ -767,6 +789,16 @@ pub trait ScannerPort: Send + Sync + 'static {
 /// Port for agent and agent-group management operations.
 #[async_trait]
 pub trait AgentPort: Send + Sync + 'static {
+    /// Issue an inventory credential; unavailable backends must not fabricate success.
+    async fn get_agent_inventory_token(
+        &self,
+        _session_token: &str,
+    ) -> Result<crate::AgentInventoryToken, GatewayError> {
+        Err(GatewayError::NotImplemented(
+            "Agent inventory token issuance is unavailable.".into(),
+        ))
+    }
+
     /// List agents for the session.
     async fn list_agents(
         &self,

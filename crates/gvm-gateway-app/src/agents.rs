@@ -13,6 +13,22 @@ use gvm_gateway_domain::{
 use crate::GatewayService;
 
 impl GatewayService {
+    /// Issue a confidential backend inventory token for the authenticated session.
+    pub async fn get_agent_inventory_token(
+        &self,
+        session_token: &str,
+    ) -> Result<gvm_gateway_domain::AgentInventoryToken, GatewayError> {
+        self.execute_with_resource(
+            "agents.inventory_token",
+            session_token,
+            "issue",
+            "agent_inventory_token",
+            None,
+            |session| async move { self.agents.get_agent_inventory_token(&session.token).await },
+        )
+        .await
+    }
+
     /// Lists agents for an authenticated session.
     pub async fn list_agents(
         &self,

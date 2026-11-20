@@ -4,6 +4,40 @@
 openapi: 3.1.0
 
 paths:
+  /agents/inventory-token:
+    post:
+      operationId: getAgentInventoryToken
+      tags: [Agents]
+      summary: Issue a confidential agent inventory token
+      description: No body or agent ID. Requires GMP 22.8 and positive help discovery. Tokens are not gateway sessions and are never cached.
+      responses:
+        "200":
+          description: Backend-issued confidential token
+          headers:
+            Cache-Control: { schema: { type: string, const: no-store } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token]
+                properties:
+                  token: { type: string }
+        "400": { $ref: "./common.yaml#/components/responses/BadRequest" }
+        "401": { $ref: "./common.yaml#/components/responses/Unauthorized" }
+        "403": { $ref: "./common.yaml#/components/responses/Forbidden" }
+        "500":
+          description: Sanitized token generation failure
+          content:
+            application/problem+json:
+              schema: { $ref: "./common.yaml#/components/schemas/ProblemDetail" }
+        "501": { $ref: "./common.yaml#/components/responses/NotImplemented" }
+        "502": { $ref: "./common.yaml#/components/responses/BadGateway" }
+        "503":
+          description: Known issuance operation temporarily unavailable
+          content:
+            application/problem+json:
+              schema: { $ref: "./common.yaml#/components/schemas/ProblemDetail" }
+        "504": { $ref: "./common.yaml#/components/responses/GatewayTimeout" }
   /agents:
     get:
       operationId: getAgents
@@ -93,6 +127,11 @@ paths:
         required: false
         schema: { type: boolean }
         description: Request backend support-bundle encryption. Omission preserves the backend default and is distinct from explicit false.
+      - name: anonymized
+        in: query
+        required: false
+        schema: { type: boolean }
+        description: Request backend anonymization independently of encryption; omission preserves the backend default. No guarantee that the bundle is safe to share.
     get:
       operationId: getAgentSupportBundle
       tags: [Agents]
@@ -654,6 +693,18 @@ components:
       type: object
       properties:
         retry: { $ref: "#/components/schemas/AgentRetryConfig" }
+    AgentScheduleResponse:
+      type: object
+      required: [cron]
+      properties:
+        cron: { type: string }
+        maxDelaySeconds: { type: integer, minimum: 0, maximum: 4294967295 }
+    AgentScheduleInput:
+      type: object
+      required: [cron]
+      properties:
+        cron: { type: string }
+        maxDelaySeconds: { type: integer, minimum: 0, maximum: 2147483647 }
     AgentScriptExecutorConfig:
       type: object
       properties:
@@ -662,7 +713,7 @@ components:
         indexerDirDepth: { type: integer, minimum: 0 }
         schedulerCronTime:
           type: array
-          items: { type: string }
+          items: { $ref: "#/components/schemas/AgentScheduleResponse" }
     AgentHeartbeatConfig:
       type: object
       properties:
@@ -689,6 +740,11 @@ components:
         updateToLatest: { type: boolean }
         status: { type: string }
         version: { type: string }
+        operatingSystem: { type: string }
+        architecture: { type: string }
+        osCpe: { type: string }
+        osStatus: { type: string }
+
         lastUpdateTime: { type: string }
         lastContactTime: { type: string }
         scanner: { $ref: "./common.yaml#/components/schemas/ResourceRef" }
@@ -725,7 +781,10 @@ components:
         indexerDirDepth: { type: integer, minimum: 0 }
         schedulerCronTime:
           type: array
-          items: { type: string }
+          items:
+            anyOf:
+              - { type: string }
+              - { $ref: "#/components/schemas/AgentScheduleInput" }
     AgentHeartbeatConfigUpdate:
       type: object
       properties:
@@ -761,6 +820,7 @@ components:
         writable: { type: boolean }
         inUse: { type: boolean }
         schedulerCronTime: { type: string }
+        maxDelaySeconds: { type: integer, minimum: 0, maximum: 4294967295 }
         agents:
           type: array
           items: { $ref: "./common.yaml#/components/schemas/ResourceRef" }
@@ -778,6 +838,7 @@ components:
       properties:
         name: { type: string }
         schedulerCronTime: { type: string }
+        maxDelaySeconds: { type: integer, minimum: 0, maximum: 2147483647 }
         comment: { type: string }
         agentIds:
           type: array
@@ -787,6 +848,7 @@ components:
       required: [schedulerCronTime]
       properties:
         schedulerCronTime: { type: string }
+        maxDelaySeconds: { type: integer, minimum: 0, maximum: 2147483647 }
         name: { type: string }
         comment: { type: string }
         agentIds:

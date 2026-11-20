@@ -16,6 +16,88 @@ use crate::auth_policy::{
 use crate::router::build_openapi;
 
 #[test]
+fn agent_schedule_input_union_preserves_disjoint_branches_and_constraints() {
+    // Regression for #730: serde's untagged union emits anyOf, which is equivalent
+    // to oneOf here only because a string cannot also satisfy the object branch.
+    // Keep the concrete branches and their constraints checked, not a permissive
+    // comparison-helper exception that might conceal overlapping alternatives.
+    fn resolve_local<'a>(document: &'a Value, schema: &'a Value) -> &'a Value {
+        match schema.get("$ref").and_then(Value::as_str) {
+            Some(reference) => document
+                .pointer(reference.strip_prefix('#').expect("local schema reference"))
+                .expect("referenced schema"),
+            None => schema,
+        }
+    }
+
+    let generated = build_openapi();
+    let spec_path = root_spec_path();
+    let curated = read_yaml(&spec_path.parent().unwrap().join("emerging.yaml"));
+    for document in [&generated, &curated] {
+        let schemas = &document["components"]["schemas"];
+        let items = resolve_local(
+            document,
+            &schemas["AgentScriptExecutorConfigUpdate"]["properties"]["schedulerCronTime"]["items"],
+        );
+        assert!(items.get("oneOf").is_none());
+        let branches = items["anyOf"].as_array().expect("untagged schedule union");
+        assert_eq!(branches.len(), 2);
+        assert_eq!(branches[0]["type"], "string");
+        let structured = resolve_local(document, &branches[1]);
+        assert_eq!(structured["type"], "object");
+        assert_eq!(structured["required"], json!(["cron"]));
+        assert_eq!(structured["properties"]["cron"]["type"], "string");
+        let delay = &structured["properties"]["maxDelaySeconds"];
+        assert_eq!(delay["type"], "integer");
+        assert_eq!(delay["minimum"].as_f64(), Some(0.0));
+        assert_eq!(delay["maximum"].as_f64(), Some(2147483647.0));
+    }
+}
+
+#[test]
+fn scheduler_read_and_write_schemas_publish_distinct_non_nullable_ranges() {
+    // Backend u32 observations must not inherit signed command constraints.
+    // Validate actual public field schemas, including group create/modify inputs.
+    let generated = build_openapi();
+    let spec_path = root_spec_path();
+    let curated = read_yaml(&spec_path.parent().unwrap().join("emerging.yaml"));
+    for document in [&generated, &curated] {
+        let schemas = &document["components"]["schemas"];
+        let response_items = resolve_local_schema_ref(
+            schemas,
+            &schemas["AgentScriptExecutorConfig"]["properties"]["schedulerCronTime"]["items"],
+        );
+        assert_eq!(response_items, &schemas["AgentScheduleResponse"]);
+        for (name, maximum) in [
+            ("AgentScheduleResponse", u32::MAX),
+            ("AgentGroup", u32::MAX),
+            ("AgentScheduleInput", i32::MAX as u32),
+            ("CreateAgentGroup", i32::MAX as u32),
+            ("ModifyAgentGroup", i32::MAX as u32),
+        ] {
+            let delay = &schemas[name]["properties"]["maxDelaySeconds"];
+            assert_eq!(delay["minimum"].as_f64(), Some(0.0), "{name}");
+            assert_eq!(
+                delay["maximum"].as_f64(),
+                Some(f64::from(maximum)),
+                "{name}"
+            );
+            let validator = jsonschema::validator_for(delay).unwrap();
+            assert!(validator.is_valid(&json!(0)), "{name}");
+            assert!(validator.is_valid(&json!(maximum)), "{name}");
+            for invalid in [
+                Value::Null,
+                json!(-1),
+                json!(1.5),
+                json!(u64::from(maximum) + 1),
+            ] {
+                assert!(!validator.is_valid(&invalid), "{name} accepted {invalid}");
+            }
+        }
+    }
+}
+
+#[test]
 fn generated_openapi_matches_curated_spec() {
     let generated = build_openapi();
     let curated = root_spec();
@@ -1024,7 +1106,7 @@ fn generated_and_curated_response_enums_accept_known_and_unknown_values_of_the_r
             json!("future_credential"),
             json!(1),
             json!([
-                "cc", "krb5", "pw", "pgp", "smime", "snmp", "up", "usk", "cs_krb5", "cs_pw",
+                "ad", "cc", "krb5", "pw", "pgp", "smime", "snmp", "up", "usk", "cs_krb5", "cs_pw",
                 "cs_pgp", "cs_smime", "cs_snmp", "cs_up", "cs_usk"
             ]),
         ),
@@ -1183,7 +1265,7 @@ fn generated_and_curated_response_enums_accept_known_and_unknown_values_of_the_r
             json!("future_credential"),
             json!(1),
             json!([
-                "cc", "krb5", "pw", "pgp", "smime", "snmp", "up", "usk", "cs_krb5", "cs_pw",
+                "ad", "cc", "krb5", "pw", "pgp", "smime", "snmp", "up", "usk", "cs_krb5", "cs_pw",
                 "cs_pgp", "cs_smime", "cs_snmp", "cs_up", "cs_usk"
             ]),
         ),
@@ -1405,7 +1487,7 @@ fn request_only_closed_enums_remain_restrictive() {
     let generated_task_type = &schemas["CreateTask"]["properties"]["type"];
     let curated_task_type = &tasks["components"]["schemas"]["CreateTask"]["properties"]["type"];
     let credential_request_types = json!([
-        "cc", "pw", "smime", "snmp", "snmpv3", "up", "usk", "cs_pw", "cs_pgp", "cs_smime",
+        "ad", "cc", "pw", "smime", "snmp", "snmpv3", "up", "usk", "cs_pw", "cs_pgp", "cs_smime",
         "cs_snmp", "cs_up", "cs_usk"
     ]);
 
@@ -2218,5 +2300,56 @@ fn task_observer_update_schemas_allow_omission_and_reject_null() {
     assert_eq!(
         generated_task["properties"]["observers"]["description"],
         curated_task["properties"]["observers"]["description"]
+    );
+}
+
+#[test]
+fn report_application_count_schema_preserves_unsigned_bounds() {
+    let generated = build_openapi();
+    for field in ["hostsCount", "occurrences"] {
+        let schema = &generated["components"]["schemas"]["ReportApplication"]["properties"][field];
+        assert_eq!(schema["type"], "integer");
+        assert_eq!(schema["minimum"].as_f64(), Some(0.0));
+        assert_eq!(schema["maximum"].as_f64(), Some(f64::from(u32::MAX)));
+    }
+}
+
+// Intent: new report/result fields are working DTO projections, with matching curated and generated schemas.
+#[test]
+fn report_adoption_schema_fields_are_present() {
+    let generated = build_openapi();
+    let schemas = &generated["components"]["schemas"];
+    for name in ["NvtRef", "NvtRefSummary"] {
+        assert_eq!(schemas[name]["properties"]["type"]["type"], "string");
+        assert!(schemas[name]["properties"].get("refs").is_some());
+    }
+    assert!(schemas["Nvt"]["properties"].get("refs").is_some());
+    for field in ["hostsCount", "occurrences", "threat"] {
+        assert!(schemas["ReportApplication"]["properties"]
+            .get(field)
+            .is_some());
+    }
+    assert!(schemas["ReportTaskRef"]["properties"]
+        .get("scanConfig")
+        .is_some());
+}
+
+#[test]
+fn inventory_token_generated_and_curated_success_headers_forbid_caching() {
+    // A description is not an OpenAPI header: require the actual no-store schema
+    // in both documents so generated clients see the runtime confidentiality policy.
+    let generated = build_openapi();
+    let spec_path = root_spec_path();
+    let curated = read_yaml(&spec_path.parent().unwrap().join("emerging.yaml"));
+    let expected = json!({"type":"string","const":"no-store"});
+    assert_eq!(
+        generated["paths"]["/agents/inventory-token"]["post"]["responses"]["200"]["headers"]
+            ["Cache-Control"]["schema"],
+        expected
+    );
+    assert_eq!(
+        curated["paths"]["/agents/inventory-token"]["post"]["responses"]["200"]["headers"]
+            ["Cache-Control"]["schema"],
+        expected
     );
 }

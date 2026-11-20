@@ -1,3 +1,7 @@
+# Adopted feature-stack baseline
+
+All five workspace components now pin immutable rust-gvm `bcac05492244f55df51b971184cc63ddc7bd7bed` (0.11.1 development stack). The reviewed facade now has 270 helpers. AD verification/discovery helpers are now exposed through the #727–728 REST slices; inventory-token retrieval is exposed by #731. Other dispositions remain unchanged. Historical release notes below describe the prior baseline.
+
 # rust-gvm upstream surface dispositions
 
 This document records the deliberate product-surface decisions completed while
@@ -74,3 +78,18 @@ Disposition meanings are deliberately closed:
 | Trash cleanup and recovery: `EmptyTrashcanRequest` and `RestoreRequest` | Deferred under #381. Bulk permanent cleanup and cross-resource restoration need resource-specific authorization, destructive-operation, and HTTP-semantics review. | Existing resource-specific delete behavior remains unchanged; no trashcan or restore route is added. |
 | Scanner administration: `CreateScannerRequest`, `CloneScannerRequest`, `ModifyScannerRequest`, `DeleteScannerRequest`, and `VerifyScannerRequest` | Deferred under #401. Connection credentials, verification side effects, and appliance ownership require a dedicated administration contract. | Existing scanner list/detail and agent installer-instruction reads remain supported; scanner mutation/action routes stay absent. |
 | Removed #664 compatibility surfaces: `ModifyLicenseWithOptsRequest`, `RunWizardWithOptsRequest`, `RestoreFromTrashcanRequest`, the former user-setting option bags, and their free builders/facade forwarding forms | Omitted as upstream cleanup artifacts, not downstream operations. Their canonical replacements inherit the explicit adopted, omitted, internal, or deferred dispositions above. | No compatibility endpoint, local GMP builder, or alias is introduced. |
+
+
+### Implemented report projection adoption (#734–736, #742)
+
+See [endpoint/source matrix and limitations](report-projection-adoption.md).
+Application summaries now carry optional typed counts/threat. Full and summary
+result NVTs carry open-string type where their actual typed source provides it;
+ordinary results and catalog NVTs carry generic raw refs. No KEV data is
+fabricated: its producer/typed dependencies are documented separately.
+
+Report detail and gateway JSON exports use the typed structured scan-report
+snapshot for report-specific task.scanConfig. Generic report lists omit that
+field because their upstream task is only NamedEntity; extending generic list
+coverage requires upstream typed generic Report support. Generic ResourceRef
+and current-task reads are unchanged, as are omitted audit/delta surfaces.

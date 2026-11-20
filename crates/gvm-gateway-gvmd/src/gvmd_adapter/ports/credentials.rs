@@ -11,6 +11,38 @@ pub(in crate::gvmd_adapter) struct CredentialStoreProbeOutcome {
 
 #[async_trait]
 impl CredentialPort for GvmdAdapter {
+    async fn search_active_directory_objects(
+        &self,
+        token: &str,
+        input: gvm_gateway_domain::ActiveDirectorySearchInput,
+    ) -> Result<gvm_gateway_domain::ActiveDirectorySearchResult, GatewayError> {
+        super::active_directory::search(self, token, input).await
+    }
+
+    async fn verify_active_directory(
+        &self,
+        session_token: &str,
+        input: gvm_gateway_domain::VerifyActiveDirectoryInput,
+    ) -> Result<(), GatewayError> {
+        use gvm_gmp::commands::credentials::VerifyActiveDirectoryCredentialRequest as Request;
+        let request = match input {
+            gvm_gateway_domain::VerifyActiveDirectoryInput::Saved(id) => Request::Saved {
+                credential_id: parse_entity_id(&id)?,
+            },
+            gvm_gateway_domain::VerifyActiveDirectoryInput::Inline(fields) => {
+                Request::Inline(ad_fields(fields)?)
+            }
+        };
+        self.execute_with_session_mapped(
+            session_token,
+            "credentials.ad.verify",
+            request,
+            map_ad_error,
+        )
+        .await?;
+        Ok(())
+    }
+
     async fn list_credential_stores(
         &self,
         session_token: &str,
@@ -241,7 +273,9 @@ impl CredentialPort for GvmdAdapter {
                 .await?;
             return Ok(parsed.id.to_string());
         }
+        let is_ad = input.active_directory.is_some();
         let mut request = CreateCredentialRequest::new(input.name);
+        request.active_directory = input.active_directory.map(ad_fields).transpose()?;
         request.comment = input.comment;
         request.credential_type = Some(parse_credential_type(&input.credential_type)?);
         request.login = input.login;
@@ -261,7 +295,13 @@ impl CredentialPort for GvmdAdapter {
             .map(parse_snmp_privacy_algorithm)
             .transpose()?;
         let parsed = self
-            .execute_with_session(session_token, "credentials.create", request)
+            .execute_with_session_mapped(session_token, "credentials.create", request, |e| {
+                if is_ad {
+                    map_ad_error(e)
+                } else {
+                    map_gvm_error(e)
+                }
+            })
             .await?;
         Ok(parsed.id.to_string())
     }
@@ -335,7 +375,9 @@ impl CredentialPort for GvmdAdapter {
             .await?;
             return self.get_credential(session_token, id).await;
         }
+        let is_ad = input.active_directory.is_some();
         let mut request = ModifyCredentialRequest::new(parse_entity_id(id)?);
+        request.active_directory = input.active_directory.map(ad_fields).transpose()?;
         request.name = input.name;
         request.comment = input.comment;
         request.login = input.login;
@@ -354,8 +396,14 @@ impl CredentialPort for GvmdAdapter {
             .as_deref()
             .map(parse_snmp_privacy_algorithm)
             .transpose()?;
-        self.execute_with_session(session_token, "credentials.modify", request)
-            .await?;
+        self.execute_with_session_mapped(session_token, "credentials.modify", request, |e| {
+            if is_ad {
+                map_ad_error(e)
+            } else {
+                map_gvm_error(e)
+            }
+        })
+        .await?;
         self.get_credential(session_token, id).await
     }
 
@@ -489,4 +537,75 @@ pub(super) fn unsupported_credential_store_error() -> GatewayError {
     GatewayError::NotImplemented(
         "credential stores are not available because gvmd does not expose `get_credential_stores` on this backend instance; the proxy does not synthesize credential store entries".to_string(),
     )
+}
+
+fn ad_fields(
+    v: gvm_gateway_domain::ActiveDirectoryInput,
+) -> Result<gvm_gmp::commands::credentials::ActiveDirectoryCredentialFields, GatewayError> {
+    use gvm_gmp::commands::credentials::ActiveDirectoryTlsMode;
+    let tls_mode = v
+        .tls_mode
+        .as_deref()
+        .map(|mode| match mode {
+            "ldaps" => Ok(ActiveDirectoryTlsMode::Ldaps),
+            "starttls" => Ok(ActiveDirectoryTlsMode::StartTls),
+            _ => Err(GatewayError::InvalidInput("invalid AD TLS mode".into())),
+        })
+        .transpose()?;
+    Ok(
+        gvm_gmp::commands::credentials::ActiveDirectoryCredentialFields {
+            host: v.host,
+            port: v.port,
+            clear_port: v.clear_port,
+            bind_dn: v.bind_dn,
+            bind_password: v.bind_password,
+            base_dn: v.base_dn,
+            tls_mode,
+            ca_certificate: v.ca_certificate,
+        },
+    )
+}
+pub(super) fn map_ad_error(error: GvmError) -> GatewayError {
+    if matches!(
+        error,
+        GvmError::CommandDiscoveryRequired { .. } | GvmError::CommandNotAdvertised { .. }
+    ) {
+        return GatewayError::NotImplemented("Active Directory capability unavailable".into());
+    }
+    match &error {
+        GvmError::Request(_) => {
+            return GatewayError::InvalidInput("invalid Active Directory request".into())
+        }
+        GvmError::Server {
+            status: 503,
+            message,
+        }
+        | GvmError::Parse(gvm_gmp::responses::ParseError::ServerError {
+            status: 503,
+            message,
+        }) if message.to_ascii_lowercase().contains("command disabled") => {
+            return GatewayError::NotImplemented("Active Directory capability unavailable".into())
+        }
+        GvmError::Server { status: 500, .. }
+        | GvmError::Parse(gvm_gmp::responses::ParseError::ServerError { status: 500, .. }) => {
+            return GatewayError::Internal("Active Directory operation failed".into())
+        }
+        GvmError::Server { status: 409, .. }
+        | GvmError::Parse(gvm_gmp::responses::ParseError::ServerError { status: 409, .. }) => {
+            return GatewayError::Conflict("Active Directory operation failed".into())
+        }
+        _ => {}
+    }
+    let mapped = map_gvm_error(error);
+    let detail = "Active Directory operation failed".to_string();
+    match mapped {
+        GatewayError::Forbidden(_) => GatewayError::Forbidden(detail),
+        GatewayError::NotFound(_) => GatewayError::NotFound(detail),
+        GatewayError::NotImplemented(_) => GatewayError::NotImplemented(detail),
+        GatewayError::GatewayTimeout(_) => GatewayError::GatewayTimeout(detail),
+        GatewayError::Unauthorized(_) => GatewayError::Unauthorized(detail),
+        GatewayError::Conflict(_) => GatewayError::Conflict(detail),
+        GatewayError::Internal(_) => GatewayError::Internal(detail),
+        _ => GatewayError::BackendUnavailable(detail),
+    }
 }

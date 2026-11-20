@@ -227,6 +227,7 @@ pub(crate) fn safe_session_id(token: &str) -> String {
 fn error_category(error: &GatewayError) -> &'static str {
     match error {
         GatewayError::BackendUnavailable(_) => "backend_unavailable",
+        GatewayError::ServiceUnavailable(_) => "service_unavailable",
         GatewayError::NotImplemented(_) => "not_implemented",
         GatewayError::NotFound(_) => "not_found",
         GatewayError::InvalidInput(_) => "invalid_input",

@@ -161,6 +161,7 @@ fn log_safety_helpers_hide_values() {
 #[test]
 fn credential_command_debug_redacts_secrets() {
     let create = CreateCredentialInput {
+        active_directory: None,
         name: "Credential".to_string(),
         comment: Some("visible comment".to_string()),
         credential_type: "snmpv3".to_string(),
@@ -177,6 +178,7 @@ fn credential_command_debug_redacts_secrets() {
         host_identifier: Some("create-host-secret".to_string()),
     };
     let modify = ModifyCredentialInput {
+        active_directory: None,
         name: Some("Credential".to_string()),
         comment: Some("visible comment".to_string()),
         login: Some("visible-login".to_string()),
@@ -269,6 +271,7 @@ fn user_setting_debug_redacts_values() {
 #[test]
 fn target_serializes_exclude_hosts_only_when_nonempty() {
     let target_with_excludes = Target {
+        source: None,
         id: "123".to_string(),
         name: "test".to_string(),
         comment: None,
@@ -305,9 +308,10 @@ fn target_serializes_exclude_hosts_only_when_nonempty() {
 fn report_serializes_camel_case() {
     let report = Report {
         id: "550e8400-e29b-41d4-a716-446655440000".to_string(),
-        task: Some(ResourceRef {
+        task: Some(ReportTaskRef {
             id: "task-1".to_string(),
             name: Some("Scan".to_string()),
+            scan_config: None,
         }),
         scan_start: Some("2026-01-01T00:00:00Z".to_string()),
         scan_end: None,
@@ -447,12 +451,14 @@ fn scan_result_serializes_camel_case() {
         threat: Some("High".to_string()),
         qod: None,
         nvt: Some(NvtRef {
+            refs: vec![],
             oid: Some("1.3.6.1.4.1.25623.1.0.12345".to_string()),
             name: Some("Test NVT".to_string()),
             family: Some("Test Family".to_string()),
             cvss_base: Some(9.8),
             cves: vec!["CVE-2024-1234".to_string()],
             tags: None,
+            type_: None,
             type_metadata: None,
             epss: None,
         }),
@@ -514,12 +520,14 @@ fn scan_result_qod_preserves_complete_partial_and_absent_shapes() {
 #[test]
 fn nvt_ref_omits_empty_cves() {
     let nvt = NvtRef {
+        refs: vec![],
         oid: Some("1.2.3".to_string()),
         name: None,
         family: None,
         cvss_base: None,
         cves: vec![],
         tags: None,
+        type_: None,
         type_metadata: None,
         epss: None,
     };

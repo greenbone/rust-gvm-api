@@ -192,6 +192,15 @@ pub struct ReportApplication {
     /// Backend severity summary.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub severity: Option<String>,
+    /// Server-provided hosts count.
+    #[serde(rename = "hostsCount", skip_serializing_if = "Option::is_none")]
+    pub hosts_count: Option<u32>,
+    /// Server-provided occurrences.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub occurrences: Option<u32>,
+    /// Server-provided threat.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub threat: Option<String>,
 }
 
 /// Paginated report-application response.
@@ -249,6 +258,29 @@ pub struct ReportCvePage {
     pub pagination: Pagination,
 }
 
+/// Task snapshot reference specific to report representations.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct ReportTaskRef {
+    /// Report task identifier.
+    pub id: String,
+    /// Report task name.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Configuration recorded by the report, never the current task configuration.
+    #[serde(rename = "scanConfig", skip_serializing_if = "Option::is_none")]
+    pub scan_config: Option<ResourceRef>,
+}
+
+impl From<ResourceRef> for ReportTaskRef {
+    fn from(task: ResourceRef) -> Self {
+        Self {
+            id: task.id,
+            name: task.name,
+            scan_config: None,
+        }
+    }
+}
+
 /// Domain report representation.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct Report {
@@ -256,7 +288,7 @@ pub struct Report {
     pub id: String,
     /// Associated task reference.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub task: Option<ResourceRef>,
+    pub task: Option<ReportTaskRef>,
     /// Scan start timestamp.
     #[serde(rename = "scanStart", skip_serializing_if = "Option::is_none")]
     pub scan_start: Option<String>,
