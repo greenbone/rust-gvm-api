@@ -1455,8 +1455,11 @@ pub(crate) fn get_agent_inventory_token_docs(
         .tag("Agents")
         .summary("Issue a confidential agent inventory token")
         .security_requirement("bearerAuth")
-        .response_with::<200, Json<AgentInventoryTokenResponse>, _>(|response| {
-            response.description("Confidential backend-issued token; Cache-Control: no-store")
+        .response_with::<200, Json<AgentInventoryTokenResponse>, _>(|mut response| {
+                let mut value = serde_json::to_value(response.inner()).expect("response schema");
+                value["headers"]["Cache-Control"] = json!({"description":"Never cache inventory credentials", "schema":{"type":"string","const":"no-store"}});
+                *response.inner() = serde_json::from_value(value).expect("response header schema");
+                response.description("Confidential backend-issued token; Cache-Control: no-store")
         });
     let op = problem_response::<400>(op, "No body accepted");
     let op = problem_response::<401>(op, "Authentication required");
