@@ -298,6 +298,7 @@ Policy creation likewise requires an explicit active policy base in
 | `POST` | `/api/v1/credential-stores/{id}/actions/verify` | Verify the credential-store connection |
 | `POST` | `/api/v1/credentials/{id}/actions/verify-active-directory` | Verify a saved AD credential without persisting changes |
 | `POST` | `/api/v1/active-directory/credential-verifications` | Verify inline AD connection settings without saving a credential |
+| `POST` | `/api/v1/active-directory/object-searches` | Read-only bounded AD discovery using a saved credential; no-store, no persistence |
 | `GET` | `/api/v1/credentials` | List credentials |
 | `POST` | `/api/v1/credentials` | Create credential |
 | `GET` | `/api/v1/credentials/{id}` | Get credential |

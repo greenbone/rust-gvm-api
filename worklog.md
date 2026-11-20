@@ -106,3 +106,6 @@ Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/
 - Removed the not-yet-implemented object-search row from the #727/PR747 Credentials inventory and added both implemented saved/inline verification rows.
 - Added a documentation gate comparing that inventory with the exact slice's curated route/method contract, plus three regression tests covering the reported drift and the later search introduction.
 - Verified documentation at124paths/202operations, all three documentation regressions, Rust formatting and diff checks.
+## 2026-11-20 — Search inventory boundary
+- Added the object-search inventory row in its owning #728/PR748 slice, after verification routes are introduced in747.
+- The new slice-aware documentation gate passes at125paths/203operations.
