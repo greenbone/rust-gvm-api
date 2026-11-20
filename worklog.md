@@ -75,6 +75,23 @@
 - #736: detail/JSON-export scope selected; typed structured report snapshot supplies task.scanConfig; generic list cannot supply it without upstream generic model extension.
 - #736 compatibility review: unsupported snapshot omits enrichment only; real backend errors propagate. Focused older-backend/error regressions pass.
 - #736 absent snapshot task names remain absent, with targeted regression coverage.
+
+- #742: raw typed refs mapped on ordinary result/catalog paths. KEV-specific typed/source gaps isolated; producer and library issue drafts prepared for parent filing; no public issue creation or pushes.
+
+- Adopted parent baseline b6b901b as cherry-pick 1a5f802 (worklog conflict resolved locally); no independent dependency upgrade.
+- Verification: cargo test --workspace passed, including generated/curated contract parity and typed application/NVT/snapshot/ref regressions. Required Clippy --workspace --all-targets --all-features -- -D warnings passed; fmt/check and diff/check passed. Existing manifest-only unused-dependency warnings remain.
+- Native compiler reused from parent workspace-local cache with CFLAGS --sysroot=/workspace/.cache/api-agent-native -g0; the initial native build failed without cc and then with compressed native debug sections unsupported by rust-lld. Corrected environment /workspace/report-test-env; successful run /workspace/report-tests2.log, Clippy /workspace/report-clippy.log.
+- No pushes/PRs/merges or issue filing. KEV-only dependency drafts: docs/kev-upstream-issue-drafts.md. Optional advisory enrichment/filter/raw-slash-route work remains excluded, not advertised.
+
+
+## Independent acceptance review
+
+- Re-read all four issues, planned contracts and implementation paths. Found #736 additive metadata inadvertently required GMP 22.8 for existing report detail. Corrected typed unsupported-command handling to omit enrichment only; preserve generic task when snapshot task is missing; all real backend errors still propagate. Regression includes GMP 22.7 report read and no dispatched snapshot/task/config query.
+- #736 review validation: focused older-backend and real-backend-error adapter regressions both pass.
+- #735 independent review: classic/nonclassic/future/empty/absent typed result, note and override discriminator regression passes; missing result NVT remains absent. Corrected documentation comments that had attached typeMetadata description to type.
+- #742 independent review repeated immutable gvmd source/schema and typed-model search: refs/EPSS producers present, no KEV contract found. Corrected producer source anchors. Following explicit parent authorization and fresh authenticated all-state duplicate searches (KEV and “known exploited”), filed gvmd #3254 and rust-gvm #873, and cross-linked API #742 comment 7018718816. No runtime branch publication. Expanded raw refs regression to diverse feed types, escaped URL, CVE compatibility and duplicate/order retention.
+- #742 focused typed/REST collection regressions pass; required full-workspace Clippy, formatting and docs validation pass. Full workspace rerun pending final result.
+- Independent read-only review of parent b02/732-agent-os-metadata (dcd4706; #730–732) against issue acceptance and specs found no concrete blocker in scheduler compatibility/range mapping, inventory-token authentication/capabilities/status/confidentiality/cache, or OS omission/open-string mapping. Parent worktree and branches were not changed.
 ## Review correction #730 (2026-11-20)
 
 Reject explicit null maxDelaySeconds on all agent schedule and group inputs; preserve omission, zero and GMP bounds. Add HTTP 400/no-backend-dispatch regressions and REST boundary coverage.

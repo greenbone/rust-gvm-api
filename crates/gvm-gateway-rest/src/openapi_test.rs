@@ -2314,6 +2314,26 @@ fn report_application_count_schema_preserves_unsigned_bounds() {
     }
 }
 
+// Intent: new report/result fields are working DTO projections, with matching curated and generated schemas.
+#[test]
+fn report_adoption_schema_fields_are_present() {
+    let generated = build_openapi();
+    let schemas = &generated["components"]["schemas"];
+    for name in ["NvtRef", "NvtRefSummary"] {
+        assert_eq!(schemas[name]["properties"]["type"]["type"], "string");
+        assert!(schemas[name]["properties"].get("refs").is_some());
+    }
+    assert!(schemas["Nvt"]["properties"].get("refs").is_some());
+    for field in ["hostsCount", "occurrences", "threat"] {
+        assert!(schemas["ReportApplication"]["properties"]
+            .get(field)
+            .is_some());
+    }
+    assert!(schemas["ReportTaskRef"]["properties"]
+        .get("scanConfig")
+        .is_some());
+}
+
 #[test]
 fn inventory_token_generated_and_curated_success_headers_forbid_caching() {
     // A description is not an OpenAPI header: require the actual no-store schema

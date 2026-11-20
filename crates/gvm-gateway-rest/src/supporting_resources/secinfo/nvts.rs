@@ -46,11 +46,18 @@ pub(crate) struct NvtResponse {
     discovery: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     epss: Option<crate::results::EpssResponse>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    refs: Vec<crate::results::NvtReferenceResponse>,
 }
 
 impl From<gvm_gateway_domain::Nvt> for NvtResponse {
     fn from(nvt: gvm_gateway_domain::Nvt) -> Self {
         Self {
+            refs: nvt
+                .refs
+                .into_iter()
+                .map(crate::results::NvtReferenceResponse::from)
+                .collect(),
             oid: nvt.oid,
             name: nvt.name,
             family: nvt.family,

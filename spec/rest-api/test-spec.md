@@ -358,3 +358,15 @@ Typed parser fixtures exercise populated, empty, independently absent and unknow
 
 ### Implemented support-bundle anonymization (#733)
 All nine encryption/anonymized omitted/false/true combinations preserve independent selectors. Invalid booleans fail before dispatch; typed backend errors propagate without local archive rewriting.
+
+
+### Report projection adoption regressions (#734–736, #742)
+
+Deterministic sidecar tests cover explicit zero/absence/nonzero application
+counts and unchanged server severity; open NVT type values and source-shaped
+metadata on full/summary DTOs; typed structured report task scanConfig UUID/name
+and missing-config omission; identical domain JSON-export/REST task serialization;
+raw result/catalog refs with unknown types and escaped opaque identifiers.
+Generated/curated OpenAPI parity remains required. These fixtures are not live
+Agent/gvmd or KEV-feed qualification. KEV-specific tests await actual producer
+and typed library contracts; absence is never a synthetic negative observation.
