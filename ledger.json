@@ -728,6 +728,91 @@
         }
       ],
       "entrySha256": "fb85044233c416a3cebe1402afa377ad06aa4da049703cf82323d657acda16a5"
+    },
+    {
+      "sequence": 10,
+      "runId": 44666224991,
+      "runAttempt": 2,
+      "createdAt": "2026-11-20T03:13:21Z",
+      "comparisonFingerprint": "331273f9656c664b27e27862357bb92e1c80ee58bfeacd65a23ebffaadead8ae",
+      "evidenceArtifactId": 14625867686,
+      "rawArtifactId": 14625432971,
+      "provenanceSha256": "b3790283a1ad20e6157cbb894bb183f2acc9109a0d40f0808983872506f11ff7",
+      "payloadSha256": "39a0c3f42b4ddca9a1af5e8ada0fb8c047f85f53c5440045ce9548fb25b277a7",
+      "previousEntrySha256": "fb85044233c416a3cebe1402afa377ad06aa4da049703cf82323d657acda16a5",
+      "files": [
+        {
+          "path": "final/comparison.json",
+          "size": 10337,
+          "sha256": "c17994a3dd555a45913f18e7c2f9f1547d42d32d83feaf9d626346e54cfb2b02"
+        },
+        {
+          "path": "final/diagnostic-evidence.json",
+          "size": 281,
+          "sha256": "0dfcd074cef7d4754e9315636ca14b78677c9082aaf87314f91eff68557a284a"
+        },
+        {
+          "path": "final/fault-mappings.json",
+          "size": 1040,
+          "sha256": "2b4a86021a751215ae87c6a1ade1d04ec55d0d07bebea40fe38cd84802d20dd2"
+        },
+        {
+          "path": "final/provenance.json",
+          "size": 3537,
+          "sha256": "b3790283a1ad20e6157cbb894bb183f2acc9109a0d40f0808983872506f11ff7"
+        },
+        {
+          "path": "final/run-evidence.json",
+          "size": 781,
+          "sha256": "2b57d072ad1cef4a6a2494ded040061185f47c47d762efafdf5ebc680ebfcd4b"
+        },
+        {
+          "path": "raw/cargo.log",
+          "size": 28278,
+          "sha256": "f12179b66b2b0c54e7dca066d32c356ec336b502b19efdecf4aee319a954a6eb"
+        },
+        {
+          "path": "raw/compose-ps.txt",
+          "size": 4477,
+          "sha256": "c7791c27495ccce8fb57d1f360f1ddfce9e0cbc616246c72854aa429a3865f27"
+        },
+        {
+          "path": "raw/compose.log",
+          "size": 888348,
+          "sha256": "dc35e6fcdba616b83372db5906cdec43b3242edf76ca777be66d10a2df5960dc"
+        },
+        {
+          "path": "raw/faults.log",
+          "size": 7232,
+          "sha256": "403c095d9824a7d05ab08933a08a189494958b86e5d3aad60c9fa17d4ebec4f3"
+        },
+        {
+          "path": "raw/feed-resolution.json",
+          "size": 1354,
+          "sha256": "c37314305a32a9cb4dc68d5d57d0dc79d161aaca17b46ca9f6a3e6ad8b02d1ac"
+        },
+        {
+          "path": "raw/feed-resolution.json.compose.env",
+          "size": 856,
+          "sha256": "a4cb265c51ecc6d25423e6906443c3533f070708ebac640028b67852347627fe"
+        },
+        {
+          "path": "raw/provenance.json",
+          "size": 3537,
+          "sha256": "b3790283a1ad20e6157cbb894bb183f2acc9109a0d40f0808983872506f11ff7"
+        },
+        {
+          "path": "raw/runner-container-runtime.txt",
+          "size": 800,
+          "sha256": "9ad1d4556428cf1f946bc5d91d65f590b08b8282a830075606b0576fc629aa17"
+        },
+        {
+          "path": "raw/running-services.txt",
+          "size": 104,
+          "sha256": "b1c34cd9817648675f9e3056a9bd3c5ba0f2138e122ffb2eb24fcd5f1b50fda7"
+        }
+      ],
+      "entrySha256": "a65f9020395bf3e2e5c9df961f4aad9f5c6a3962b058cfc614869555d0a02a3c"
     }
   ]
 }
