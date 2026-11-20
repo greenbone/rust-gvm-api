@@ -35,3 +35,9 @@
 
 - Exact-head CI exposed Aide inferring a request body from the rejection-only Bytes extractor. Move the existing later-slice suppression into inventory-token issuance itself, preserving runtime body rejection and the curated no-body contract.
 - Add an explicit generated-OpenAPI regression asserting this operation has no requestBody.
+
+## Review correction #730 (2026-11-20)
+
+Reject explicit null maxDelaySeconds on all agent schedule and group inputs; preserve omission, zero and GMP bounds. Add HTTP 400/no-backend-dispatch regressions and REST boundary coverage.
+
+Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/api-agent-target): cargo test -p gvm-gateway-rest --lib (200 passed, including generated/curated OpenAPI parity); cargo test -p gvm-gateway --test agents (5 passed, including all four invalid-delay HTTP entry points with zero backend commands); cargo fmt --all -- --check; cargo clippy --workspace --all-targets --all-features -- -D warnings. All passed.

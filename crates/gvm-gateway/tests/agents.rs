@@ -488,3 +488,61 @@ async fn inventory_token_route_is_authenticated_confidential_and_has_no_body() {
     let unauthorized = harness.client.post(&url).send().await.unwrap();
     assert_eq!(unauthorized.status(), StatusCode::UNAUTHORIZED);
 }
+
+#[tokio::test]
+async fn invalid_agent_and_group_delays_return_400_without_backend_dispatch() {
+    // Exercise every schedule/group input through HTTP: invalid JSON values must
+    // fail before even a discovery/read command reaches the backend.
+    let harness = specialized_target_harness(seed_agent_resource).await;
+    for delay in [Value::Null, json!(-1), json!(2147483648u64), json!(1.5)] {
+        let schedule = json!({"agentScriptExecutor":{"schedulerCronTime":[
+            {"cron":"* * * * *","maxDelaySeconds":delay}
+        ]}});
+        for (method, path, body) in [
+            (
+                reqwest::Method::PUT,
+                format!("/api/v1/agents/{AGENT_ID}"),
+                json!({"config":schedule}),
+            ),
+            (
+                reqwest::Method::PUT,
+                format!("/api/v1/agent-control-scan-configs/{SCANNER_ID}"),
+                json!({"agentDefaults":schedule}),
+            ),
+            (
+                reqwest::Method::POST,
+                "/api/v1/agent-groups".to_string(),
+                json!({"name":"group","schedulerCronTime":"* * * * *","maxDelaySeconds":delay}),
+            ),
+            (
+                reqwest::Method::PUT,
+                format!("/api/v1/agent-groups/{AGENT_ID}"),
+                json!({"schedulerCronTime":"* * * * *","maxDelaySeconds":delay}),
+            ),
+        ] {
+            harness.server.clear_history();
+            let response = harness
+                .client
+                .request(method.clone(), harness.url(&path))
+                .bearer_auth(&harness.token)
+                .json(&body)
+                .send()
+                .await
+                .unwrap();
+            assert_eq!(
+                response.status(),
+                StatusCode::BAD_REQUEST,
+                "{method} {path}: {body}"
+            );
+            assert_eq!(
+                response.json::<Value>().await.unwrap()["code"],
+                "bad_request"
+            );
+            assert!(
+                harness.server.command_history().is_empty(),
+                "{method} {path} dispatched an invalid delay"
+            );
+        }
+    }
+    harness.shutdown().await;
+}
