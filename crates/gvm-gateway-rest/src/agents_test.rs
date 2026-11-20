@@ -223,6 +223,18 @@ fn scheduler_delay_rejects_invalid_ranges_and_types_before_dispatch() {
 }
 
 #[test]
+fn inventory_token_cache_policy_covers_success_and_failure() {
+    // Confidential issuance and error responses must not be cached.
+    for status in [
+        axum::http::StatusCode::OK,
+        axum::http::StatusCode::FORBIDDEN,
+    ] {
+        let response = inventory_token_no_store(status.into_response());
+        assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
+    }
+}
+
+#[test]
 fn group_delay_omission_zero_and_bounds_match_the_schedule_contract() {
     // Optional is not nullable: only omission and integers in the GMP range are valid.
     for delay in [

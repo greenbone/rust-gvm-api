@@ -35,11 +35,12 @@ use crate::{
         clone_agent_group, clone_agent_group_docs, create_agent_group, create_agent_group_docs,
         delete_agent, delete_agent_docs, delete_agent_group, delete_agent_group_docs, get_agent,
         get_agent_docs, get_agent_group, get_agent_group_docs, get_agent_installer_instruction,
-        get_agent_installer_instruction_docs, get_agent_support_bundle,
-        get_agent_support_bundle_docs, list_agent_groups, list_agent_groups_docs, list_agents,
-        list_agents_docs, modify_agent_control_scan_config_docs, modify_agent_docs,
-        modify_agent_group_docs, sync_agents, sync_agents_docs, update_agent,
-        update_agent_control_scan_config, update_agent_group,
+        get_agent_installer_instruction_docs, get_agent_inventory_token,
+        get_agent_inventory_token_docs, get_agent_support_bundle, get_agent_support_bundle_docs,
+        list_agent_groups, list_agent_groups_docs, list_agents, list_agents_docs,
+        modify_agent_control_scan_config_docs, modify_agent_docs, modify_agent_group_docs,
+        sync_agents, sync_agents_docs, update_agent, update_agent_control_scan_config,
+        update_agent_group,
     },
     alerts::{
         create_alert, create_alert_docs, delete_alert, delete_alert_docs, get_alert,
@@ -309,6 +310,10 @@ fn documented_router() -> ApiRouter<GatewayService> {
             post_with(clone_target, clone_target_docs),
         )
         // Agents and agent groups
+        .api_route(
+            "/api/v1/agents/inventory-token",
+            post_with(get_agent_inventory_token, get_agent_inventory_token_docs),
+        )
         .api_route("/api/v1/agents", get_with(list_agents, list_agents_docs))
         .api_route("/api/v1/agents/{id}", get_with(get_agent, get_agent_docs))
         .api_route(

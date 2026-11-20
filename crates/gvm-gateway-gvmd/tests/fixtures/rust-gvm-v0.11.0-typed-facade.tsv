@@ -1,6 +1,6 @@
 # rust-gvm-reference	stack-commit
 # rust-gvm-tag	gmp-feature-stack
-# rust-gvm-revision	b6f33da1224aa4950f39dc3db0e6d5607e0e0f89
+# rust-gvm-revision	bcac05492244f55df51b971184cc63ddc7bd7bed
 module	method
 active_directory	get_active_directory_objects
 agents	clone_agent_group

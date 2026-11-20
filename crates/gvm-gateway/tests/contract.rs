@@ -60,6 +60,12 @@ async fn generated_openapi_endpoint_exposes_implemented_contract() {
     );
 
     let json = response.json::<Value>().await.unwrap();
+    assert!(
+        json["paths"]["/api/v1/agents/inventory-token"]["post"]
+            .get("requestBody")
+            .is_none(),
+        "inventory-token issuance accepts no request body"
+    );
     let docs = SpecDocs::load(&json);
     let root_spec = docs.root_spec();
 

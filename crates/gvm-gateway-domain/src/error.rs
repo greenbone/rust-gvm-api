@@ -8,6 +8,8 @@
 pub enum GatewayErrorCode {
     /// Backend connection or dependency failure.
     BackendUnavailable,
+    /// Known backend operation is temporarily unavailable.
+    ServiceUnavailable,
     /// Requested operation is not implemented by the current backend.
     NotImplemented,
     /// Requested resource or route was not found.
@@ -37,6 +39,7 @@ impl GatewayErrorCode {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::BackendUnavailable => "backend_unavailable",
+            Self::ServiceUnavailable => "service_unavailable",
             Self::NotImplemented => "not_implemented",
             Self::NotFound => "not_found",
             Self::BadRequest => "bad_request",
@@ -55,6 +58,7 @@ impl GatewayErrorCode {
     pub fn problem_slug(self) -> &'static str {
         match self {
             Self::BackendUnavailable => "bad-gateway",
+            Self::ServiceUnavailable => "service-unavailable",
             Self::NotImplemented => "not-implemented",
             Self::NotFound => "not-found",
             Self::BadRequest => "bad-request",
@@ -75,6 +79,8 @@ impl GatewayErrorCode {
 pub enum GatewayError {
     /// Backend service is unavailable or unhealthy.
     BackendUnavailable(String),
+    /// Known backend operation is temporarily unavailable.
+    ServiceUnavailable(String),
     /// Requested operation is not implemented by the current backend.
     NotImplemented(String),
     /// Resource or route was not found.
@@ -104,6 +110,7 @@ impl GatewayError {
     pub fn code(&self) -> GatewayErrorCode {
         match self {
             Self::BackendUnavailable(_) => GatewayErrorCode::BackendUnavailable,
+            Self::ServiceUnavailable(_) => GatewayErrorCode::ServiceUnavailable,
             Self::NotImplemented(_) => GatewayErrorCode::NotImplemented,
             Self::NotFound(_) => GatewayErrorCode::NotFound,
             Self::InvalidInput(_) => GatewayErrorCode::BadRequest,
@@ -126,7 +133,8 @@ impl GatewayError {
     /// Returns the occurrence-specific detail string.
     pub fn detail(&self) -> &str {
         match self {
-            Self::BackendUnavailable(detail)
+            Self::ServiceUnavailable(detail)
+            | Self::BackendUnavailable(detail)
             | Self::NotImplemented(detail)
             | Self::NotFound(detail)
             | Self::InvalidInput(detail)
