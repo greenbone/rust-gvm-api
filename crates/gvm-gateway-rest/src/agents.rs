@@ -99,6 +99,8 @@ pub(crate) struct AgentSupportBundleQueryParams {
     /// Request backend support-bundle encryption. Omission preserves the backend default and is
     /// distinct from explicit false.
     encryption: Option<bool>,
+    /// Request backend anonymization independently of encryption; omission preserves the server default.
+    anonymized: Option<bool>,
 }
 
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
@@ -711,6 +713,7 @@ fn parse_agent_group_query(raw: &str) -> Result<AgentGroupQuery, GatewayError> {
 fn parse_agent_support_bundle_query(raw: &str) -> Result<AgentSupportBundleQuery, GatewayError> {
     let mut days = None;
     let mut encryption = None;
+    let mut anonymized = None;
     for (key, value) in decoded_query_pairs(raw) {
         match key.as_ref() {
             "days" => {
@@ -724,6 +727,11 @@ fn parse_agent_support_bundle_query(raw: &str) -> Result<AgentSupportBundleQuery
                 }
                 days = Some(parsed_days);
             }
+            "anonymized" => {
+                anonymized = Some(value.parse::<bool>().map_err(|_| {
+                    GatewayError::InvalidInput("anonymized must be true or false".into())
+                })?);
+            }
             "encryption" => {
                 encryption = Some(value.parse::<bool>().map_err(|_| {
                     GatewayError::InvalidInput("encryption must be true or false".to_string())
@@ -732,7 +740,11 @@ fn parse_agent_support_bundle_query(raw: &str) -> Result<AgentSupportBundleQuery
             _ => {}
         }
     }
-    Ok(AgentSupportBundleQuery { days, encryption })
+    Ok(AgentSupportBundleQuery {
+        days,
+        encryption,
+        anonymized,
+    })
 }
 
 fn parse_agent_installer_instruction_query(

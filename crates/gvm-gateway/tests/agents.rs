@@ -228,6 +228,7 @@ async fn agent_group_rest_lifecycle_filter_trash_and_ultimate_delete() {
         .json(&json!({
             "name": "Blue Team",
             "schedulerCronTime": "0 */15 * * *",
+            "maxDelaySeconds": 30,
             "comment": "initial",
             "agentIds": []
         }))
@@ -244,7 +245,9 @@ async fn agent_group_rest_lifecycle_filter_trash_and_ultimate_delete() {
         .await
         .unwrap();
     assert_eq!(get.status(), StatusCode::OK);
-    assert_eq!(get.json::<Value>().await.unwrap()["name"], "Blue Team");
+    let group = get.json::<Value>().await.unwrap();
+    assert_eq!(group["name"], "Blue Team");
+    assert_eq!(group["maxDelaySeconds"], 30);
 
     let update = harness
         .client
@@ -253,6 +256,7 @@ async fn agent_group_rest_lifecycle_filter_trash_and_ultimate_delete() {
         .json(&json!({
             "name": "Updated",
             "schedulerCronTime": "0 */30 * * *",
+            "maxDelaySeconds": 0,
             "comment": "updated"
         }))
         .send()
@@ -262,6 +266,7 @@ async fn agent_group_rest_lifecycle_filter_trash_and_ultimate_delete() {
     let update = update.json::<Value>().await.unwrap();
     assert_eq!(update["name"], "Updated");
     assert_eq!(update["schedulerCronTime"], "0 */30 * * *");
+    assert_eq!(update["maxDelaySeconds"], 0);
 
     let clone = harness
         .client

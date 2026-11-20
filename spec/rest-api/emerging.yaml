@@ -127,6 +127,11 @@ paths:
         required: false
         schema: { type: boolean }
         description: Request backend support-bundle encryption. Omission preserves the backend default and is distinct from explicit false.
+      - name: anonymized
+        in: query
+        required: false
+        schema: { type: boolean }
+        description: Request backend anonymization independently of encryption; omission preserves the backend default. No guarantee that the bundle is safe to share.
     get:
       operationId: getAgentSupportBundle
       tags: [Agents]

@@ -338,3 +338,5 @@ For the complete method-level upstream disposition, see the repository's
 Inventory tokens are opaque backend-issued confidential credentials, not sessions. The endpoint requires GMP 22.8, positive help discovery and `get_agents` permission. Unsupported capability returns 501, temporary issuance 503, internal generation 500, and malformed successful payload 502. Mock tokens are nonfunctional test fixtures, not live agent authentication qualification.
 
 Agent list/detail responses preserve optional read-only operatingSystem, architecture, osCpe, and osStatus as open backend strings. Missing or empty upstream fields are omitted; unknown future values are preserved. No OS update or administration surface is added (#732).
+
+Support-bundle downloads accept optional boolean anonymized independently of encryption; omitted, false and true are forwarded distinctly. days and binary/content headers are unchanged. gvmd performs anonymization: the gateway does not rewrite archives or guarantee that all contents are safe to share. Live backend qualification remains required (#733).
