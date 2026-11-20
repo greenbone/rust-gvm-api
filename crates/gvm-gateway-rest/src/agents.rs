@@ -152,6 +152,7 @@ struct AgentScheduleResponse {
     cron: String,
     #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
     #[schemars(range(min = 0, max = 2147483647))]
+    #[serde(default, deserialize_with = "deserialize_delay")]
     max_delay_seconds: Option<u32>,
 }
 
@@ -186,6 +187,13 @@ impl AgentScheduleRequest {
             max_delay_seconds: entry.max_delay_seconds,
         })
     }
+}
+
+// Omission uses serde's default; a present value must be an integer, never null.
+fn deserialize_delay<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Option<u32>, D::Error> {
+    u32::deserialize(deserializer).map(Some)
 }
 
 fn validate_delay(value: Option<u32>) -> Result<(), GatewayError> {
@@ -546,6 +554,7 @@ struct AgentGroupResponse {
     scheduler_cron_time: Option<String>,
     #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
     #[schemars(range(min = 0, max = 2147483647))]
+    #[serde(default, deserialize_with = "deserialize_delay")]
     max_delay_seconds: Option<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     agents: Vec<ResourceRefResponse>,
@@ -594,6 +603,7 @@ struct CreateAgentGroupRequest {
     scheduler_cron_time: Option<String>,
     #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
     #[schemars(range(min = 0, max = 2147483647))]
+    #[serde(default, deserialize_with = "deserialize_delay")]
     max_delay_seconds: Option<u32>,
     comment: Option<String>,
     #[serde(rename = "agentIds", default)]
@@ -625,6 +635,7 @@ struct ModifyAgentGroupRequest {
     scheduler_cron_time: Option<String>,
     #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
     #[schemars(range(min = 0, max = 2147483647))]
+    #[serde(default, deserialize_with = "deserialize_delay")]
     max_delay_seconds: Option<u32>,
     name: Option<String>,
     comment: Option<String>,
@@ -1461,8 +1472,11 @@ pub(crate) fn get_agent_inventory_token_docs(
         .tag("Agents")
         .summary("Issue a confidential agent inventory token")
         .security_requirement("bearerAuth")
-        .response_with::<200, Json<AgentInventoryTokenResponse>, _>(|response| {
-            response.description("Confidential backend-issued token; Cache-Control: no-store")
+        .response_with::<200, Json<AgentInventoryTokenResponse>, _>(|mut response| {
+                let mut value = serde_json::to_value(response.inner()).expect("response schema");
+                value["headers"]["Cache-Control"] = json!({"description":"Never cache inventory credentials", "schema":{"type":"string","const":"no-store"}});
+                *response.inner() = serde_json::from_value(value).expect("response header schema");
+                response.description("Confidential backend-issued token; Cache-Control: no-store")
         });
     let op = problem_response::<400>(op, "No body accepted");
     let op = problem_response::<401>(op, "Authentication required");

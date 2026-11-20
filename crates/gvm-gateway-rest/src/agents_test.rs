@@ -204,8 +204,9 @@ fn schedules_accept_legacy_and_structured_and_publish_only_structured() {
 
 #[test]
 fn scheduler_delay_rejects_invalid_ranges_and_types_before_dispatch() {
-    // Signed, overflowing and fractional delays must never be sent to gvmd.
+    // Null, signed, overflowing and fractional delays violate the non-nullable contract.
     for value in [
+        serde_json::Value::Null,
         serde_json::json!(-1),
         serde_json::json!(2147483648u64),
         serde_json::json!(1.5),
@@ -229,6 +230,47 @@ fn inventory_token_cache_policy_covers_success_and_failure() {
     ] {
         let response = inventory_token_no_store(status.into_response());
         assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
+    }
+}
+
+#[test]
+fn group_delay_omission_zero_and_bounds_match_the_schedule_contract() {
+    // Optional is not nullable: only omission and integers in the GMP range are valid.
+    for delay in [
+        None,
+        Some(serde_json::json!(0)),
+        Some(serde_json::json!(2147483647)),
+    ] {
+        let mut body = serde_json::json!({"name":"group","schedulerCronTime":"* * * * *"});
+        if let Some(delay) = delay {
+            body["maxDelaySeconds"] = delay;
+        }
+        assert!(
+            serde_json::from_value::<CreateAgentGroupRequest>(body.clone())
+                .unwrap()
+                .validate_into()
+                .is_ok()
+        );
+        assert!(serde_json::from_value::<ModifyAgentGroupRequest>(body)
+            .unwrap()
+            .validate_into()
+            .is_ok());
+    }
+    for delay in [
+        serde_json::Value::Null,
+        serde_json::json!(-1),
+        serde_json::json!(2147483648u64),
+        serde_json::json!(1.5),
+    ] {
+        let body = serde_json::json!({"name":"group","schedulerCronTime":"* * * * *","maxDelaySeconds":delay});
+        assert!(
+            serde_json::from_value::<CreateAgentGroupRequest>(body.clone())
+                .map(|request| request.validate_into().is_err())
+                .unwrap_or(true)
+        );
+        assert!(serde_json::from_value::<ModifyAgentGroupRequest>(body)
+            .map(|request| request.validate_into().is_err())
+            .unwrap_or(true));
     }
 }
 
