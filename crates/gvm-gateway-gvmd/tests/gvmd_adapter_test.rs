@@ -6151,6 +6151,92 @@ async fn ad_verification_uses_discovery_and_status_only_fixture_without_persiste
 }
 
 #[tokio::test]
+async fn report_snapshot_metadata_is_additive_on_older_backends() {
+    // Intent (#736): a typed unsupported snapshot command on GMP 22.7 must
+    // not break existing report reads or invent scanConfig via today's task.
+    let report_id = uuid::Uuid::new_v4();
+    let task_id = uuid::Uuid::new_v4();
+    let server = MockGmpServer::builder()
+        .mode(ServerMode::Stateful)
+        .version(MockVersion::V22_7)
+        .seed(move |store| {
+            store.create(Resource::with_id("task", "Existing task", task_id));
+            let mut report = Resource::with_id("report", "Older report", report_id);
+            report.set_attr("usage_type", "scan");
+            report.set_attr("task_id", &task_id.to_string());
+            store.create(report);
+        })
+        .unix_socket_auto()
+        .build()
+        .await
+        .unwrap();
+    let adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
+    adapter
+        .connect_session("token", "admin", "admin")
+        .await
+        .unwrap();
+    server.clear_history();
+    let report = adapter
+        .get_report("token", &report_id.to_string(), &GetReportOpts::default())
+        .await
+        .expect("optional metadata must not raise the existing read version floor");
+    let task = report.task.expect("generic report task remains present");
+    assert_eq!(task.id, task_id.to_string());
+    assert!(task.scan_config.is_none());
+    let history = server.command_history();
+    assert!(history
+        .iter()
+        .any(|entry| entry.command_name() == "get_reports"));
+    assert!(history.iter().all(|entry| !matches!(
+        entry.command_name(),
+        "get_scan_report" | "get_tasks" | "get_configs" | "get_scan_configs"
+    )));
+    server.shutdown().await;
+}
+
+#[tokio::test]
+async fn report_snapshot_backend_failure_is_not_optional_absence() {
+    // Intent (#736): only unsupported optional capability may be omitted;
+    // a failed real snapshot read must not become a successful stale report.
+    let report_id = uuid::Uuid::new_v4();
+    let server = MockGmpServer::builder()
+        .mode(ServerMode::Stateful)
+        .version(MockVersion::V22_8)
+        .seed(move |store| {
+            let mut report = Resource::with_id("report", "Faulted snapshot", report_id);
+            report.set_attr("usage_type", "scan");
+            store.create(report);
+        })
+        .inject_fault(Fault::on_command(
+            "get_scan_report",
+            FaultKind::ErrorStatus {
+                code: 503,
+                message: "snapshot unavailable".into(),
+            },
+        ))
+        .unix_socket_auto()
+        .build()
+        .await
+        .unwrap();
+    let adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
+    adapter
+        .connect_session("token", "admin", "admin")
+        .await
+        .unwrap();
+    server.clear_history();
+    let error = adapter
+        .get_report("token", &report_id.to_string(), &GetReportOpts::default())
+        .await
+        .expect_err("real snapshot errors must propagate");
+    assert!(matches!(error, GatewayError::BackendUnavailable(_)));
+    assert!(server
+        .command_history()
+        .iter()
+        .all(|entry| entry.command_name() != "get_results"));
+    server.shutdown().await;
+}
+
+#[tokio::test]
 async fn inventory_token_empty_success_is_typed_backend_failure_without_secret_diagnostics() {
     // The owning parser, not the adapter, validates nonempty opaque credentials.
     for payload in [

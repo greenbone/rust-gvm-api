@@ -2097,10 +2097,13 @@ impl ReportPort for MissingReportPort {
 fn report_response(id: &str) -> Report {
     Report {
         id: id.to_string(),
-        task: Some(ResourceRef {
-            id: "660e8400-e29b-41d4-a716-446655440000".to_string(),
-            name: Some("Task".to_string()),
-        }),
+        task: Some(
+            ResourceRef {
+                id: "660e8400-e29b-41d4-a716-446655440000".to_string(),
+                name: Some("Task".to_string()),
+            }
+            .into(),
+        ),
         scan_start: None,
         scan_end: None,
         severity: Some(5.0),
