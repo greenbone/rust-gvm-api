@@ -494,7 +494,13 @@ async fn invalid_agent_and_group_delays_return_400_without_backend_dispatch() {
     // Exercise every schedule/group input through HTTP: invalid JSON values must
     // fail before even a discovery/read command reaches the backend.
     let harness = specialized_target_harness(seed_agent_resource).await;
-    for delay in [Value::Null, json!(-1), json!(2147483648u64), json!(1.5)] {
+    for delay in [
+        Value::Null,
+        json!(-1),
+        json!(2147483648u64),
+        json!(u32::MAX),
+        json!(1.5),
+    ] {
         let schedule = json!({"agentScriptExecutor":{"schedulerCronTime":[
             {"cron":"* * * * *","maxDelaySeconds":delay}
         ]}});

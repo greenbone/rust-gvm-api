@@ -688,7 +688,13 @@ components:
       type: object
       properties:
         retry: { $ref: "#/components/schemas/AgentRetryConfig" }
-    AgentSchedule:
+    AgentScheduleResponse:
+      type: object
+      required: [cron]
+      properties:
+        cron: { type: string }
+        maxDelaySeconds: { type: integer, minimum: 0, maximum: 4294967295 }
+    AgentScheduleInput:
       type: object
       required: [cron]
       properties:
@@ -702,7 +708,7 @@ components:
         indexerDirDepth: { type: integer, minimum: 0 }
         schedulerCronTime:
           type: array
-          items: { $ref: "#/components/schemas/AgentSchedule" }
+          items: { $ref: "#/components/schemas/AgentScheduleResponse" }
     AgentHeartbeatConfig:
       type: object
       properties:
@@ -768,7 +774,7 @@ components:
           items:
             anyOf:
               - { type: string }
-              - { $ref: "#/components/schemas/AgentSchedule" }
+              - { $ref: "#/components/schemas/AgentScheduleInput" }
     AgentHeartbeatConfigUpdate:
       type: object
       properties:
@@ -804,7 +810,7 @@ components:
         writable: { type: boolean }
         inUse: { type: boolean }
         schedulerCronTime: { type: string }
-        maxDelaySeconds: { type: integer, minimum: 0, maximum: 2147483647 }
+        maxDelaySeconds: { type: integer, minimum: 0, maximum: 4294967295 }
         agents:
           type: array
           items: { $ref: "./common.yaml#/components/schemas/ResourceRef" }

@@ -46,3 +46,13 @@ Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/
 Publish the inventory-token 200 Cache-Control header with const no-store in generated OpenAPI; assert generated/curated header parity.
 
 Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/api-agent-target): cargo test -p gvm-gateway-rest --lib (201 passed, including inventory-token generated/curated header parity); cargo test -p gvm-gateway --test agents (5 passed, including runtime inventory-token no-store success/rejection behavior); cargo fmt --all -- --check; cargo clippy --workspace --all-targets --all-features -- -D warnings. All passed. Reused the existing target cache; refreshed local source mtimes after cross-worktree stale dependency artifacts initially hid this slice's token service/error additions.
+
+
+## PR #743 response delay review (2026-11-20)
+- Isolated worktree based on exact a1c3f29611a2e37611e64fba38c4887a5ed95625; no shared stack edits.
+- Split signed-range write schedules from full-u32 response observations; keep non-null input validation. Review and owning specification read.
+- Scanner responses at this slice do not expose agent defaults or reuse AgentConfigResponse; scanner defaults writes reuse the constrained request model.
+- Response schedule schema is now AgentScheduleResponse (0..u32::MAX); structured write object is AgentScheduleInput (0..i32::MAX). Group read/write schemas retain separate existing names. No runtime read validation, casts, or truncation added.
+- Sidecar regressions cover typed GMP agent/group projections at 2147483648/u32::MAX, complete REST response serialization validated against generated and bundled curated schemas, exact field range/type boundaries, and HTTP rejection with no dispatch for u32::MAX (including defaults writes). Added dev-only jsonschema validator with remote resolution features disabled rather than extending the primitive-only enum test helper.
+- Verified using /workspace/api-agent-env: cargo test -p gvm-gateway-rest (202 passed, including generated/curated OpenAPI parity); cargo test -p gvm-gateway-gvmd typed_agent_and_group_delay_observations (1 passed); cargo test -p gvm-gateway --test agents --test contract (5 + 27 passed); cargo fmt --all -- --check; cargo clippy --workspace --all-targets --all-features -- -D warnings (exit 0). Existing Cargo manifest unused-dependency notices remain, with no Rust/Clippy diagnostics. Final logs: /workspace/reviews/api-727-742/review21-743-{rest,projection,http,fmt,clippy}-final.log.
+- No push, PR mutation, or review comment; scoped commit is for parent merge-forward/restack and CI.
