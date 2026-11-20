@@ -25,11 +25,11 @@ axum = "0.8.9"
 clap = { version = "4.6.1", features = ["derive"] }
 # Keep all five workspace components on one immutable rust-gvm commit so Cargo
 # resolves a coherent upstream snapshot.
-gvm-client = { git = "https://github.com/greenbone/rust-gvm", rev = "b6f33da1224aa4950f39dc3db0e6d5607e0e0f89" }
-gvm-connection = { git = "https://github.com/greenbone/rust-gvm", rev = "b6f33da1224aa4950f39dc3db0e6d5607e0e0f89" }
-gvm-gmp = { git = "https://github.com/greenbone/rust-gvm", rev = "b6f33da1224aa4950f39dc3db0e6d5607e0e0f89", features = ["serde"] }
-gvm-mock-server = { git = "https://github.com/greenbone/rust-gvm", rev = "b6f33da1224aa4950f39dc3db0e6d5607e0e0f89" }
-gvm-protocol = { git = "https://github.com/greenbone/rust-gvm", rev = "b6f33da1224aa4950f39dc3db0e6d5607e0e0f89" }
+gvm-client = { git = "https://github.com/greenbone/rust-gvm", rev = "bcac05492244f55df51b971184cc63ddc7bd7bed" }
+gvm-connection = { git = "https://github.com/greenbone/rust-gvm", rev = "bcac05492244f55df51b971184cc63ddc7bd7bed" }
+gvm-gmp = { git = "https://github.com/greenbone/rust-gvm", rev = "bcac05492244f55df51b971184cc63ddc7bd7bed", features = ["serde"] }
+gvm-mock-server = { git = "https://github.com/greenbone/rust-gvm", rev = "bcac05492244f55df51b971184cc63ddc7bd7bed" }
+gvm-protocol = { git = "https://github.com/greenbone/rust-gvm", rev = "bcac05492244f55df51b971184cc63ddc7bd7bed" }
 http = "1.4.1"
 opentelemetry = { version = "0.33.0", features = ["trace"] }
 opentelemetry-otlp = { version = "0.33.0", features = ["grpc-tonic", "trace"] }

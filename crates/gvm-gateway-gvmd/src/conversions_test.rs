@@ -1719,3 +1719,57 @@ fn snapshot_task_omits_unavailable_name_like_generic_report_task() {
     assert!(task.name.is_none());
     assert!(task.scan_config.is_none());
 }
+
+#[test]
+fn typed_agent_and_group_delay_observations_preserve_full_u32_range() {
+    // Exercise the real typed-to-domain projections independently of write builders:
+    // successful backend observations above i32::MAX must not be rejected or truncated.
+    for delay in [2147483648u32, u32::MAX] {
+        let agent_xml = format!(
+            r#"<get_agents_response status="200" status_text="OK">
+            <agent id="550e8400-e29b-41d4-a716-446655440000"><name>Observed</name>
+            <config><agent_script_executor><scheduler_cron_time><item>
+            <cron>* * * * *</cron><max_delay_seconds>{delay}</max_delay_seconds>
+            </item></scheduler_cron_time></agent_script_executor></config></agent>
+            </get_agents_response>"#
+        );
+        let parsed =
+            GetAgentsResponse::from_response(&GmpResponse::from(agent_xml.as_str())).unwrap();
+        let typed = parsed.items.into_iter().next().unwrap();
+        assert_eq!(
+            typed
+                .config
+                .as_ref()
+                .unwrap()
+                .agent_script_executor
+                .as_ref()
+                .unwrap()
+                .scheduler_cron_time[0]
+                .max_delay_seconds,
+            Some(delay)
+        );
+        let projected = agent_from_gmp(typed);
+        assert_eq!(
+            projected
+                .config
+                .unwrap()
+                .agent_script_executor
+                .unwrap()
+                .scheduler_cron_time[0]
+                .max_delay_seconds,
+            Some(delay)
+        );
+
+        let group_xml = format!(
+            r#"<get_agent_groups_response status="200" status_text="OK">
+            <agent_group id="550e8400-e29b-41d4-a716-446655440000"><name>Observed</name>
+            <scheduler_cron_time>* * * * *</scheduler_cron_time>
+            <max_delay_seconds>{delay}</max_delay_seconds></agent_group>
+            </get_agent_groups_response>"#
+        );
+        let parsed =
+            GetAgentGroupsResponse::from_response(&GmpResponse::from(group_xml.as_str())).unwrap();
+        let projected = agent_group_from_gmp(parsed.items.into_iter().next().unwrap());
+        assert_eq!(projected.max_delay_seconds, Some(delay));
+    }
+}

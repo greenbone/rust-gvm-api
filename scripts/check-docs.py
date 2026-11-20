@@ -112,6 +112,39 @@ def check_api_reference() -> list[str]:
     return failures
 
 
+def check_credentials_inventory() -> list[str]:
+    """Keep the design route table honest at every stacked feature boundary."""
+
+    expected = {
+        path: methods
+        for path, methods in curated_routes().items()
+        if path.startswith(("/credentials", "/credential-stores", "/active-directory/"))
+    }
+    design = (REPOSITORY_ROOT / "spec" / "rest-api" / "openspec.md").read_text()
+    section = re.search(r"^#### Credentials\n(.*?)(?=^#### |\Z)", design, re.MULTILINE | re.DOTALL)
+    if section is None:
+        return ["OpenSpec is missing its Credentials route inventory"]
+    documented: dict[str, set[str]] = {}
+    for method, path in re.findall(
+        r"^\| `(GET|POST|PUT|PATCH|DELETE)` \| `/api/v1(/[^`]+)` \|",
+        section.group(1),
+        re.MULTILINE,
+    ):
+        methods = documented.setdefault(path, set())
+        if method in methods:
+            return [f"OpenSpec Credentials repeats {method} {path}"]
+        methods.add(method)
+    failures: list[str] = []
+    for path in sorted(expected.keys() - documented.keys()):
+        failures.append(f"OpenSpec Credentials is missing route {path}")
+    for path in sorted(documented.keys() - expected.keys()):
+        failures.append(f"OpenSpec Credentials has unimplemented route {path}")
+    for path in sorted(expected.keys() & documented.keys()):
+        if expected[path] != documented[path]:
+            failures.append(f"OpenSpec Credentials methods for {path} do not match OpenAPI")
+    return failures
+
+
 def check_relative_links() -> list[str]:
     """Reject broken repository-relative Markdown links in active and archived docs."""
 
@@ -146,7 +179,7 @@ def main() -> int:
     """Run all deterministic documentation checks."""
 
     try:
-        failures = check_api_reference() + check_relative_links()
+        failures = check_api_reference() + check_credentials_inventory() + check_relative_links()
     except (OSError, ValueError) as error:
         print(f"documentation validation failed: {error}", file=sys.stderr)
         return 1
