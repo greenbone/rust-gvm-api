@@ -2304,6 +2304,17 @@ fn task_observer_update_schemas_allow_omission_and_reject_null() {
 }
 
 #[test]
+fn report_application_count_schema_preserves_unsigned_bounds() {
+    let generated = build_openapi();
+    for field in ["hostsCount", "occurrences"] {
+        let schema = &generated["components"]["schemas"]["ReportApplication"]["properties"][field];
+        assert_eq!(schema["type"], "integer");
+        assert_eq!(schema["minimum"].as_f64(), Some(0.0));
+        assert_eq!(schema["maximum"].as_f64(), Some(f64::from(u32::MAX)));
+    }
+}
+
+#[test]
 fn inventory_token_generated_and_curated_success_headers_forbid_caching() {
     // A description is not an OpenAPI header: require the actual no-store schema
     // in both documents so generated clients see the runtime confidentiality policy.
