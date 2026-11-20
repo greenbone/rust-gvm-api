@@ -19,7 +19,7 @@ const RUST_GVM_COMPONENTS: &[&str] = &[
 // workspace components share one upstream baseline.
 const RUST_GVM_DEPENDENCY_URL: &str = "https://github.com/greenbone/rust-gvm";
 const RUST_GVM_DEPENDENCY_VERSION: &str = "0.11.1";
-const RUST_GVM_DEPENDENCY_REVISION: &str = "b6f33da1224aa4950f39dc3db0e6d5607e0e0f89";
+const RUST_GVM_DEPENDENCY_REVISION: &str = "bcac05492244f55df51b971184cc63ddc7bd7bed";
 // Issue #588 established the reviewed rust-gvm v0.8.0 facade inventory, and
 // issues #620 and #634 advanced the accepted baseline through v0.10.0. Direct
 // comparison of the v0.10.0 and v0.11.0 typed-facade trees shows the same 267
@@ -27,7 +27,7 @@ const RUST_GVM_DEPENDENCY_REVISION: &str = "b6f33da1224aa4950f39dc3db0e6d5607e0e
 // release metadata advances atomically.
 const RUST_GVM_PIN_REFERENCE: &str = "stack-commit";
 const RUST_GVM_FACADE_TAG: &str = "gmp-feature-stack";
-const RUST_GVM_FACADE_REVISION: &str = "b6f33da1224aa4950f39dc3db0e6d5607e0e0f89";
+const RUST_GVM_FACADE_REVISION: &str = "bcac05492244f55df51b971184cc63ddc7bd7bed";
 const RUST_GVM_TYPED_FACADE_METHOD_COUNT: usize = 270;
 const RUST_GVM_TYPED_FACADE_SNAPSHOT: &str = "tests/fixtures/rust-gvm-v0.11.0-typed-facade.tsv";
 const RUST_GVM_DISPOSITION_LEDGER: &str = "../../docs/upstream-surface-dispositions.tsv";
