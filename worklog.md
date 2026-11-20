@@ -28,12 +28,25 @@
 - Adopted upstream immutable feature stack b6f33da; reviewed 270-method typed facade (three newly blocked REST adopters). Building isolated target; native compiler provisioned inside workspace only.
 - Prerequisite commit b6b901b compiles all workspace features; SHA also recorded in /workspace/api-agent-baseline.txt for parent coordination (no sessions-send tool available).
 - #730 runtime maps structured schedules/delays with legacy writes and explicit documented Tech Preview response break.
+- #730 acceptance: 12 REST agent tests passed; strict all-target/all-feature clippy passed before token slice.
+- #731 implemented typed backend-only token issuance, no-store REST, confidential domain wrapper and sanitized status-aware failure mapping including distinct 503.
+
+## #731 independent-head contract correction
+
+- Exact-head CI exposed Aide inferring a request body from the rejection-only Bytes extractor. Move the existing later-slice suppression into inventory-token issuance itself, preserving runtime body rejection and the curated no-body contract.
+- Add an explicit generated-OpenAPI regression asserting this operation has no requestBody.
 
 ## Review correction #730 (2026-11-20)
 
 Reject explicit null maxDelaySeconds on all agent schedule and group inputs; preserve omission, zero and GMP bounds. Add HTTP 400/no-backend-dispatch regressions and REST boundary coverage.
 
 Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/api-agent-target): cargo test -p gvm-gateway-rest --lib (200 passed, including generated/curated OpenAPI parity); cargo test -p gvm-gateway --test agents (5 passed, including all four invalid-delay HTTP entry points with zero backend commands); cargo fmt --all -- --check; cargo clippy --workspace --all-targets --all-features -- -D warnings. All passed.
+## Review correction #731 (2026-11-20)
+
+Publish the inventory-token 200 Cache-Control header with const no-store in generated OpenAPI; assert generated/curated header parity.
+
+Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/api-agent-target): cargo test -p gvm-gateway-rest --lib (201 passed, including inventory-token generated/curated header parity); cargo test -p gvm-gateway --test agents (5 passed, including runtime inventory-token no-store success/rejection behavior); cargo fmt --all -- --check; cargo clippy --workspace --all-targets --all-features -- -D warnings. All passed. Reused the existing target cache; refreshed local source mtimes after cross-worktree stale dependency artifacts initially hid this slice's token service/error additions.
+
 
 ## PR #743 response delay review (2026-11-20)
 - Isolated worktree based on exact a1c3f29611a2e37611e64fba38c4887a5ed95625; no shared stack edits.
@@ -43,3 +56,11 @@ Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/
 - Sidecar regressions cover typed GMP agent/group projections at 2147483648/u32::MAX, complete REST response serialization validated against generated and bundled curated schemas, exact field range/type boundaries, and HTTP rejection with no dispatch for u32::MAX (including defaults writes). Added dev-only jsonschema validator with remote resolution features disabled rather than extending the primitive-only enum test helper.
 - Verified using /workspace/api-agent-env: cargo test -p gvm-gateway-rest (202 passed, including generated/curated OpenAPI parity); cargo test -p gvm-gateway-gvmd typed_agent_and_group_delay_observations (1 passed); cargo test -p gvm-gateway --test agents --test contract (5 + 27 passed); cargo fmt --all -- --check; cargo clippy --workspace --all-targets --all-features -- -D warnings (exit 0). Existing Cargo manifest unused-dependency notices remain, with no Rust/Clippy diagnostics. Final logs: /workspace/reviews/api-727-742/review21-743-{rest,projection,http,fmt,clippy}-final.log.
 - No push, PR mutation, or review comment; scoped commit is for parent merge-forward/restack and CI.
+## Review correction #876 / API #744 (2026-11-20)
+- Published owning parser fix at greenbone/rust-gvm#877, bcac05492244f55df51b971184cc63ddc7bd7bed, incremental on #872/fa990ad so the protected report-result filter helper is retained. No PR merged.
+- Adopted all five exact dependency pins, lock source identities, architecture revision guard and facade snapshot revision together.
+- Added typed adapter and real HTTP regressions for self-closing/explicit empty and whitespace-only successful backend tokens, including XML whitespace/entity references; assert sanitized backend-unavailable/502, no token response, and HTTP no-store.
+- No gateway parser, normalization or trim workaround. Running focused tests, architecture guard, full-feature strict workspace Clippy and fmt in dedicated /workspace/.cache/api-876-target.
+- Verification passed: adapter inventory-token tests 4/4; actual HTTP inventory-token tests 2/2 (six malformed payload shapes plus valid issuance/auth/body checks); REST cache/OpenAPI tests 2/2; architecture guards 22/22; cargo clippy --workspace --all-targets --all-features -- -D warnings; cargo fmt --all -- --check; git diff --check. Existing manifest-only unused-dependency warnings remain.
+- The reviewed client facade source is unchanged between old pin and bcac054, so the existing 270-method inventory/dispositions remain valid; updated snapshot, ledger and adoption-note revision metadata atomically. Specifications left unchanged.
+- API branch fix/744-adopt-876 is based exactly on a8c84cb0bd22d0ab48190a92fb984a80dfef24cc; local commit only, no API push/comment/merge. Parent must retain bcac054 when restacking #744/#754 rather than reverting to #754's older fa990ad pin.

@@ -5911,3 +5911,146 @@ async fn gvmd_adapter_failed_user_setting_modify_short_circuits_read_back() {
 
     server.shutdown().await;
 }
+
+#[tokio::test]
+async fn inventory_token_uses_discovered_no_argument_command_and_redacts_diagnostics() {
+    // Only the intended response may expose this credential, never Debug or diagnostics.
+    let _guard = lock_tracing().await;
+    let capture = capture_tracing();
+    let (adapter, server, token) = create_mock_adapter_v22_8().await;
+    server.clear_history();
+    let issued = adapter.get_agent_inventory_token(&token).await.unwrap();
+    assert_eq!(issued.expose(), "mock-agent-inventory-token");
+    assert!(!format!("{issued:?}").contains(issued.expose()));
+    let history = server.command_history();
+    assert_eq!(
+        history
+            .iter()
+            .filter(|record| record.command_name() == "get_agent_inventory_token")
+            .count(),
+        1
+    );
+    assert!(!String::from_utf8_lossy(&capture.lock().unwrap()).contains(issued.expose()));
+    server.shutdown().await;
+}
+
+#[tokio::test]
+async fn inventory_token_failures_preserve_status_without_secret_diagnostics() {
+    // GMP 400 permission denial differs from syntax, and temporary issuance differs from unsupported.
+    for (status, message, expected) in [
+        (400, "Permission denied", GatewayErrorCode::Forbidden),
+        (
+            503,
+            "SECRET unavailable",
+            GatewayErrorCode::ServiceUnavailable,
+        ),
+        (
+            500,
+            "SECRET generation failed",
+            GatewayErrorCode::InternalServerError,
+        ),
+    ] {
+        let server = MockGmpServer::builder()
+            .mode(ServerMode::Stateful)
+            .version(MockVersion::V22_8)
+            .inject_fault(Fault::on_command(
+                "get_agent_inventory_token",
+                FaultKind::ErrorStatus {
+                    code: status,
+                    message: message.into(),
+                },
+            ))
+            .unix_socket_auto()
+            .build()
+            .await
+            .unwrap();
+        let adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
+        adapter
+            .connect_session("inventory-error-test", "admin", "admin")
+            .await
+            .unwrap();
+        let error = adapter
+            .get_agent_inventory_token("inventory-error-test")
+            .await
+            .unwrap_err();
+        assert_eq!(error.code(), expected);
+        assert!(!format!("{error:?}").contains("SECRET"));
+        server.shutdown().await;
+    }
+}
+
+#[tokio::test]
+async fn inventory_token_requires_positive_help_and_payload() {
+    // A missing command or malformed success must never manufacture an inventory token.
+    for (command, response, expected) in [
+        (
+            "help",
+            r#"<help_response status="200" status_text="OK"><schema format="XML"><command><name>get_agents</name></command></schema></help_response>"#,
+            GatewayErrorCode::NotImplemented,
+        ),
+        (
+            "get_agent_inventory_token",
+            r#"<get_agent_inventory_token_response status="200" status_text="OK"/>"#,
+            GatewayErrorCode::BackendUnavailable,
+        ),
+    ] {
+        let server = MockGmpServer::builder()
+            .mode(ServerMode::Fixture)
+            .version(MockVersion::V22_8)
+            .override_response("help", r#"<help_response status="200" status_text="OK"><schema format="XML"><command><name>get_agent_inventory_token</name></command></schema></help_response>"#)
+            .override_response(command, response)
+            .unix_socket_auto()
+            .build()
+            .await
+            .unwrap();
+        let adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
+        adapter
+            .connect_session("inventory-discovery-test", "admin", "admin")
+            .await
+            .unwrap();
+        let error = adapter
+            .get_agent_inventory_token("inventory-discovery-test")
+            .await
+            .unwrap_err();
+        assert_eq!(error.code(), expected);
+        if command == "help" {
+            assert!(!server
+                .command_history()
+                .iter()
+                .any(|r| r.command_name() == "get_agent_inventory_token"));
+        }
+        server.shutdown().await;
+    }
+}
+
+#[tokio::test]
+async fn inventory_token_empty_success_is_typed_backend_failure_without_secret_diagnostics() {
+    // The owning parser, not the adapter, validates nonempty opaque credentials.
+    for payload in [
+        "<token/>",
+        "<token></token>",
+        "<token> </token>",
+        "<token>\t\r\n </token>",
+        "<token>&#x20;&#x9;&#xD;&#xA;</token>",
+    ] {
+        let xml = format!(
+            r#"<get_agent_inventory_token_response status="200" status_text="SECRET diagnostic">{payload}<diagnostic>SECRET payload</diagnostic></get_agent_inventory_token_response>"#
+        );
+        let server = MockGmpServer::builder().mode(ServerMode::Fixture).version(MockVersion::V22_8)
+            .override_response("help", r#"<help_response status="200" status_text="OK"><schema format="XML"><command><name>get_agent_inventory_token</name></command></schema></help_response>"#)
+            .override_response("get_agent_inventory_token", &xml)
+            .unix_socket_auto().build().await.unwrap();
+        let adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
+        adapter
+            .connect_session("inventory-empty-test", "admin", "admin")
+            .await
+            .unwrap();
+        let error = adapter
+            .get_agent_inventory_token("inventory-empty-test")
+            .await
+            .unwrap_err();
+        assert_eq!(error.code(), GatewayErrorCode::BackendUnavailable);
+        assert!(!format!("{error:?}").contains("SECRET"));
+        server.shutdown().await;
+    }
+}

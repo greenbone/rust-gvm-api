@@ -767,6 +767,16 @@ pub trait ScannerPort: Send + Sync + 'static {
 /// Port for agent and agent-group management operations.
 #[async_trait]
 pub trait AgentPort: Send + Sync + 'static {
+    /// Issue an inventory credential; unavailable backends must not fabricate success.
+    async fn get_agent_inventory_token(
+        &self,
+        _session_token: &str,
+    ) -> Result<crate::AgentInventoryToken, GatewayError> {
+        Err(GatewayError::NotImplemented(
+            "Agent inventory token issuance is unavailable.".into(),
+        ))
+    }
+
     /// List agents for the session.
     async fn list_agents(
         &self,
