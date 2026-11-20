@@ -53,6 +53,18 @@ pub struct Agent {
     /// Backend-reported version.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
+    /// Backend-reported operatingSystem; open read-only metadata.
+    #[serde(rename = "operatingSystem", skip_serializing_if = "Option::is_none")]
+    pub operating_system: Option<String>,
+    /// Backend-reported architecture; open read-only metadata.
+    #[serde(rename = "architecture", skip_serializing_if = "Option::is_none")]
+    pub architecture: Option<String>,
+    /// Backend-reported osCpe; open read-only metadata.
+    #[serde(rename = "osCpe", skip_serializing_if = "Option::is_none")]
+    pub os_cpe: Option<String>,
+    /// Backend-reported osStatus; open read-only metadata.
+    #[serde(rename = "osStatus", skip_serializing_if = "Option::is_none")]
+    pub os_status: Option<String>,
     /// Last update timestamp.
     #[serde(rename = "lastUpdateTime", skip_serializing_if = "Option::is_none")]
     pub last_update_time: Option<String>,

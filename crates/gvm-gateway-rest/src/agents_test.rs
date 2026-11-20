@@ -277,6 +277,28 @@ fn group_delay_omission_zero_and_bounds_match_the_schedule_contract() {
 }
 
 #[test]
+fn agent_os_metadata_is_shared_by_detail_and_list_projection() {
+    // Both endpoints use the same projection and preserve open read-only fields exactly.
+    let domain: gvm_gateway_domain::Agent = serde_json::from_value(serde_json::json!({
+        "id":RESOURCE_ID,"name":"Agent","writable":true,"inUse":false,
+        "operatingSystem":"Future OS","architecture":"future64","osCpe":"cpe:/o:future","osStatus":"new-status"
+    })).unwrap();
+    let detail = serde_json::to_value(AgentResponse::from(domain.clone())).unwrap();
+    let list = serde_json::to_value(AgentListResponse::from(gvm_gateway_domain::AgentPage {
+        data: vec![domain],
+        pagination: gvm_gateway_domain::Pagination {
+            page: 1,
+            per_page: 25,
+            total: 1,
+            total_pages: 1,
+        },
+    }))
+    .unwrap();
+    assert_eq!(list["data"][0], detail);
+    assert_eq!(detail["osStatus"], "new-status");
+}
+
+#[test]
 fn response_delay_observations_validate_without_write_range_truncation() {
     // A typed backend observation is not a write: project and serialize full
     // agent/group responses, then validate them against both public contracts.
