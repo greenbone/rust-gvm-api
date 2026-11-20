@@ -151,6 +151,17 @@ pub trait SchedulePort: Send + Sync + 'static {
 /// Port for credential CRUD operations.
 #[async_trait]
 pub trait CredentialPort: Send + Sync + 'static {
+    /// Verify an AD credential without creating resources.
+    async fn verify_active_directory(
+        &self,
+        _session_token: &str,
+        _input: crate::VerifyActiveDirectoryInput,
+    ) -> Result<(), GatewayError> {
+        Err(GatewayError::NotImplemented(
+            "Active Directory verification unavailable".into(),
+        ))
+    }
+
     /// List credential stores available to the backend.
     async fn list_credential_stores(
         &self,

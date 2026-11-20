@@ -296,6 +296,8 @@ Policy creation likewise requires an explicit active policy base in
 | `GET` | `/api/v1/credential-stores/{id}` | Get a credential store without exposing preference values |
 | `PUT` | `/api/v1/credential-stores/{id}` | Update credential-store connection settings and write-only preferences |
 | `POST` | `/api/v1/credential-stores/{id}/actions/verify` | Verify the credential-store connection |
+| `POST` | `/api/v1/credentials/{id}/actions/verify-active-directory` | Verify a saved AD credential without persisting changes |
+| `POST` | `/api/v1/active-directory/credential-verifications` | Verify inline AD connection settings without saving a credential |
 | `GET` | `/api/v1/credentials` | List credentials |
 | `POST` | `/api/v1/credentials` | Create credential |
 | `GET` | `/api/v1/credentials/{id}` | Get credential |
@@ -605,3 +607,22 @@ and does not describe a shipped runtime surface.
 
 - [ ] WebSocket vs SSE for real-time task status updates?
 - [ ] Should request-scoped Basic auth remain a compatibility path long-term, or should clients be encouraged to use explicit sessions for all workflows?
+
+
+### Active Directory credential operations
+
+Credentials accept explicit type `ad` with nested `activeDirectory` fields.
+Create and inline verification require host, bindDn, baseDn, bindPassword and
+secure tlsMode (`ldaps` or `starttls`). Port omission retains the backend default;
+partial modify preserves omitted values, permits empty CA to clear, and supports
+clearPort without an explicit port. Passwords are write-only; directory metadata
+is excluded from Debug output. Read TLS mode is an open string.
+
+`POST /credentials/{id}/actions/verify-active-directory` requires an empty body.
+`POST /active-directory/credential-verifications` takes only a complete
+`activeDirectory` object. These controller exceptions return 204, no Location,
+and Cache-Control: no-store; neither creates a credential. The backend owns
+destination, TLS and permission policy, including explicit AD write permissions.
+Positive help discovery is required; missing support returns 501, never an LDAP
+workaround. Backend diagnostics are sanitized. Deterministic tests are not live
+AD/TLS interoperability qualification.
