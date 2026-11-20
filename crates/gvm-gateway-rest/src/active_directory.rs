@@ -450,7 +450,15 @@ pub(crate) fn search_active_directory_objects_docs(
     let op = op.id("searchActiveDirectoryObjects").tag("Credentials").summary("Search live Active Directory objects")
         .description("Read-only bounded discovery using a saved credential. Counts describe the fetched subset; no targets or tasks are created. Sensitive responses use Cache-Control: no-store.")
         .security_requirement("bearerAuth").input::<Json<ActiveDirectorySearchInput>>()
-        .response_with::<200, Json<ActiveDirectorySearchResult>, _>(ok_schema("Fetched directory subset"));
+        .response_with::<200, Json<ActiveDirectorySearchResult>, _>(|mut response| {
+            let mut value = serde_json::to_value(response.inner()).expect("response schema");
+            value["headers"]["Cache-Control"] = serde_json::json!({
+                "description": "Never cache sensitive directory objects",
+                "schema": {"type": "string", "const": "no-store"}
+            });
+            *response.inner() = serde_json::from_value(value).expect("response header schema");
+            ok_schema("Fetched directory subset")(response)
+        });
     let op = problem_response::<400>(op, "Invalid search selectors");
     let op = problem_response::<401>(op, "Authentication required");
     let op = problem_response::<403>(op, "Permission denied");
