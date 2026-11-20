@@ -191,6 +191,7 @@ impl AgentScheduleRequest {
     }
 }
 
+// Omission uses serde's default; a present value must be an integer, never null.
 fn deserialize_delay<'de, D: serde::Deserializer<'de>>(
     deserializer: D,
 ) -> Result<Option<u32>, D::Error> {
