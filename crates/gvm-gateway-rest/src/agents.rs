@@ -148,13 +148,12 @@ impl From<gvm_gateway_domain::AgentControlConfig> for AgentControlConfigResponse
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
-#[schemars(rename = "AgentSchedule")]
+#[derive(Clone, Debug, Serialize, JsonSchema)]
+#[schemars(rename = "AgentScheduleResponse")]
 struct AgentScheduleResponse {
     cron: String,
     #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
-    #[schemars(range(min = 0, max = 2147483647))]
-    #[serde(default, deserialize_with = "deserialize_delay")]
+    #[schemars(range(min = 0, max = 4294967295u32))]
     max_delay_seconds: Option<u32>,
 }
 
@@ -167,17 +166,31 @@ impl From<gvm_gateway_domain::AgentSchedule> for AgentScheduleResponse {
     }
 }
 
+// Writes follow the signed GMP command range; observations retain typed u32 values.
+#[derive(Clone, Debug, Deserialize, JsonSchema)]
+#[schemars(rename = "AgentScheduleInput")]
+struct AgentScheduleInput {
+    cron: String,
+    #[serde(
+        rename = "maxDelaySeconds",
+        default,
+        deserialize_with = "deserialize_delay"
+    )]
+    #[schemars(range(min = 0, max = 2147483647))]
+    max_delay_seconds: Option<u32>,
+}
+
 #[derive(Clone, Debug, Deserialize, JsonSchema)]
 #[serde(untagged)]
 enum AgentScheduleRequest {
     Legacy(String),
-    Structured(AgentScheduleResponse),
+    Structured(AgentScheduleInput),
 }
 
 impl AgentScheduleRequest {
     fn validate_into(self) -> Result<gvm_gateway_domain::AgentSchedule, GatewayError> {
         let entry = match self {
-            Self::Legacy(cron) => AgentScheduleResponse {
+            Self::Legacy(cron) => AgentScheduleInput {
                 cron,
                 max_delay_seconds: None,
             },
@@ -555,8 +568,7 @@ struct AgentGroupResponse {
     #[serde(rename = "schedulerCronTime", skip_serializing_if = "Option::is_none")]
     scheduler_cron_time: Option<String>,
     #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
-    #[schemars(range(min = 0, max = 2147483647))]
-    #[serde(default, deserialize_with = "deserialize_delay")]
+    #[schemars(range(min = 0, max = 4294967295u32))]
     max_delay_seconds: Option<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     agents: Vec<ResourceRefResponse>,
