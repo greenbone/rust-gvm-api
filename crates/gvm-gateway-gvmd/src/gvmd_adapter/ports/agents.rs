@@ -189,6 +189,7 @@ impl AgentPort for GvmdAdapter {
     ) -> Result<AgentSupportBundle, GatewayError> {
         let mut request = GetAgentSupportBundleRequest::new(parse_entity_id(id)?, query.days);
         request.encryption = query.encryption;
+        request.anonymized = query.anonymized;
         let parsed = self
             .execute_with_session(session_token, "agents.support_bundle", request)
             .await?;

@@ -2185,6 +2185,7 @@ async fn gvmd_adapter_agent_download_helpers_map_typed_payloads() {
             &AgentSupportBundleQuery {
                 days: Some(7),
                 encryption: None,
+                anonymized: None,
             },
         )
         .await
@@ -2217,6 +2218,7 @@ async fn gvmd_adapter_support_bundle_preserves_encryption_tristate() {
                 &AgentSupportBundleQuery {
                     days: None,
                     encryption,
+                    anonymized: None,
                 },
             )
             .await
@@ -6021,6 +6023,71 @@ async fn inventory_token_requires_positive_help_and_payload() {
         }
         server.shutdown().await;
     }
+}
+
+#[tokio::test]
+async fn support_bundle_typed_dispatch_preserves_nine_independent_privacy_combinations() {
+    // The typed request owns encoding. Every selector combination must survive REST/domain projection.
+    let (adapter, server, token) = create_mock_adapter_v22_8().await;
+    for encryption in [None, Some(false), Some(true)] {
+        for anonymized in [None, Some(false), Some(true)] {
+            server.clear_history();
+            let bundle = adapter
+                .get_agent_support_bundle(
+                    &token,
+                    "550e8400-e29b-41d4-a716-446655440000",
+                    &AgentSupportBundleQuery {
+                        days: Some(7),
+                        encryption,
+                        anonymized,
+                    },
+                )
+                .await
+                .unwrap();
+            assert_eq!(bundle.artifact.bytes, b"hello-mock");
+            let history = server.command_history();
+            let command = history
+                .iter()
+                .find(|r| r.command_name() == "get_agent_support_bundle")
+                .unwrap();
+            let xml = String::from_utf8(command.raw_xml().to_vec()).unwrap();
+            for (name, value) in [("encryption", encryption), ("anonymized", anonymized)] {
+                match value {
+                    None => assert!(!xml.contains(&format!("{name}="))),
+                    Some(value) => {
+                        assert!(xml.contains(&format!("{name}=\"{}\"", u8::from(value))))
+                    }
+                }
+            }
+            assert!(xml.contains("days=\"7\""));
+        }
+    }
+    server.shutdown().await;
+}
+
+#[tokio::test]
+async fn explicit_bundle_privacy_never_becomes_success_on_unsupported_backend() {
+    // A requested privacy selector must not be dropped to obtain a successful old-version download.
+    let (adapter, server, token) = create_mock_adapter().await;
+    server.clear_history();
+    let error = adapter
+        .get_agent_support_bundle(
+            &token,
+            "550e8400-e29b-41d4-a716-446655440000",
+            &AgentSupportBundleQuery {
+                days: None,
+                encryption: None,
+                anonymized: Some(true),
+            },
+        )
+        .await
+        .unwrap_err();
+    assert!(matches!(error, GatewayError::NotImplemented(_)));
+    assert!(!server
+        .command_history()
+        .iter()
+        .any(|r| r.command_name() == "get_agent_support_bundle"));
+    server.shutdown().await;
 }
 
 #[tokio::test]

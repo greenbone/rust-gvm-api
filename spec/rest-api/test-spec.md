@@ -355,3 +355,6 @@ Typed no-argument issuance, positive discovery, missing payload, 400 permission 
 
 ### Implemented OS projections (#732)
 Typed parser fixtures exercise populated, empty, independently absent and unknown future OS strings. List/detail use an identical projection; read metadata cannot be written through update models.
+
+### Implemented support-bundle anonymization (#733)
+All nine encryption/anonymized omitted/false/true combinations preserve independent selectors. Invalid booleans fail before dispatch; typed backend errors propagate without local archive rewriting.
