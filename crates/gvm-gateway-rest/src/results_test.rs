@@ -69,6 +69,7 @@ fn result_response_preserves_source_shaped_type_metadata() {
             cvss_base: None,
             cves: Vec::new(),
             tags: None,
+            type_: None,
             type_metadata: Some("{\"future\":[1,true]}".to_string()),
             epss: None,
         }),
@@ -135,6 +136,7 @@ fn result_response_omits_absent_type_metadata() {
         cvss_base: None,
         cves: Vec::new(),
         tags: None,
+        type_: None,
         type_metadata: None,
         epss: None,
     });
@@ -155,6 +157,7 @@ fn result_response_serializes_distinct_epss_selections() {
         cvss_base: None,
         cves: Vec::new(),
         tags: None,
+        type_: None,
         type_metadata: None,
         epss: Some(Epss {
             max_epss: EpssSelection {
@@ -198,6 +201,7 @@ fn summary_nvt_reference_does_not_expose_epss() {
         cvss_base: None,
         cves: Vec::new(),
         tags: None,
+        type_: None,
         type_metadata: None,
         epss: Some(Epss {
             max_epss: EpssSelection {
@@ -221,4 +225,28 @@ fn summary_nvt_reference_does_not_expose_epss() {
 
     let value = serde_json::to_value(nvt).expect("summary NVT reference should serialize");
     assert!(value.get("epss").is_none());
+}
+
+// Intent: both full and nested summary DTOs preserve unknown discriminators without altering metadata.
+#[test]
+fn nvt_open_type_full_and_summary() {
+    for kind in [Some("nvt"), Some("package"), Some("future-source"), None] {
+        let n = NvtRef {
+            oid: None,
+            name: None,
+            family: None,
+            cvss_base: None,
+            cves: vec![],
+            tags: None,
+            type_: kind.map(str::to_owned),
+            type_metadata: Some("{opaque}".into()),
+            epss: None,
+        };
+        let full = serde_json::to_value(super::NvtRefResponse::from(n.clone())).unwrap();
+        let summary = serde_json::to_value(super::NvtRefSummaryResponse::from(n)).unwrap();
+        for json in [full, summary] {
+            assert_eq!(json["typeMetadata"], "{opaque}");
+            assert_eq!(json.get("type").and_then(serde_json::Value::as_str), kind);
+        }
+    }
 }
