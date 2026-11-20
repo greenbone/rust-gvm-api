@@ -6149,3 +6149,35 @@ async fn ad_verification_uses_discovery_and_status_only_fixture_without_persiste
     );
     server.shutdown().await;
 }
+
+#[tokio::test]
+async fn inventory_token_empty_success_is_typed_backend_failure_without_secret_diagnostics() {
+    // The owning parser, not the adapter, validates nonempty opaque credentials.
+    for payload in [
+        "<token/>",
+        "<token></token>",
+        "<token> </token>",
+        "<token>\t\r\n </token>",
+        "<token>&#x20;&#x9;&#xD;&#xA;</token>",
+    ] {
+        let xml = format!(
+            r#"<get_agent_inventory_token_response status="200" status_text="SECRET diagnostic">{payload}<diagnostic>SECRET payload</diagnostic></get_agent_inventory_token_response>"#
+        );
+        let server = MockGmpServer::builder().mode(ServerMode::Fixture).version(MockVersion::V22_8)
+            .override_response("help", r#"<help_response status="200" status_text="OK"><schema format="XML"><command><name>get_agent_inventory_token</name></command></schema></help_response>"#)
+            .override_response("get_agent_inventory_token", &xml)
+            .unix_socket_auto().build().await.unwrap();
+        let adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
+        adapter
+            .connect_session("inventory-empty-test", "admin", "admin")
+            .await
+            .unwrap();
+        let error = adapter
+            .get_agent_inventory_token("inventory-empty-test")
+            .await
+            .unwrap_err();
+        assert_eq!(error.code(), GatewayErrorCode::BackendUnavailable);
+        assert!(!format!("{error:?}").contains("SECRET"));
+        server.shutdown().await;
+    }
+}
