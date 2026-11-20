@@ -92,6 +92,26 @@
 - #742 independent review repeated immutable gvmd source/schema and typed-model search: refs/EPSS producers present, no KEV contract found. Corrected producer source anchors. Following explicit parent authorization and fresh authenticated all-state duplicate searches (KEV and “known exploited”), filed gvmd #3254 and rust-gvm #873, and cross-linked API #742 comment 7018718816. No runtime branch publication. Expanded raw refs regression to diverse feed types, escaped URL, CVE compatibility and duplicate/order retention.
 - #742 focused typed/REST collection regressions pass; required full-workspace Clippy, formatting and docs validation pass. Full workspace rerun pending final result.
 - Independent read-only review of parent b02/732-agent-os-metadata (dcd4706; #730–732) against issue acceptance and specs found no concrete blocker in scheduler compatibility/range mapping, inventory-token authentication/capabilities/status/confidentiality/cache, or OS omission/open-string mapping. Parent worktree and branches were not changed.
+
+# API #741 report result isolation
+
+- 2026-11-19: Rooted at PR740 head9a5664f. Read contract/code and pinned local gvmd producer.
+- Identified protected `_and_report_id` control in gvmd source; filed rust-gvm#871 for typed composition and strict comparator validation, rather than parsing GMP in gateway.
+- Adding defense-in-depth response scope invariant: backend cross-report rows fail the whole page with sanitized502; UUID case-equivalent identities remain accepted.
+- Waiting on upstream helper plus shared immutable dependency adoption before final adapter integration/testing/publication.
+
+- Adopted upstream immutable feature stack b6f33da; reviewed 270-method typed facade (three newly blocked REST adopters). Building isolated target; native compiler provisioned inside workspace only.
+- Integrated typed compose_report_results_filter at both report result read paths; saved terms resolve first and no filter_id is forwarded. Added transport regressions for caller/saved boolean alternatives, report-scoped counts across pages, and rejection before result execution for unsupported or endpoint-owned predicates.
+- Focused testing initially used CLI path patches; final manifest and regenerated lockfile now pin all five upstream crates to published immutable 64b9d01820c8b4715265bbae06293462c24fdfe7 (rust-gvm#872), without local patches. All 120 focused adapter/scope tests and strict workspace Clippy passed; full workspace tests running.
+
+- Parent full-suite retries exposed two stale dependency-adoption expectations: application fixture intentionally lacks severity (kept absent), and the exact dependency invariant now pins64b9d018. Both corrected without weakening production contracts. The fixture correction is already present in stack730 and need not be cherry-picked into final741. Full-suite retry in progress.
+- Full workspace `cargo test --workspace --locked` completed successfully, including OpenAPI parity and doctests; zero failures. Strict workspace Clippy was already successful at this code state. Integration into issue-specific final stack pending sibling slice completion.
+
+## API #741 quote-override transport follow-up
+- Independent upstream parser review corrected quote semantics in rust-gvm #872 at fa990ad0c8aab4609dec7999f01e9922713fe71b. Updated all five manifest/lock pins and exact architecture invariant; no local protocol parsing or parent edits.
+- Added transport regressions for disguised scope/window controls and inclusive operators in both inline and resolved saved terms; assert InvalidInput and absence of get_results. Real double-quoted literals, terminal backslashes and ordinary apostrophes remain dispatchable using fixture playback.
+- Confirmed negative regression fails against 64b9d018 (old helper dispatches and returns an empty successful page). At fa990ad all six report-scope transport tests pass (including OR, counts/paging, saved and inline reserved/quote cases), as do all 22 architecture tests. Exact manifest/lock coherence and fmt/diff checks pass.
+- Required `cargo clippy --workspace --all-targets --all-features --locked -- -D warnings` passed (only pre-existing Cargo manifest unused-dependency warnings). Tooling sourced /workspace/api-agent-env, isolated CARGO_TARGET_DIR=/workspace/.cache/api-filter-target. No parent checkout or specifications modified; no push/PR requested.
 ## Review correction #730 (2026-11-20)
 
 Reject explicit null maxDelaySeconds on all agent schedule and group inputs; preserve omission, zero and GMP bounds. Add HTTP 400/no-backend-dispatch regressions and REST boundary coverage.
@@ -119,6 +139,11 @@ Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/
 - Verification in progress using report-test-env and an isolated copy of the existing cache; no dependency changes.
 
 - Final verification: full REST suite 214 passed (including generated no-store schema), gateway contract 30 passed (including served-generated/curated header-schema parity); fmt check and required strict workspace/all-target/all-feature Clippy passed. Used an isolated copy of the existing report cache to avoid other worktree artifacts; no dependency changes.
+
+## 2026-11-20 — issue #741 review
+- Review correctly identified that successful rows missing their report association bypassed the response-side scope check.
+- Reject absent and mismatched report identities before conversion for both report-results and embedded-report paths; preserve case-equivalent UUID acceptance.
+- Added successful-response fixture coverage without a report association through both typed adapter paths. Updated the published report error contract to describe unverifiable rows.
 
 
 ## PR #743 response delay review (2026-11-20)
