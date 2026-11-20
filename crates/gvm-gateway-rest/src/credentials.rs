@@ -1135,8 +1135,11 @@ fn ad_verify_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = problem_response::<401>(op, "Authentication required");
     let op = problem_response::<403>(op, "Permission denied");
     let op = problem_response::<404>(op, "Credential not found");
+    let op = problem_response::<409>(op, "Resource conflict");
+    let op = problem_response::<500>(op, "Backend operation failed");
     let op = problem_response::<501>(op, "Backend capability unavailable");
-    problem_response::<502>(op, "Directory operation failed")
+    let op = problem_response::<502>(op, "Directory operation failed");
+    problem_response::<504>(op, "Backend timeout")
 }
 
 fn ad_create_schema(generator: &mut schemars::SchemaGenerator) -> schemars::Schema {

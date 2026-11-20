@@ -2270,3 +2270,23 @@ fn report_application_count_schema_preserves_unsigned_bounds() {
         assert_eq!(schema["maximum"].as_f64(), Some(f64::from(u32::MAX)));
     }
 }
+
+#[test]
+fn inventory_token_generated_and_curated_success_headers_forbid_caching() {
+    // A description is not an OpenAPI header: require the actual no-store schema
+    // in both documents so generated clients see the runtime confidentiality policy.
+    let generated = build_openapi();
+    let spec_path = root_spec_path();
+    let curated = read_yaml(&spec_path.parent().unwrap().join("emerging.yaml"));
+    let expected = json!({"type":"string","const":"no-store"});
+    assert_eq!(
+        generated["paths"]["/agents/inventory-token"]["post"]["responses"]["200"]["headers"]
+            ["Cache-Control"]["schema"],
+        expected
+    );
+    assert_eq!(
+        curated["paths"]["/agents/inventory-token"]["post"]["responses"]["200"]["headers"]
+            ["Cache-Control"]["schema"],
+        expected
+    );
+}

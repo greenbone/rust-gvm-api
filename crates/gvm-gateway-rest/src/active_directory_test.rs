@@ -101,6 +101,11 @@ fn generated_schema_exposes_the_bounded_search_contract() {
     for status in ["200", "400", "401", "403", "404", "501", "502", "504"] {
         assert!(op["responses"].get(status).is_some());
     }
+    // Cache semantics must be machine-readable, not only mentioned in prose.
+    assert_eq!(
+        op["responses"]["200"]["headers"]["Cache-Control"]["schema"],
+        json!({"type": "string", "const": "no-store"})
+    );
     let input = &api["components"]["schemas"]["ActiveDirectorySearchInput"];
     assert_eq!(input["properties"]["maxResults"]["maximum"], 1000);
 }
