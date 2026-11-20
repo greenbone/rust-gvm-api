@@ -40,6 +40,7 @@
 
 - Exact-head CI exposed Aide inferring a request body from the rejection-only Bytes extractor. Move the existing later-slice suppression into inventory-token issuance itself, preserving runtime body rejection and the curated no-body contract.
 - Add an explicit generated-OpenAPI regression asserting this operation has no requestBody.
+- #732 projects all four typed optional OS metadata values to domain and REST list/detail schemas without inference or enum narrowing.
 
 ## Review correction #730 (2026-11-20)
 
