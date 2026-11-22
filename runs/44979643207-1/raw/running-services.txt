@@ -1,0 +1,8 @@
+data-objects
+e2e-target
+gvm-gateway
+gvmd
+openvasd-backend
+openvasd-scenario-proxy
+pg-gvm
+report-formats
