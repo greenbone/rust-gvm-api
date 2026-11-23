@@ -65,7 +65,7 @@ jobs:
             --output dist/e2e-openvasd/real/temporary-scanner-build.json \
             --github-env "${GITHUB_ENV}"
       - name: Set up Rust
-        uses: greenbone/actions/setup-rust@d6d4c9500cb4e83f8a516ec1d40b04bcc720bd22 # v3
+        uses: greenbone/actions/setup-rust@c28cd1740972049d898f7ea2cdd871a94bd9bd77 # v3
         with:
           rust-version: "1.98.1"
           components: rustfmt
