@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "status": "resolved",
+  "declaredChannels": {
+    "vulnerability-tests": "registry.community.greenbone.net/community/vulnerability-tests:latest",
+    "data-objects": "registry.community.greenbone.net/community/data-objects:latest",
+    "report-formats": "registry.community.greenbone.net/community/report-formats:latest",
+    "gpg-data": "registry.community.greenbone.net/community/gpg-data:latest",
+    "notus-data": "registry.community.greenbone.net/community/notus-data:latest"
+  },
+  "resolvedImages": {
+    "vulnerability-tests": "registry.community.greenbone.net/community/vulnerability-tests:latest@sha256:57839e39ccc326d39c46d81a117bcf87743efa1d0a0865d47f879f1a0fd960a3",
+    "data-objects": "registry.community.greenbone.net/community/data-objects:latest@sha256:99975ecb271ed7cd39d52d8cd6353458685c9d06e6daa4c0f422e9a89667a9c5",
+    "report-formats": "registry.community.greenbone.net/community/report-formats:latest@sha256:343a09b442c2cbdc838ac06b5da4d213fb61dd750abf51259be05d88e830331d",
+    "gpg-data": "registry.community.greenbone.net/community/gpg-data:latest@sha256:f89f21b93ef1d1dc4774178d664a02759350621ba70719dd8742d644b5bf3cd5",
+    "notus-data": "registry.community.greenbone.net/community/notus-data:latest@sha256:63fcc22b5eb69ba5033d4cc0bbdfdc4f84edcf409e03e93bfec91c73e705ff8b"
+  },
+  "failure": null
+}
