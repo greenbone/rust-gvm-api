@@ -6195,6 +6195,60 @@ async fn report_snapshot_metadata_is_additive_on_older_backends() {
 }
 
 #[tokio::test]
+async fn audit_report_reads_select_the_typed_audit_snapshot() {
+    // Regression coverage for the compliance E2E lane: a generic REST report
+    // may belong to an audit task, so a scan-shaped miss must select the typed
+    // audit snapshot without inspecting backend error text.
+    let report_id = uuid::Uuid::new_v4();
+    let task_id = uuid::Uuid::new_v4();
+    let server = MockGmpServer::builder()
+        .mode(ServerMode::Stateful)
+        .version(MockVersion::V22_8)
+        .seed(move |store| {
+            let mut task = Resource::with_id("task", "Compliance audit", task_id);
+            task.set_attr("usage_type", "audit");
+            store.create(task);
+
+            let mut report = Resource::with_id("report", "Compliance report", report_id);
+            report.set_attr("usage_type", "audit");
+            report.set_attr("task_id", &task_id.to_string());
+            store.create(report);
+        })
+        .unix_socket_auto()
+        .build()
+        .await
+        .unwrap();
+    let adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
+    adapter
+        .connect_session("token", "admin", "admin")
+        .await
+        .unwrap();
+    server.clear_history();
+
+    let report = adapter
+        .get_report("token", &report_id.to_string(), &GetReportOpts::default())
+        .await
+        .expect("audit report should use the audit snapshot path");
+    let task_id = task_id.to_string();
+    assert_eq!(
+        report.task.as_ref().map(|task| task.id.as_str()),
+        Some(task_id.as_str())
+    );
+
+    let history = server.command_history();
+    assert!(history
+        .iter()
+        .any(|entry| entry.command_name() == "get_reports"));
+    assert!(history
+        .iter()
+        .any(|entry| entry.command_name() == "get_audit_report"));
+    assert!(history
+        .iter()
+        .all(|entry| entry.command_name() != "get_scan_report"));
+    server.shutdown().await;
+}
+
+#[tokio::test]
 async fn report_snapshot_backend_failure_is_not_optional_absence() {
     // Intent (#736): only unsupported optional capability may be omitted;
     // a failed real snapshot read must not become a successful stale report.

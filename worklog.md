@@ -169,3 +169,10 @@ Validation (source /workspace/api-agent-env; CARGO_TARGET_DIR=/workspace/.cache/
 ## 2026-11-20 — Search inventory boundary
 - Added the object-search inventory row in its owning #728/PR748 slice, after verification routes are introduced in747.
 - The new slice-aware documentation gate passes at125paths/203operations.
+
+## PR #743 CI repair (2026-11-23)
+
+- Inspected failed Security and E2E runs at head 5d45e33. Causal failures were missing cargo-vet coverage for the jsonschema dev dependency, audit reports being read only through scan-shaped typed commands, and the E2E summary-NVT DTO omitting the specified open type discriminator.
+- Added typed audit-report fallback and projection without local GMP construction or backend-message matching. Added an adapter regression proving audit reports use get_audit_report after the scan-shaped miss.
+- Added the open NVT type to full/summary E2E DTOs and a regression that preserves the EPSS-free summary boundary.
+- Regenerated minimal cargo-vet exemptions. `cargo vet --locked`, formatting, diff hygiene, strict workspace/all-target/all-feature Clippy, both focused regressions, and the complete all-feature workspace test suite pass. Rebase onto the current PR base completed cleanly; signed commit, push, and exact-head CI are pending.

@@ -86,36 +86,89 @@ impl ReportPort for GvmdAdapter {
         request.details = Some(false);
         let parsed = self
             .execute_with_session(session_token, "reports.get", request)
-            .await?;
-        let mut report = parsed
-            .items
-            .into_iter()
-            .next()
-            .map(report_from_gmp)
-            .ok_or_else(|| GatewayError::NotFound(format!("report {id} not found")))?;
+            .await;
+        let (mut report, has_audit_snapshot) = match parsed {
+            Ok(parsed) => (
+                parsed
+                    .items
+                    .into_iter()
+                    .next()
+                    .map(report_from_gmp)
+                    .ok_or_else(|| GatewayError::NotFound(format!("report {id} not found")))?,
+                false,
+            ),
+            Err(scan_error @ (GatewayError::InvalidInput(_) | GatewayError::NotFound(_))) => {
+                let audit_snapshot = self
+                    .execute_with_session(
+                        session_token,
+                        "reports.audit_snapshot",
+                        gvm_gmp::commands::reports::GetAuditReportRequest::new(report_id.clone()),
+                    )
+                    .await;
+                match audit_snapshot {
+                    Ok(snapshot) => (report_from_audit_gmp(snapshot.report), true),
+                    Err(
+                        GatewayError::InvalidInput(_)
+                        | GatewayError::NotFound(_)
+                        | GatewayError::NotImplemented(_),
+                    ) => return Err(scan_error),
+                    Err(error) => return Err(error),
+                }
+            }
+            Err(error) => return Err(error),
+        };
 
         // Read the report snapshot through the typed structured source. Never fetch
         // today's task/configuration to stand in for historical metadata.
-        let snapshot = self
-            .execute_with_session(
-                session_token,
-                "reports.snapshot",
-                gvm_gmp::commands::reports::GetScanReportRequest::new(parse_entity_id(id)?),
-            )
-            .await;
-        match snapshot {
-            Ok(snapshot) => {
-                report.task = snapshot
-                    .report
-                    .task
-                    .and_then(crate::conversions::report_task_from_snapshot)
-                    .or(report.task);
+        if !has_audit_snapshot {
+            let snapshot = self
+                .execute_with_session(
+                    session_token,
+                    "reports.snapshot",
+                    gvm_gmp::commands::reports::GetScanReportRequest::new(report_id.clone()),
+                )
+                .await;
+            match snapshot {
+                Ok(snapshot) => {
+                    report.task = snapshot
+                        .report
+                        .task
+                        .and_then(crate::conversions::report_task_from_snapshot)
+                        .or(report.task);
+                }
+                // This additive metadata must not make older report reads fail.
+                // The typed capability check rejects unsupported commands before
+                // transport. Do not suppress permission, parse or backend errors.
+                Err(GatewayError::NotImplemented(_)) => {}
+                // Some backends expose audit reports through the shared report
+                // read but reject the scan-shaped snapshot. Retry only through
+                // the typed audit command, never by inspecting backend text.
+                Err(scan_error @ GatewayError::InvalidInput(_)) => {
+                    let audit_snapshot = self
+                        .execute_with_session(
+                            session_token,
+                            "reports.audit_snapshot",
+                            gvm_gmp::commands::reports::GetAuditReportRequest::new(
+                                report_id.clone(),
+                            ),
+                        )
+                        .await;
+                    match audit_snapshot {
+                        Ok(snapshot) => {
+                            report.task = snapshot
+                                .report
+                                .task
+                                .and_then(crate::conversions::report_task_from_snapshot)
+                                .or(report.task);
+                        }
+                        Err(GatewayError::InvalidInput(_) | GatewayError::NotFound(_)) => {
+                            return Err(scan_error);
+                        }
+                        Err(error) => return Err(error),
+                    }
+                }
+                Err(error) => return Err(error),
             }
-            // This additive metadata must not make older report reads fail.
-            // The typed capability check rejects unsupported commands before
-            // transport. Do not suppress permission, parse or backend errors.
-            Err(GatewayError::NotImplemented(_)) => {}
-            Err(error) => return Err(error),
         }
 
         // Fetch the explicitly requested embedded-result window for this report.

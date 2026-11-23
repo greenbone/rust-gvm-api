@@ -487,6 +487,18 @@ pub(crate) fn report_from_gmp(report: gvm_gmp::responses::Report) -> Report {
     }
 }
 
+pub(crate) fn report_from_audit_gmp(report: gvm_gmp::responses::AuditReport) -> Report {
+    Report {
+        id: report.meta.id.to_string(),
+        task: report.task.and_then(report_task_from_snapshot),
+        scan_start: report.scan_start,
+        scan_end: report.scan_end,
+        severity: None,
+        result_count: None,
+        results: vec![],
+    }
+}
+
 pub(crate) fn result_from_gmp(
     result: gvm_gmp::responses::ScanResult,
 ) -> Result<ScanResult, GatewayError> {
