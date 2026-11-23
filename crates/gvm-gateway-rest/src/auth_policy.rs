@@ -22,7 +22,7 @@ pub(crate) enum RestRouteAuthPolicy {
 
 /// Classifies a runtime REST path into its auth policy bucket.
 pub(crate) fn classify_runtime_route(method: &Method, path: &str) -> Option<RestRouteAuthPolicy> {
-    if matches!(path, "/health" | "/ready") {
+    if matches!(path, "/gvm/health" | "/gvm/ready") {
         return Some(RestRouteAuthPolicy::Public);
     }
 
@@ -64,7 +64,7 @@ fn is_report_export_job_collection(path: &str) -> bool {
 /// Maps a served OpenAPI path back to the runtime path used by the router.
 pub(crate) fn runtime_path_from_openapi_path(path: &str) -> String {
     match path {
-        "/health" | "/ready" => path.to_string(),
+        "/gvm/health" | "/gvm/ready" => path.to_string(),
         "/version" => "/gvm/public/v1/version".to_string(),
         "/openapi.json" => "/gvm/public/v1/openapi.json".to_string(),
         _ => format!("/gvm/public/v1{path}"),

@@ -8,8 +8,13 @@ redirect. OpenAPI and browser documentation now live at
 `/gvm/public/v1/openapi.json` and `/gvm/public/v1/docs`. Resource `Location`
 headers and export-job result links use the new prefix.
 
-The application-owned liveness and readiness endpoints remain `/health` and
-`/ready`. Existing deployment probe URLs do not need to change.
+The application-owned liveness and readiness endpoints move to `/gvm/health`
+and `/gvm/ready`. Update deployment probe URLs from `/health` and `/ready`;
+the former root paths are not retained as aliases. Both probes remain
+unauthenticated and unversioned.
+
+Ingress routing should forward `/gvm/...` to the API service without stripping
+`/gvm`: the service routes the full path, including `/gvm/public/v1/...`.
 
 ## Authentication modes
 

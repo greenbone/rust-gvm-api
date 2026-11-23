@@ -32,7 +32,7 @@ pub(crate) enum HealthState {
     Ok,
 }
 
-/// JSON body returned by `GET /health`.
+/// JSON body returned by `GET /gvm/health`.
 #[derive(Clone, Debug, Serialize, JsonSchema)]
 #[schemars(rename = "HealthStatus")]
 pub(crate) struct HealthStatusResponse {
@@ -48,7 +48,7 @@ pub(crate) enum ReadinessState {
     NotReady,
 }
 
-/// JSON body returned by `GET /ready`.
+/// JSON body returned by `GET /gvm/ready`.
 #[derive(Clone, Debug, Serialize, JsonSchema)]
 #[schemars(rename = "ReadinessStatus")]
 pub(crate) struct ReadinessStatusResponse {
@@ -138,7 +138,7 @@ pub(crate) async fn ready(
             }),
         )
             .into_response(),
-        Err(error) => RestError::from_gateway_error(error, "/ready").into_response(),
+        Err(error) => RestError::from_gateway_error(error, "/gvm/ready").into_response(),
     }
 }
 
@@ -185,7 +185,7 @@ pub(crate) async fn list_timezones(
 // OpenAPI transforms
 // ============================================================================
 
-/// OpenAPI transform for `GET /health`.
+/// OpenAPI transform for `GET /gvm/health`.
 pub(crate) fn health_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getHealth")
@@ -199,7 +199,7 @@ pub(crate) fn health_docs(op: TransformOperation<'_>) -> TransformOperation<'_> 
     problem_response::<400>(op, "Invalid request")
 }
 
-/// OpenAPI transform for `GET /ready`.
+/// OpenAPI transform for `GET /gvm/ready`.
 pub(crate) fn ready_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getReadiness")

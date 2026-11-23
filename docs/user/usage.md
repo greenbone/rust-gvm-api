@@ -163,8 +163,8 @@ session being inspected or removed.
 
 Operational probes:
 
-- `/health`
-- `/ready`
+- `/gvm/health`
+- `/gvm/ready`
 
 Versioned REST API:
 

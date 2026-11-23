@@ -24,8 +24,10 @@ fn session_expired_problem_uses_https_type_and_public_code() {
 #[test]
 fn internal_error_problem_hides_private_detail() {
     let private_detail = "database password leaked in stack trace";
-    let error =
-        RestError::from_gateway_error(GatewayError::Internal(private_detail.to_string()), "/ready");
+    let error = RestError::from_gateway_error(
+        GatewayError::Internal(private_detail.to_string()),
+        "/gvm/ready",
+    );
 
     assert_eq!(error.status, StatusCode::INTERNAL_SERVER_ERROR);
     let json = serde_json::to_value(&error.problem).unwrap();

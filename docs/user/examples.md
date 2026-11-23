@@ -117,7 +117,7 @@ Expected fields include:
 Check that the service is healthy and learn the exposed gateway version:
 
 ```bash
-curl -fsS "${GVM_GATEWAY_BASE_URL}/ready" | jq
+curl -fsS "${GVM_GATEWAY_BASE_URL}/gvm/ready" | jq
 curl -fsS \
   -H "Authorization: Bearer ${SESSION_TOKEN}" \
   "${GVM_GATEWAY_BASE_URL}/gvm/public/v1/version" | jq

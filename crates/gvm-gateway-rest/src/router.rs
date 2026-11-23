@@ -269,8 +269,8 @@ pub(crate) fn build_openapi() -> Value {
 
 fn documented_router() -> ApiRouter<GatewayService> {
     ApiRouter::new()
-        .api_route("/health", get_with(health, health_docs))
-        .api_route("/ready", get_with(ready, ready_docs))
+        .api_route("/gvm/health", get_with(health, health_docs))
+        .api_route("/gvm/ready", get_with(ready, ready_docs))
         .api_route("/gvm/public/v1/version", get_with(version, version_docs))
         .api_route(
             "/gvm/public/v1/timezones",
@@ -1157,7 +1157,7 @@ async fn shutdown_gate_middleware(
 }
 
 fn should_bypass_shutdown_gate(path: &str) -> bool {
-    matches!(path, "/health" | "/ready")
+    matches!(path, "/gvm/health" | "/gvm/ready")
 }
 
 #[derive(Clone, Default)]

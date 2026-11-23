@@ -447,7 +447,10 @@ fn operation_can_proxy_to_backend(path: &str, method_name: &str) -> bool {
             | RestRouteAuthPolicy::BearerOnly,
         ) => true,
         Some(RestRouteAuthPolicy::Public) => {
-            matches!(runtime_path.as_str(), "/ready" | "/gvm/public/v1/version")
+            matches!(
+                runtime_path.as_str(),
+                "/gvm/ready" | "/gvm/public/v1/version"
+            )
         }
         Some(RestRouteAuthPolicy::SessionCurrent) | None => false,
     }
@@ -569,7 +572,7 @@ fn add_probe_server_overrides(normalized_paths: &mut Map<String, Value>) {
         }
     ]);
 
-    for path in ["/health", "/ready"] {
+    for path in ["/gvm/health", "/gvm/ready"] {
         if let Some(path_item) = normalized_paths
             .get_mut(path)
             .and_then(Value::as_object_mut)

@@ -148,7 +148,7 @@ Run the compose-backed REST end-to-end tests through the wrapper script:
 ./scripts/run-e2e-tests.sh
 ```
 
-The wrapper waits for `/ready`, prints feed status for diagnostics, then polls the REST resources required by the discovery scan test: discovery scan configs, OpenVAS scanner availability, and usable port lists. This is stricter than feed status alone because gvmd can accept GMP connections before first-boot data imports have populated REST-visible scan configs.
+The wrapper waits for `/gvm/ready`, prints feed status for diagnostics, then polls the REST resources required by the discovery scan test: discovery scan configs, OpenVAS scanner availability, and usable port lists. This is stricter than feed status alone because gvmd can accept GMP connections before first-boot data imports have populated REST-visible scan configs.
 
 Run the weekly-scope performance slice through its dedicated wrapper:
 

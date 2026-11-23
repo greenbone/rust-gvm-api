@@ -142,7 +142,7 @@ async fn draining_router_keeps_readiness_probe_available() {
     let response = app
         .oneshot(
             Request::builder()
-                .uri("/ready")
+                .uri("/gvm/ready")
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -442,7 +442,7 @@ async fn request_trace_context_returns_trace_headers_without_echoing_baggage() {
     let response = app
         .oneshot(
             Request::builder()
-                .uri("/health")
+                .uri("/gvm/health")
                 .header(
                     "traceparent",
                     "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
@@ -469,7 +469,7 @@ async fn request_trace_context_returns_trace_headers_without_echoing_baggage() {
     let output = String::from_utf8(logs.lock().unwrap().clone()).unwrap();
     assert!(output.contains("http.request"));
     assert!(output.contains("http_method=GET"));
-    assert!(output.contains("http_route=/health"));
+    assert!(output.contains("http_route=/gvm/health"));
     assert!(!output.contains("secret=user-token"));
 }
 
@@ -624,13 +624,15 @@ async fn removed_ticket_routes_use_the_unknown_route_problem_contract() {
 }
 
 #[tokio::test]
-async fn public_prefix_keeps_probes_at_root_and_does_not_alias_legacy_routes() {
-    // Clients migrate to the public prefix, while operational probes retain
-    // their existing root URLs independently of container deployment.
+async fn service_prefix_exposes_probes_and_does_not_alias_legacy_routes() {
+    // Ingress can forward /gvm unchanged for public API and operational probes.
+    // Probes stay unauthenticated; legacy root paths are not aliases.
     let app = build_router(static_gateway_service());
     for (path, expected) in [
-        ("/health", StatusCode::OK),
-        ("/ready", StatusCode::OK),
+        ("/gvm/health", StatusCode::OK),
+        ("/gvm/ready", StatusCode::OK),
+        ("/health", StatusCode::NOT_FOUND),
+        ("/ready", StatusCode::NOT_FOUND),
         ("/gvm/public/v1/openapi.json", StatusCode::OK),
         ("/api/v1/openapi.json", StatusCode::NOT_FOUND),
         ("/api/v1/docs", StatusCode::NOT_FOUND),

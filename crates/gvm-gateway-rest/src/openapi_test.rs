@@ -1855,8 +1855,8 @@ fn generated_openapi_excludes_the_browser_docs_ui() {
 #[test]
 fn normalize_paths_strips_runtime_api_prefix() {
     let source_paths = serde_json::from_value::<Map<String, Value>>(serde_json::json!({
-        "/health": { "get": {} },
-        "/ready": { "get": {} },
+        "/gvm/health": { "get": {} },
+        "/gvm/ready": { "get": {} },
         "/gvm/public/v1/version": { "get": {} },
         "/gvm/public/v1/reports/{id}/exports": { "post": {} }
     }))
@@ -1864,8 +1864,8 @@ fn normalize_paths_strips_runtime_api_prefix() {
 
     let normalized = normalize_paths(&source_paths);
 
-    assert!(normalized.contains_key("/health"));
-    assert!(normalized.contains_key("/ready"));
+    assert!(normalized.contains_key("/gvm/health"));
+    assert!(normalized.contains_key("/gvm/ready"));
     assert!(normalized.contains_key("/version"));
     assert!(normalized.contains_key("/reports/{id}/exports"));
     assert!(!normalized.contains_key("/gvm/public/v1/version"));

@@ -7,11 +7,11 @@ use axum::http::Method;
 #[test]
 fn classifies_public_routes() {
     assert_eq!(
-        classify_runtime_route(&Method::GET, "/health"),
+        classify_runtime_route(&Method::GET, "/gvm/health"),
         Some(RestRouteAuthPolicy::Public)
     );
     assert_eq!(
-        classify_runtime_route(&Method::GET, "/ready"),
+        classify_runtime_route(&Method::GET, "/gvm/ready"),
         Some(RestRouteAuthPolicy::Public)
     );
     assert_eq!(
@@ -90,7 +90,7 @@ fn treats_non_session_api_routes_as_protected_by_default() {
 
 #[test]
 fn maps_openapi_paths_back_to_runtime_paths() {
-    assert_eq!(runtime_path_from_openapi_path("/health"), "/health");
+    assert_eq!(runtime_path_from_openapi_path("/gvm/health"), "/gvm/health");
     assert_eq!(
         runtime_path_from_openapi_path("/version"),
         "/gvm/public/v1/version"

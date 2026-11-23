@@ -30,7 +30,7 @@ async fn health_returns_200() {
     let adapter = StaticGvmdAdapter::ready("22.7");
     let (addr, handle) = spawn_server(adapter.clone(), adapter).await;
     let response = Client::new()
-        .get(format!("http://{addr}/health"))
+        .get(format!("http://{addr}/gvm/health"))
         .send()
         .await
         .unwrap();
@@ -49,7 +49,7 @@ async fn ready_returns_200_when_ready() {
     let adapter = StaticGvmdAdapter::ready("22.7");
     let (addr, handle) = spawn_server(adapter.clone(), adapter).await;
     let response = Client::new()
-        .get(format!("http://{addr}/ready"))
+        .get(format!("http://{addr}/gvm/ready"))
         .send()
         .await
         .unwrap();
@@ -68,7 +68,7 @@ async fn ready_returns_503_when_not_ready() {
     let adapter = StaticGvmdAdapter::not_ready("gvmd unavailable", "22.7");
     let (addr, handle) = spawn_server(adapter.clone(), adapter).await;
     let response = Client::new()
-        .get(format!("http://{addr}/ready"))
+        .get(format!("http://{addr}/gvm/ready"))
         .send()
         .await
         .unwrap();
@@ -276,7 +276,7 @@ async fn https_health_returns_200_and_hsts_in_native_tls_mode() {
         .danger_accept_invalid_certs(true)
         .build()
         .unwrap()
-        .get(format!("https://localhost:{port}/health"))
+        .get(format!("https://localhost:{port}/gvm/health"))
         .send()
         .await
         .unwrap();
@@ -333,7 +333,7 @@ async fn native_tls_slow_handshake_does_not_block_later_connections() {
         .danger_accept_invalid_certs(true)
         .build()
         .unwrap()
-        .get(format!("https://localhost:{port}/health"))
+        .get(format!("https://localhost:{port}/gvm/health"))
         .send();
     let response = tokio::time::timeout(Duration::from_secs(1), request)
         .await

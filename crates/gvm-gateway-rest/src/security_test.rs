@@ -24,8 +24,8 @@ fn basic_request(method: &str, path: &str) -> Request<Body> {
 #[test]
 fn request_scoped_basic_auth_skips_public_routes() {
     for path in [
-        "/health",
-        "/ready",
+        "/gvm/health",
+        "/gvm/ready",
         "/gvm/public/v1/version",
         "/gvm/public/v1/openapi.json",
     ] {

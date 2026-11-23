@@ -2387,7 +2387,7 @@ async fn trace_context_headers_propagated_without_baggage_echo() {
     let adapter = StaticGvmdAdapter::ready("22.7");
     let (addr, handle) = spawn_server(adapter.clone(), adapter).await;
     let response = Client::new()
-        .get(format!("http://{addr}/health"))
+        .get(format!("http://{addr}/gvm/health"))
         .header(
             "traceparent",
             "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-00",
@@ -2882,7 +2882,9 @@ fn build_route_probe_request(
     );
 
     match runtime_path.as_str() {
-        "/health" | "/ready" | "/gvm/public/v1/version" | "/gvm/public/v1/openapi.json" => request,
+        "/gvm/health" | "/gvm/ready" | "/gvm/public/v1/version" | "/gvm/public/v1/openapi.json" => {
+            request
+        }
         "/gvm/public/v1/session" if method == "post" => {
             request.header("Authorization", "Basic YWRtaW46c2VjcmV0")
         }

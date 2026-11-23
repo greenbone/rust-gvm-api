@@ -87,7 +87,7 @@ crates/
 ```
 
 The default API base path is `/gvm/public/`. The application-owned operational
-probes remain unversioned at `/health` and `/ready`, outside this prefix.
+probes remain unversioned at `/gvm/health` and `/gvm/ready`, outside this prefix.
 
 ### Versioning Strategy
 
@@ -371,8 +371,8 @@ it is omitted when absent.
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/health` | Liveness probe |
-| `GET` | `/ready` | Readiness probe (checks gvmd connectivity) |
+| `GET` | `/gvm/health` | Liveness probe |
+| `GET` | `/gvm/ready` | Readiness probe (checks gvmd connectivity) |
 | `GET` | `/gvm/public/v1/version` | GMP protocol version reported by the proxied gvmd; `apiVersion` is the REST contract and gateway package version |
 | `GET` | `/gvm/public/v1/timezones` | Authenticated backend-sourced timezone catalog from gvmd; returns `501` on backends that do not support `get_timezones` |
 | `GET` | `/gvm/public/v1/openapi.json` | OpenAPI 3.1 spec |

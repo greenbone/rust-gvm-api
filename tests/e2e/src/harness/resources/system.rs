@@ -6,7 +6,7 @@ use super::super::*;
 impl E2eHarness {
     pub async fn get_health(&self) -> Result<HealthResponse> {
         self.send_json(
-            self.request(Method::GET, "/health"),
+            self.request(Method::GET, "/gvm/health"),
             StatusCode::OK,
             "get gateway health",
         )
@@ -15,7 +15,7 @@ impl E2eHarness {
 
     pub async fn get_readiness(&self) -> Result<ReadinessResponse> {
         self.send_json(
-            self.request(Method::GET, "/ready"),
+            self.request(Method::GET, "/gvm/ready"),
             StatusCode::OK,
             "get gateway readiness",
         )

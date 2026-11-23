@@ -14,19 +14,19 @@ alignment. The current contract contains 121 paths and 199 operations.
 ## Base paths and documentation
 
 - Versioned API: `/gvm/public/v1`
-- Liveness: `GET /health`
-- Readiness: `GET /ready`
+- Liveness: `GET /gvm/health`
+- Readiness: `GET /gvm/ready`
 - Runtime OpenAPI: `GET /gvm/public/v1/openapi.json`
 - Browser documentation: `GET /gvm/public/v1/docs`
 
 The default API base path is `/gvm/public/`. Liveness and readiness are
 unversioned HTTP endpoints implemented by the gateway application, also when
-running outside a container. `/health` reports process liveness; `/ready` checks
+running outside a container. `/gvm/health` reports process liveness; `/gvm/ready` checks
 backend readiness and returns `503` during shutdown or when not ready. Container
-or orchestration probes can call these endpoints; their root paths do not change
-with the versioned API prefix. The former `/api/v1` prefix is no longer served.
+or orchestration probes can call these endpoints; their service-level paths stay outside
+the versioned public API prefix. The former `/api/v1` prefix is no longer served.
 
-`/health` and `/ready` are intentionally unversioned. The browser documentation
+`/gvm/health` and `/gvm/ready` are intentionally unversioned. The browser documentation
 route is an operational UI and is not itself part of the OpenAPI contract.
 
 ## Authentication
@@ -161,14 +161,14 @@ return `traceparent` and, when present, `tracestate`; `baggage` is not echoed.
 ## Route map
 
 Methods below are the methods currently published for each path. All paths in
-the tables are relative to `/gvm/public/v1` except `/health` and `/ready`.
+the tables are relative to `/gvm/public/v1` except `/gvm/health` and `/gvm/ready`.
 
 ### System and sessions
 
 | Methods | Path | Purpose |
 | --- | --- | --- |
-| `GET` | `/health` | Unversioned process liveness |
-| `GET` | `/ready` | Unversioned backend readiness |
+| `GET` | `/gvm/health` | Unversioned process liveness |
+| `GET` | `/gvm/ready` | Unversioned backend readiness |
 | `GET` | `/version` | REST package/API version and backend GMP version |
 | `GET` | `/timezones` | Backend timezone catalog |
 | `GET` | `/openapi.json` | Runtime-generated OpenAPI contract |

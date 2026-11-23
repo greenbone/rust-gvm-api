@@ -380,10 +380,10 @@ paths:
     $ref: './supporting-resources.yaml#/paths/~1nvts~1{id}'
   /nvt-families:
     $ref: './supporting-resources.yaml#/paths/~1nvt-families'
-  /health:
-    $ref: './system.yaml#/paths/~1health'
-  /ready:
-    $ref: './system.yaml#/paths/~1ready'
+  /gvm/health:
+    $ref: './system.yaml#/paths/~1gvm~1health'
+  /gvm/ready:
+    $ref: './system.yaml#/paths/~1gvm~1ready'
   /version:
     $ref: './system.yaml#/paths/~1version'
   /timezones:

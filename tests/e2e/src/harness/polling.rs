@@ -16,16 +16,19 @@ impl E2eHarness {
         while Instant::now() < deadline {
             let response = self
                 .client
-                .get(self.endpoint("/ready"))
+                .get(self.endpoint("/gvm/ready"))
                 .send()
                 .await
-                .context("query /ready")?;
+                .context("query /gvm/ready")?;
             let status = response.status();
-            let body = response.text().await.context("read /ready response body")?;
+            let body = response
+                .text()
+                .await
+                .context("read /gvm/ready response body")?;
 
             if status == StatusCode::OK {
                 let readiness: ReadinessResponse =
-                    serde_json::from_str(&body).context("parse /ready success body")?;
+                    serde_json::from_str(&body).context("parse /gvm/ready success body")?;
                 if readiness.status == "ready" {
                     eprintln!("gateway ready: {body}");
                     return Ok(());

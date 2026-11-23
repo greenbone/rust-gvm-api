@@ -150,7 +150,7 @@ wait_for_gateway_ready() {
     response="$(mktemp)"
     local status
     status="$(
-      curl -sS -o "${response}" -w '%{http_code}' "${BASE_URL}/ready" \
+      curl -sS -o "${response}" -w '%{http_code}' "${BASE_URL}/gvm/ready" \
         || true
     )"
     local body
