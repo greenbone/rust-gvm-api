@@ -175,6 +175,7 @@ async fn create_task_target(adapter: &GvmdAdapter, token: &str, name: &str) -> S
         .create_target(
             token,
             CreateTargetInput {
+                source: None,
                 name: name.to_string(),
                 comment: None,
                 hosts: vec!["192.0.2.10".to_string()],
@@ -493,6 +494,7 @@ async fn gvmd_adapter_create_target() {
     let (adapter, server, token) = create_mock_adapter().await;
 
     let input = CreateTargetInput {
+        source: None,
         name: "Test Target".to_string(),
         comment: Some("Integration test".to_string()),
         hosts: vec!["192.168.1.1".to_string()],
@@ -522,6 +524,7 @@ async fn gvmd_adapter_get_target() {
 
     // Create a target first so get can read an existing target path.
     let input = CreateTargetInput {
+        source: None,
         name: "Get Me".to_string(),
         comment: None,
         hosts: vec!["10.0.0.1".to_string()],
@@ -566,6 +569,7 @@ async fn gvmd_adapter_modify_target() {
 
     // Create a target first
     let input = CreateTargetInput {
+        source: None,
         name: "Before Modify".to_string(),
         comment: None,
         hosts: vec!["10.0.0.1".to_string()],
@@ -585,6 +589,7 @@ async fn gvmd_adapter_modify_target() {
     // Regression coverage for issue #309: reverse lookup flags supplied on
     // modify must reach rust-gvm's typed modify_target builder.
     let modify_input = ModifyTargetInput {
+        source: None,
         name: Some("After Modify".to_string()),
         comment: Some("Updated".to_string()),
         hosts: Some(vec!["10.0.0.2".to_string(), "10.0.0.3".to_string()]),
@@ -1620,6 +1625,7 @@ async fn gvmd_adapter_delete_target() {
 
     // Create a target first
     let input = CreateTargetInput {
+        source: None,
         name: "Delete Me".to_string(),
         comment: None,
         hosts: vec!["10.0.0.1".to_string()],
@@ -1849,7 +1855,7 @@ async fn gvmd_adapter_direct_lists_emit_backend_pagination_filter() {
             }
         ),
         "get_results",
-        "filter=\"report_id=550e8400-e29b-41d4-a716-446655440000 name=Target first=11 rows=10\""
+        "filter=\"name=Target _and_report_id=550e8400-e29b-41d4-a716-446655440000 first=11 rows=10\""
     );
     assert_backend_pagination!(
         adapter,
@@ -2108,6 +2114,7 @@ async fn gvmd_adapter_rejects_empty_agent_group_selection_before_dispatch() {
             "123e4567-e89b-12d3-a456-426614174000",
             ModifyAgentGroupInput {
                 scheduler_cron_time: "0 */15 * * *".to_string(),
+                max_delay_seconds: None,
                 name: None,
                 comment: None,
                 agent_ids: Some(vec![]),
@@ -2184,6 +2191,7 @@ async fn gvmd_adapter_agent_download_helpers_map_typed_payloads() {
             &AgentSupportBundleQuery {
                 days: Some(7),
                 encryption: None,
+                anonymized: None,
             },
         )
         .await
@@ -2216,6 +2224,7 @@ async fn gvmd_adapter_support_bundle_preserves_encryption_tristate() {
                 &AgentSupportBundleQuery {
                     days: None,
                     encryption,
+                    anonymized: None,
                 },
             )
             .await
@@ -3957,7 +3966,7 @@ async fn gvmd_adapter_get_report_results_resolves_filter_id_into_inline_filter()
         .expect("get_results command should be recorded");
     let xml = String::from_utf8(command.raw_xml().to_vec()).expect("xml command");
     assert!(xml.contains(
-            "filter=\"threat=Alarm report_id=550e8400-e29b-41d4-a716-446655440000 severity&gt;5 first=1 rows=25\""
+            "filter=\"threat=Alarm severity&gt;5 _and_report_id=550e8400-e29b-41d4-a716-446655440000 first=1 rows=25\""
         ));
     assert!(!xml.contains("filter_id"));
 
@@ -4860,6 +4869,7 @@ async fn gvmd_adapter_clone_target() {
     let (adapter, server, token) = create_mock_adapter().await;
 
     let input = CreateTargetInput {
+        source: None,
         name: "Clone Source".to_string(),
         comment: None,
         hosts: vec!["10.0.0.5".to_string()],
@@ -5909,4 +5919,405 @@ async fn gvmd_adapter_failed_user_setting_modify_short_circuits_read_back() {
     );
 
     server.shutdown().await;
+}
+
+#[tokio::test]
+async fn inventory_token_uses_discovered_no_argument_command_and_redacts_diagnostics() {
+    // Only the intended response may expose this credential, never Debug or diagnostics.
+    let _guard = lock_tracing().await;
+    let capture = capture_tracing();
+    let (adapter, server, token) = create_mock_adapter_v22_8().await;
+    server.clear_history();
+    let issued = adapter.get_agent_inventory_token(&token).await.unwrap();
+    assert_eq!(issued.expose(), "mock-agent-inventory-token");
+    assert!(!format!("{issued:?}").contains(issued.expose()));
+    let history = server.command_history();
+    assert_eq!(
+        history
+            .iter()
+            .filter(|record| record.command_name() == "get_agent_inventory_token")
+            .count(),
+        1
+    );
+    assert!(!String::from_utf8_lossy(&capture.lock().unwrap()).contains(issued.expose()));
+    server.shutdown().await;
+}
+
+#[tokio::test]
+async fn inventory_token_failures_preserve_status_without_secret_diagnostics() {
+    // GMP 400 permission denial differs from syntax, and temporary issuance differs from unsupported.
+    for (status, message, expected) in [
+        (400, "Permission denied", GatewayErrorCode::Forbidden),
+        (
+            503,
+            "SECRET unavailable",
+            GatewayErrorCode::ServiceUnavailable,
+        ),
+        (
+            500,
+            "SECRET generation failed",
+            GatewayErrorCode::InternalServerError,
+        ),
+    ] {
+        let server = MockGmpServer::builder()
+            .mode(ServerMode::Stateful)
+            .version(MockVersion::V22_8)
+            .inject_fault(Fault::on_command(
+                "get_agent_inventory_token",
+                FaultKind::ErrorStatus {
+                    code: status,
+                    message: message.into(),
+                },
+            ))
+            .unix_socket_auto()
+            .build()
+            .await
+            .unwrap();
+        let adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
+        adapter
+            .connect_session("inventory-error-test", "admin", "admin")
+            .await
+            .unwrap();
+        let error = adapter
+            .get_agent_inventory_token("inventory-error-test")
+            .await
+            .unwrap_err();
+        assert_eq!(error.code(), expected);
+        assert!(!format!("{error:?}").contains("SECRET"));
+        server.shutdown().await;
+    }
+}
+
+#[tokio::test]
+async fn inventory_token_requires_positive_help_and_payload() {
+    // A missing command or malformed success must never manufacture an inventory token.
+    for (command, response, expected) in [
+        (
+            "help",
+            r#"<help_response status="200" status_text="OK"><schema format="XML"><command><name>get_agents</name></command></schema></help_response>"#,
+            GatewayErrorCode::NotImplemented,
+        ),
+        (
+            "get_agent_inventory_token",
+            r#"<get_agent_inventory_token_response status="200" status_text="OK"/>"#,
+            GatewayErrorCode::BackendUnavailable,
+        ),
+    ] {
+        let server = MockGmpServer::builder()
+            .mode(ServerMode::Fixture)
+            .version(MockVersion::V22_8)
+            .override_response("help", r#"<help_response status="200" status_text="OK"><schema format="XML"><command><name>get_agent_inventory_token</name></command></schema></help_response>"#)
+            .override_response(command, response)
+            .unix_socket_auto()
+            .build()
+            .await
+            .unwrap();
+        let adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
+        adapter
+            .connect_session("inventory-discovery-test", "admin", "admin")
+            .await
+            .unwrap();
+        let error = adapter
+            .get_agent_inventory_token("inventory-discovery-test")
+            .await
+            .unwrap_err();
+        assert_eq!(error.code(), expected);
+        if command == "help" {
+            assert!(!server
+                .command_history()
+                .iter()
+                .any(|r| r.command_name() == "get_agent_inventory_token"));
+        }
+        server.shutdown().await;
+    }
+}
+
+#[tokio::test]
+async fn support_bundle_typed_dispatch_preserves_nine_independent_privacy_combinations() {
+    // The typed request owns encoding. Every selector combination must survive REST/domain projection.
+    let (adapter, server, token) = create_mock_adapter_v22_8().await;
+    for encryption in [None, Some(false), Some(true)] {
+        for anonymized in [None, Some(false), Some(true)] {
+            server.clear_history();
+            let bundle = adapter
+                .get_agent_support_bundle(
+                    &token,
+                    "550e8400-e29b-41d4-a716-446655440000",
+                    &AgentSupportBundleQuery {
+                        days: Some(7),
+                        encryption,
+                        anonymized,
+                    },
+                )
+                .await
+                .unwrap();
+            assert_eq!(bundle.artifact.bytes, b"hello-mock");
+            let history = server.command_history();
+            let command = history
+                .iter()
+                .find(|r| r.command_name() == "get_agent_support_bundle")
+                .unwrap();
+            let xml = String::from_utf8(command.raw_xml().to_vec()).unwrap();
+            for (name, value) in [("encryption", encryption), ("anonymized", anonymized)] {
+                match value {
+                    None => assert!(!xml.contains(&format!("{name}="))),
+                    Some(value) => {
+                        assert!(xml.contains(&format!("{name}=\"{}\"", u8::from(value))))
+                    }
+                }
+            }
+            assert!(xml.contains("days=\"7\""));
+        }
+    }
+    server.shutdown().await;
+}
+
+#[tokio::test]
+async fn explicit_bundle_privacy_never_becomes_success_on_unsupported_backend() {
+    // A requested privacy selector must not be dropped to obtain a successful old-version download.
+    let (adapter, server, token) = create_mock_adapter().await;
+    server.clear_history();
+    let error = adapter
+        .get_agent_support_bundle(
+            &token,
+            "550e8400-e29b-41d4-a716-446655440000",
+            &AgentSupportBundleQuery {
+                days: None,
+                encryption: None,
+                anonymized: Some(true),
+            },
+        )
+        .await
+        .unwrap_err();
+    assert!(matches!(error, GatewayError::NotImplemented(_)));
+    assert!(!server
+        .command_history()
+        .iter()
+        .any(|r| r.command_name() == "get_agent_support_bundle"));
+    server.shutdown().await;
+}
+
+#[tokio::test]
+async fn ad_verification_uses_discovery_and_status_only_fixture_without_persistence() {
+    // This scripted success proves gateway command wiring, not a real LDAP bind.
+    let server = MockGmpServer::builder().mode(ServerMode::Fixture).version(MockVersion::V22_8)
+        .override_response("help", r#"<help_response status="200" status_text="OK"><schema format="XML"><command><name>verify_active_directory_credential</name></command></schema></help_response>"#)
+        .override_response("verify_active_directory_credential", r#"<verify_active_directory_credential_response status="200" status_text="OK"/>"#)
+        .unix_socket_auto().build().await.unwrap();
+    let adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
+    adapter
+        .connect_session("ad-fixture-session", "admin", "admin")
+        .await
+        .unwrap();
+    server.clear_history();
+    adapter
+        .verify_active_directory(
+            "ad-fixture-session",
+            VerifyActiveDirectoryInput::Saved("123e4567-e89b-12d3-a456-426614174000".into()),
+        )
+        .await
+        .unwrap();
+    let input = ActiveDirectoryInput {
+        host: Some("fixture.invalid".into()),
+        bind_dn: Some("CN=bind<&>".into()),
+        base_dn: Some("DC=fixture".into()),
+        bind_password: Some("ad-fixture-secret".into()),
+        tls_mode: Some("ldaps".into()),
+        ..Default::default()
+    };
+    adapter
+        .verify_active_directory(
+            "ad-fixture-session",
+            VerifyActiveDirectoryInput::Inline(input),
+        )
+        .await
+        .unwrap();
+    let history = server.command_history();
+    assert_eq!(
+        history
+            .iter()
+            .filter(|v| v.command_name() == "verify_active_directory_credential")
+            .count(),
+        2
+    );
+    assert!(history.iter().any(|v| v.command_name() == "help"));
+    assert!(
+        !history
+            .iter()
+            .any(|v| ["create_credential", "create_target", "create_task"]
+                .contains(&v.command_name()))
+    );
+    server.shutdown().await;
+}
+
+#[tokio::test]
+async fn report_snapshot_metadata_is_additive_on_older_backends() {
+    // Intent (#736): a typed unsupported snapshot command on GMP 22.7 must
+    // not break existing report reads or invent scanConfig via today's task.
+    let report_id = uuid::Uuid::new_v4();
+    let task_id = uuid::Uuid::new_v4();
+    let server = MockGmpServer::builder()
+        .mode(ServerMode::Stateful)
+        .version(MockVersion::V22_7)
+        .seed(move |store| {
+            store.create(Resource::with_id("task", "Existing task", task_id));
+            let mut report = Resource::with_id("report", "Older report", report_id);
+            report.set_attr("usage_type", "scan");
+            report.set_attr("task_id", &task_id.to_string());
+            store.create(report);
+        })
+        .unix_socket_auto()
+        .build()
+        .await
+        .unwrap();
+    let adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
+    adapter
+        .connect_session("token", "admin", "admin")
+        .await
+        .unwrap();
+    server.clear_history();
+    let report = adapter
+        .get_report("token", &report_id.to_string(), &GetReportOpts::default())
+        .await
+        .expect("optional metadata must not raise the existing read version floor");
+    let task = report.task.expect("generic report task remains present");
+    assert_eq!(task.id, task_id.to_string());
+    assert!(task.scan_config.is_none());
+    let history = server.command_history();
+    assert!(history
+        .iter()
+        .any(|entry| entry.command_name() == "get_reports"));
+    assert!(history.iter().all(|entry| !matches!(
+        entry.command_name(),
+        "get_scan_report" | "get_tasks" | "get_configs" | "get_scan_configs"
+    )));
+    server.shutdown().await;
+}
+
+#[tokio::test]
+async fn audit_report_reads_select_the_typed_audit_snapshot() {
+    // Regression coverage for the compliance E2E lane: a generic REST report
+    // may belong to an audit task, so a scan-shaped miss must select the typed
+    // audit snapshot without inspecting backend error text.
+    let report_id = uuid::Uuid::new_v4();
+    let task_id = uuid::Uuid::new_v4();
+    let server = MockGmpServer::builder()
+        .mode(ServerMode::Stateful)
+        .version(MockVersion::V22_8)
+        .seed(move |store| {
+            let mut task = Resource::with_id("task", "Compliance audit", task_id);
+            task.set_attr("usage_type", "audit");
+            store.create(task);
+
+            let mut report = Resource::with_id("report", "Compliance report", report_id);
+            report.set_attr("usage_type", "audit");
+            report.set_attr("task_id", &task_id.to_string());
+            store.create(report);
+        })
+        .unix_socket_auto()
+        .build()
+        .await
+        .unwrap();
+    let adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
+    adapter
+        .connect_session("token", "admin", "admin")
+        .await
+        .unwrap();
+    server.clear_history();
+
+    let report = adapter
+        .get_report("token", &report_id.to_string(), &GetReportOpts::default())
+        .await
+        .expect("audit report should use the audit snapshot path");
+    let task_id = task_id.to_string();
+    assert_eq!(
+        report.task.as_ref().map(|task| task.id.as_str()),
+        Some(task_id.as_str())
+    );
+
+    let history = server.command_history();
+    assert!(history
+        .iter()
+        .any(|entry| entry.command_name() == "get_reports"));
+    assert!(history
+        .iter()
+        .any(|entry| entry.command_name() == "get_audit_report"));
+    assert!(history
+        .iter()
+        .all(|entry| entry.command_name() != "get_scan_report"));
+    server.shutdown().await;
+}
+
+#[tokio::test]
+async fn report_snapshot_backend_failure_is_not_optional_absence() {
+    // Intent (#736): only unsupported optional capability may be omitted;
+    // a failed real snapshot read must not become a successful stale report.
+    let report_id = uuid::Uuid::new_v4();
+    let server = MockGmpServer::builder()
+        .mode(ServerMode::Stateful)
+        .version(MockVersion::V22_8)
+        .seed(move |store| {
+            let mut report = Resource::with_id("report", "Faulted snapshot", report_id);
+            report.set_attr("usage_type", "scan");
+            store.create(report);
+        })
+        .inject_fault(Fault::on_command(
+            "get_scan_report",
+            FaultKind::ErrorStatus {
+                code: 503,
+                message: "snapshot unavailable".into(),
+            },
+        ))
+        .unix_socket_auto()
+        .build()
+        .await
+        .unwrap();
+    let adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
+    adapter
+        .connect_session("token", "admin", "admin")
+        .await
+        .unwrap();
+    server.clear_history();
+    let error = adapter
+        .get_report("token", &report_id.to_string(), &GetReportOpts::default())
+        .await
+        .expect_err("real snapshot errors must propagate");
+    assert!(matches!(error, GatewayError::BackendUnavailable(_)));
+    assert!(server
+        .command_history()
+        .iter()
+        .all(|entry| entry.command_name() != "get_results"));
+    server.shutdown().await;
+}
+
+#[tokio::test]
+async fn inventory_token_empty_success_is_typed_backend_failure_without_secret_diagnostics() {
+    // The owning parser, not the adapter, validates nonempty opaque credentials.
+    for payload in [
+        "<token/>",
+        "<token></token>",
+        "<token> </token>",
+        "<token>\t\r\n </token>",
+        "<token>&#x20;&#x9;&#xD;&#xA;</token>",
+    ] {
+        let xml = format!(
+            r#"<get_agent_inventory_token_response status="200" status_text="SECRET diagnostic">{payload}<diagnostic>SECRET payload</diagnostic></get_agent_inventory_token_response>"#
+        );
+        let server = MockGmpServer::builder().mode(ServerMode::Fixture).version(MockVersion::V22_8)
+            .override_response("help", r#"<help_response status="200" status_text="OK"><schema format="XML"><command><name>get_agent_inventory_token</name></command></schema></help_response>"#)
+            .override_response("get_agent_inventory_token", &xml)
+            .unix_socket_auto().build().await.unwrap();
+        let adapter = GvmdAdapter::unix_socket(server.socket_path().unwrap());
+        adapter
+            .connect_session("inventory-empty-test", "admin", "admin")
+            .await
+            .unwrap();
+        let error = adapter
+            .get_agent_inventory_token("inventory-empty-test")
+            .await
+            .unwrap_err();
+        assert_eq!(error.code(), GatewayErrorCode::BackendUnavailable);
+        assert!(!format!("{error:?}").contains("SECRET"));
+        server.shutdown().await;
+    }
 }

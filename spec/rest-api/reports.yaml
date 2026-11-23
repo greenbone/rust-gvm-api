@@ -141,6 +141,15 @@ paths:
       operationId: getReportResults
       tags: [Reports]
       summary: Get paginated results for a report
+      description: |
+        Results and counts remain restricted to the report in the path, including
+        when caller or saved filters contain boolean alternatives. Endpoint-owned
+        report scope and pagination controls cannot be overridden. Supported
+        comparison operators retain GMP semantics; unsupported inclusive operators
+        such as `severity>=7` or `severity<=7` return 400 rather than being silently
+        ignored. Use supported strict or equality comparisons explicitly.
+        A backend response with missing or mismatched row report references fails as 502;
+        the gateway never drops those rows while retaining misleading counts.
       parameters:
         - $ref: "./common.yaml#/components/parameters/FilterString"
         - $ref: "./common.yaml#/components/parameters/FilterId"
@@ -153,6 +162,8 @@ paths:
             application/json:
               schema:
                 $ref: "./results.yaml#/components/schemas/ResultList"
+        "400":
+          $ref: "./common.yaml#/components/responses/BadRequest"
         "401":
           $ref: "./common.yaml#/components/responses/Unauthorized"
         "502":
@@ -433,7 +444,7 @@ components:
           type: string
           format: uuid
         task:
-          $ref: "./common.yaml#/components/schemas/ResourceRef"
+          $ref: "#/components/schemas/ReportTaskRef"
         scanStart:
           type: string
           format: date-time
@@ -452,6 +463,19 @@ components:
           items:
             $ref: "./results.yaml#/components/schemas/Result"
           description: Embedded results from the requested page when fetching a single report.
+
+    ReportTaskRef:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        scanConfig:
+          $ref: "./common.yaml#/components/schemas/ResourceRef"
+          description: Historical configuration from the structured report snapshot; absent on report lists.
 
     ResultCount:
       type: object
@@ -713,6 +737,17 @@ components:
         severity:
           type: string
           description: Backend severity summary for the application row.
+
+        hostsCount:
+          type: integer
+          minimum: 0
+          maximum: 4294967295
+        occurrences:
+          type: integer
+          minimum: 0
+          maximum: 4294967295
+        threat:
+          type: string
 
     ReportApplicationList:
       type: object

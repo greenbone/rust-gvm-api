@@ -180,11 +180,12 @@ use crate::conversions::{
     parse_snmp_auth_algorithm, parse_snmp_privacy_algorithm, parse_user_auth_type,
     permission_from_gmp, port_list_from_gmp, report_application_from_gmp,
     report_closed_cve_from_gmp, report_cve_from_gmp, report_error_from_gmp, report_format_from_gmp,
-    report_from_gmp, report_host_from_gmp, report_operating_system_from_gmp, report_port_from_gmp,
-    result_from_gmp, result_from_report_vulnerability, role_from_gmp, scan_config_from_gmp,
-    scanner_from_gmp, schedule_from_gmp, tag_from_gmp, target_from_gmp, task_from_gmp,
-    timezone_from_gmp, tls_certificate_asset_from_gmp, tls_certificate_from_report_tls_certificate,
-    user_from_gmp, user_setting_from_gmp, vulnerability_from_gmp, web_application_target_from_gmp,
+    report_from_audit_gmp, report_from_gmp, report_host_from_gmp, report_operating_system_from_gmp,
+    report_port_from_gmp, result_from_gmp, result_from_report_vulnerability, role_from_gmp,
+    scan_config_from_gmp, scanner_from_gmp, schedule_from_gmp, tag_from_gmp, target_from_gmp,
+    task_from_gmp, timezone_from_gmp, tls_certificate_asset_from_gmp,
+    tls_certificate_from_report_tls_certificate, user_from_gmp, user_setting_from_gmp,
+    vulnerability_from_gmp, web_application_target_from_gmp,
 };
 use filters::{
     composed_filter, gvmd_total, needs_client_side_pagination_fallback, paged_pagination,
@@ -386,7 +387,7 @@ impl GvmdAdapter {
     ) -> Result<R::Response, GatewayError>
     where
         R: GmpRequest,
-        F: FnOnce(GvmError) -> GatewayError,
+        F: Fn(GvmError) -> GatewayError,
     {
         let client = self.session_client(session_token)?;
         let span = info_span!(
@@ -399,12 +400,13 @@ impl GvmdAdapter {
         );
 
         async move {
-            let response = client
-                .lock()
-                .await?
-                .execute(request)
-                .await
-                .map_err(map_error)?;
+            let mut client = client.lock().await?;
+            if request.command().is_some_and(|command| {
+                client.command_support(command.wire_name()) == CommandSupport::RequiresDiscovery
+            }) {
+                client.discover_commands().await.map_err(&map_error)?;
+            }
+            let response = client.execute(request).await.map_err(map_error)?;
             tracing::Span::current().record("gvmd_status", field::display("ok"));
             Ok(response)
         }

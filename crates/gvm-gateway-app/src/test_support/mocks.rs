@@ -528,6 +528,7 @@ impl TargetPort for MockTargetPort {
             return Err(GatewayError::NotFound(format!("target {id} not found")));
         }
         Ok(Target {
+            source: None,
             id: id.to_string(),
             name: "Mock Target".to_string(),
             comment: None,
@@ -556,6 +557,7 @@ impl TargetPort for MockTargetPort {
             return Err(GatewayError::NotFound(format!("target {id} not found")));
         }
         Ok(Target {
+            source: None,
             id: id.to_string(),
             name: input.name.unwrap_or_else(|| "Modified Target".to_string()),
             comment: input.comment,
@@ -1262,6 +1264,10 @@ impl AgentPort for MockAgentPort {
             update_to_latest: Some(false),
             status: Some("online".to_string()),
             version: Some("1.0.0".to_string()),
+            operating_system: None,
+            architecture: None,
+            os_cpe: None,
+            os_status: None,
             last_update_time: None,
             last_contact_time: None,
             scanner: Some(ResourceRef {
@@ -1280,7 +1286,7 @@ impl AgentPort for MockAgentPort {
                     bulk_size: Some(10),
                     bulk_throttle_time_in_ms: Some(250),
                     indexer_dir_depth: Some(3),
-                    scheduler_cron_time: vec!["0 */6 * * *".to_string()],
+                    scheduler_cron_time: vec!["0 */6 * * *".to_string().into()],
                 }),
                 heartbeat: Some(AgentHeartbeatConfig {
                     interval_in_seconds: Some(60),
@@ -1394,6 +1400,7 @@ impl AgentPort for MockAgentPort {
                 in_use: false,
             },
             scheduler_cron_time: Some("0 */6 * * *".to_string()),
+            max_delay_seconds: None,
             agents: vec![ResourceRef {
                 id: "00000000-0000-0000-0000-000000000043".to_string(),
                 name: Some("Mock Agent".to_string()),

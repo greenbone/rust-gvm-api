@@ -717,6 +717,8 @@ pub struct NvtRef {
     pub cvss_base: Option<f64>,
     pub cves: Option<Vec<String>>,
     pub tags: Option<String>,
+    #[serde(rename = "type")]
+    pub type_: Option<String>,
     #[serde(rename = "typeMetadata")]
     pub type_metadata: Option<String>,
     pub epss: Option<Epss>,
@@ -733,6 +735,8 @@ pub struct NvtRefSummary {
     pub cvss_base: Option<f64>,
     pub cves: Option<Vec<String>>,
     pub tags: Option<String>,
+    #[serde(rename = "type")]
+    pub type_: Option<String>,
     #[serde(rename = "typeMetadata")]
     pub type_metadata: Option<String>,
 }

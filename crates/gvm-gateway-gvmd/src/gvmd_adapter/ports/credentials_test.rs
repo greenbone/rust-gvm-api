@@ -68,3 +68,32 @@ fn unsupported_credential_store_error_documents_no_synthesis_boundary() {
     assert!(detail.contains("get_credential_stores"));
     assert!(detail.contains("does not synthesize credential store entries"));
 }
+
+// AD diagnostics must preserve denial categories, not LDAP strings or secrets.
+#[test]
+fn ad_errors_are_classified_and_sanitized() {
+    for (status, message, expected) in [
+        (400, "Permission denied", "forbidden"),
+        (404, "Not found: CN=secret", "not_found"),
+        (400, "LDAP bind failed: secret", "backend_unavailable"),
+        (500, "Internal error: secret", "internal_server_error"),
+        (409, "Conflict: CN=secret bindPassword=secret", "conflict"),
+    ] {
+        let error = super::credentials::map_ad_error(gvm_client::GvmError::Server {
+            status,
+            message: message.into(),
+        });
+        assert_eq!(error.code().as_str(), expected);
+        assert!(!format!("{error:?}").contains("secret"));
+    }
+}
+
+#[test]
+fn ad_timeout_keeps_its_category_with_sanitized_detail() {
+    // The route can publish 504 without exposing transport diagnostics.
+    let error = super::credentials::map_ad_error(gvm_client::GvmError::Timeout(
+        std::time::Duration::from_secs(5),
+    ));
+    assert!(matches!(error, GatewayError::GatewayTimeout(_)));
+    assert_eq!(error.detail(), "Active Directory operation failed");
+}

@@ -96,6 +96,7 @@ fn create_agent_group_requires_trimmed_name_and_scheduler_cron_time() {
     let error = CreateAgentGroupRequest {
         name: Some("  ".to_string()),
         scheduler_cron_time: Some(" ".to_string()),
+        max_delay_seconds: None,
         comment: None,
         agent_ids: Vec::new(),
     }
@@ -113,6 +114,7 @@ fn modify_agent_group_requires_scheduler_cron_time() {
     // REST must enforce that contract instead of silently sending omissions.
     let error = ModifyAgentGroupRequest {
         scheduler_cron_time: None,
+        max_delay_seconds: None,
         name: Some("renamed".to_string()),
         comment: None,
         agent_ids: None,
@@ -131,6 +133,7 @@ fn modify_agent_group_validates_agent_selection_update_semantics() {
     // supported replacement, and an explicit empty list must fail before gvmd.
     let omitted = ModifyAgentGroupRequest {
         scheduler_cron_time: Some("0 */15 * * *".to_string()),
+        max_delay_seconds: None,
         name: None,
         comment: None,
         agent_ids: None,
@@ -142,6 +145,7 @@ fn modify_agent_group_validates_agent_selection_update_semantics() {
     let replacement = Uuid::parse_str(RESOURCE_ID).expect("valid agent UUID");
     let replaced = ModifyAgentGroupRequest {
         scheduler_cron_time: Some("0 */15 * * *".to_string()),
+        max_delay_seconds: None,
         name: None,
         comment: None,
         agent_ids: Some(vec![replacement]),
@@ -152,6 +156,7 @@ fn modify_agent_group_validates_agent_selection_update_semantics() {
 
     let clear = ModifyAgentGroupRequest {
         scheduler_cron_time: Some("0 */15 * * *".to_string()),
+        max_delay_seconds: None,
         name: None,
         comment: None,
         agent_ids: Some(vec![]),
@@ -173,4 +178,209 @@ fn attachment_filename_sanitizes_path_and_control_characters() {
         "_bundle__name.zip"
     );
     assert_eq!(safe_attachment_filename("..."), "agent-support-bundle.bin");
+}
+
+#[test]
+fn schedules_accept_legacy_and_structured_and_publish_only_structured() {
+    // Tech Preview migration deliberately breaks response type, while preserving legacy writes.
+    let request: AgentScriptExecutorConfigRequest = serde_json::from_value(serde_json::json!({
+        "schedulerCronTime": ["0 */6 * * *", {"cron":"1 * * * *", "maxDelaySeconds":0},
+            {"cron":"2 * * * *", "maxDelaySeconds":2147483647}]
+    }))
+    .unwrap();
+    let domain = request.validate_into().unwrap();
+    assert_eq!(domain.scheduler_cron_time[0].max_delay_seconds, None);
+    assert_eq!(domain.scheduler_cron_time[1].max_delay_seconds, Some(0));
+    let response = serde_json::to_value(AgentScriptExecutorConfigResponse::from(domain)).unwrap();
+    assert_eq!(
+        response["schedulerCronTime"][0],
+        serde_json::json!({"cron":"0 */6 * * *"})
+    );
+    assert_eq!(
+        response["schedulerCronTime"][2]["maxDelaySeconds"],
+        2147483647
+    );
+}
+
+#[test]
+fn scheduler_delay_rejects_invalid_ranges_and_types_before_dispatch() {
+    // Null, signed, overflowing and fractional delays violate the non-nullable contract.
+    for value in [
+        serde_json::Value::Null,
+        serde_json::json!(-1),
+        serde_json::json!(2147483648u64),
+        serde_json::json!(u32::MAX),
+        serde_json::json!(1.5),
+        serde_json::Value::Null,
+    ] {
+        let parsed =
+            serde_json::from_value::<AgentScriptExecutorConfigRequest>(serde_json::json!({
+                "schedulerCronTime":[{"cron":"* * * * *", "maxDelaySeconds":value}]
+            }));
+        assert!(parsed
+            .map(|request| request.validate_into().is_err())
+            .unwrap_or(true));
+    }
+}
+
+#[test]
+fn inventory_token_cache_policy_covers_success_and_failure() {
+    // Confidential issuance and error responses must not be cached.
+    for status in [
+        axum::http::StatusCode::OK,
+        axum::http::StatusCode::FORBIDDEN,
+    ] {
+        let response = inventory_token_no_store(status.into_response());
+        assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
+    }
+}
+
+#[test]
+fn group_delay_omission_zero_and_bounds_match_the_schedule_contract() {
+    // Optional is not nullable: only omission and integers in the GMP range are valid.
+    for delay in [
+        None,
+        Some(serde_json::json!(0)),
+        Some(serde_json::json!(2147483647)),
+    ] {
+        let mut body = serde_json::json!({"name":"group","schedulerCronTime":"* * * * *"});
+        if let Some(delay) = delay {
+            body["maxDelaySeconds"] = delay;
+        }
+        assert!(
+            serde_json::from_value::<CreateAgentGroupRequest>(body.clone())
+                .unwrap()
+                .validate_into()
+                .is_ok()
+        );
+        assert!(serde_json::from_value::<ModifyAgentGroupRequest>(body)
+            .unwrap()
+            .validate_into()
+            .is_ok());
+    }
+    for delay in [
+        serde_json::Value::Null,
+        serde_json::json!(-1),
+        serde_json::json!(2147483648u64),
+        serde_json::json!(u32::MAX),
+        serde_json::json!(1.5),
+    ] {
+        let body = serde_json::json!({"name":"group","schedulerCronTime":"* * * * *","maxDelaySeconds":delay});
+        assert!(
+            serde_json::from_value::<CreateAgentGroupRequest>(body.clone())
+                .map(|request| request.validate_into().is_err())
+                .unwrap_or(true)
+        );
+        assert!(serde_json::from_value::<ModifyAgentGroupRequest>(body)
+            .map(|request| request.validate_into().is_err())
+            .unwrap_or(true));
+    }
+}
+
+#[test]
+fn agent_os_metadata_is_shared_by_detail_and_list_projection() {
+    // Both endpoints use the same projection and preserve open read-only fields exactly.
+    let domain: gvm_gateway_domain::Agent = serde_json::from_value(serde_json::json!({
+        "id":RESOURCE_ID,"name":"Agent","writable":true,"inUse":false,
+        "operatingSystem":"Future OS","architecture":"future64","osCpe":"cpe:/o:future","osStatus":"new-status"
+    })).unwrap();
+    let detail = serde_json::to_value(AgentResponse::from(domain.clone())).unwrap();
+    let list = serde_json::to_value(AgentListResponse::from(gvm_gateway_domain::AgentPage {
+        data: vec![domain],
+        pagination: gvm_gateway_domain::Pagination {
+            page: 1,
+            per_page: 25,
+            total: 1,
+            total_pages: 1,
+        },
+    }))
+    .unwrap();
+    assert_eq!(list["data"][0], detail);
+    assert_eq!(detail["osStatus"], "new-status");
+}
+
+#[test]
+fn support_bundle_selectors_preserve_all_nine_independent_states() {
+    // Encryption is not anonymization: no default may collapse either selector.
+    for encryption in [None, Some(false), Some(true)] {
+        for anonymized in [None, Some(false), Some(true)] {
+            let mut parts = vec!["days=7".to_string()];
+            if let Some(value) = encryption {
+                parts.push(format!("encryption={value}"));
+            }
+            if let Some(value) = anonymized {
+                parts.push(format!("anonymized={value}"));
+            }
+            let query = parse_agent_support_bundle_query(&parts.join("&")).unwrap();
+            assert_eq!(query.days, Some(7));
+            assert_eq!(query.encryption, encryption);
+            assert_eq!(query.anonymized, anonymized);
+        }
+    }
+    for value in ["1", "0", "yes", "", "TRUE", "null"] {
+        assert!(parse_agent_support_bundle_query(&format!("anonymized={value}")).is_err());
+    }
+}
+
+#[test]
+fn response_delay_observations_validate_without_write_range_truncation() {
+    // A typed backend observation is not a write: project and serialize full
+    // agent/group responses, then validate them against both public contracts.
+    let generated = crate::router::build_openapi();
+    let spec_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../spec/rest-api");
+    let mut curated: serde_json::Value =
+        serde_yaml::from_str(&std::fs::read_to_string(spec_dir.join("emerging.yaml")).unwrap())
+            .unwrap();
+    let common: serde_json::Value =
+        serde_yaml::from_str(&std::fs::read_to_string(spec_dir.join("common.yaml")).unwrap())
+            .unwrap();
+    for (name, schema) in common["components"]["schemas"].as_object().unwrap() {
+        curated["components"]["schemas"]
+            .as_object_mut()
+            .unwrap()
+            .entry(name.clone())
+            .or_insert_with(|| schema.clone());
+    }
+    // Bundle the shared resource references used by agent/group response objects.
+    let curated: serde_json::Value =
+        serde_json::from_str(&serde_json::to_string(&curated).unwrap().replace(
+            "./common.yaml#/components/schemas/",
+            "#/components/schemas/",
+        ))
+        .unwrap();
+    for delay in [0, 2147483648u32, u32::MAX] {
+        let agent: gvm_gateway_domain::Agent = serde_json::from_value(serde_json::json!({
+            "id": RESOURCE_ID, "name": "observed", "writable": true, "inUse": false,
+            "config": {"agentScriptExecutor": {"schedulerCronTime": [
+                {"cron": "* * * * *", "maxDelaySeconds": delay}
+            ]}}
+        }))
+        .unwrap();
+        let group: gvm_gateway_domain::AgentGroup = serde_json::from_value(serde_json::json!({
+            "id": RESOURCE_ID, "name": "observed", "writable": true, "inUse": false,
+            "schedulerCronTime": "* * * * *", "maxDelaySeconds": delay
+        }))
+        .unwrap();
+        let agent = serde_json::to_value(AgentResponse::from(agent)).unwrap();
+        let group = serde_json::to_value(AgentGroupResponse::from(group)).unwrap();
+        assert_eq!(
+            agent["config"]["agentScriptExecutor"]["schedulerCronTime"][0]["maxDelaySeconds"],
+            delay
+        );
+        assert_eq!(group["maxDelaySeconds"], delay);
+        for document in [&generated, &curated] {
+            for (name, body) in [("Agent", &agent), ("AgentGroup", &group)] {
+                let schema = serde_json::json!({
+                    "$ref": format!("#/components/schemas/{name}"),
+                    "components": document["components"]
+                });
+                let validator = jsonschema::validator_for(&schema).unwrap();
+                assert!(
+                    validator.is_valid(body),
+                    "{name}: {:?}",
+                    validator.iter_errors(body).collect::<Vec<_>>()
+                );
+            }
+        }
+    }
 }

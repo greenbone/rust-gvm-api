@@ -1186,6 +1186,9 @@ fn report_export_cancelled_error() -> GatewayError {
 
 fn report_export_job_problem(error: &GatewayError) -> JobProblem {
     let public_error = match error {
+        GatewayError::ServiceUnavailable(_) => GatewayError::ServiceUnavailable(
+            "The backend operation is temporarily unavailable.".into(),
+        ),
         GatewayError::BackendUnavailable(_) => {
             GatewayError::BackendUnavailable("The backend service is unavailable.".to_string())
         }

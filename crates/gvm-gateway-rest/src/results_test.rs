@@ -63,12 +63,14 @@ fn result_response_preserves_source_shaped_type_metadata() {
         threat: None,
         qod: None,
         nvt: Some(NvtRef {
+            refs: vec![],
             oid: Some("1.3.6.1".to_string()),
             name: None,
             family: None,
             cvss_base: None,
             cves: Vec::new(),
             tags: None,
+            type_: None,
             type_metadata: Some("{\"future\":[1,true]}".to_string()),
             epss: None,
         }),
@@ -129,12 +131,14 @@ fn result_response_omits_absent_type_metadata() {
     // Additive response compatibility requires the field to disappear, not
     // serialize as null, when gvmd did not provide it.
     let nvt = super::NvtRefResponse::from(NvtRef {
+        refs: vec![],
         oid: Some("1.3.6.1".to_string()),
         name: None,
         family: None,
         cvss_base: None,
         cves: Vec::new(),
         tags: None,
+        type_: None,
         type_metadata: None,
         epss: None,
     });
@@ -149,12 +153,14 @@ fn result_response_serializes_distinct_epss_selections() {
     // The shared result DTO must expose both maxima without normalizing the
     // backend-native percentile or fabricating an absent CVE severity.
     let nvt = super::NvtRefResponse::from(NvtRef {
+        refs: vec![],
         oid: Some("1.3.6.1".to_string()),
         name: None,
         family: None,
         cvss_base: None,
         cves: Vec::new(),
         tags: None,
+        type_: None,
         type_metadata: None,
         epss: Some(Epss {
             max_epss: EpssSelection {
@@ -192,12 +198,14 @@ fn summary_nvt_reference_does_not_expose_epss() {
     // Aggregate report vulnerabilities and other summary-only surfaces remain
     // outside issue #620 even if their shared domain value carries EPSS.
     let nvt = super::NvtRefSummaryResponse::from(NvtRef {
+        refs: vec![],
         oid: Some("1.3.6.1".to_string()),
         name: None,
         family: None,
         cvss_base: None,
         cves: Vec::new(),
         tags: None,
+        type_: None,
         type_metadata: None,
         epss: Some(Epss {
             max_epss: EpssSelection {
@@ -221,4 +229,65 @@ fn summary_nvt_reference_does_not_expose_epss() {
 
     let value = serde_json::to_value(nvt).expect("summary NVT reference should serialize");
     assert!(value.get("epss").is_none());
+}
+
+// Intent: both full and nested summary DTOs preserve unknown discriminators without altering metadata.
+#[test]
+fn nvt_open_type_full_and_summary() {
+    for kind in [Some("nvt"), Some("package"), Some("future-source"), None] {
+        let n = NvtRef {
+            refs: vec![],
+            oid: None,
+            name: None,
+            family: None,
+            cvss_base: None,
+            cves: vec![],
+            tags: None,
+            type_: kind.map(str::to_owned),
+            type_metadata: Some("{opaque}".into()),
+            epss: None,
+        };
+        let full = serde_json::to_value(super::NvtRefResponse::from(n.clone())).unwrap();
+        let summary = serde_json::to_value(super::NvtRefSummaryResponse::from(n)).unwrap();
+        for json in [full, summary] {
+            assert_eq!(json["typeMetadata"], "{opaque}");
+            assert_eq!(json.get("type").and_then(serde_json::Value::as_str), kind);
+        }
+    }
+}
+
+// Intent: unknown raw reference types stay open and IDs are not interpreted or normalized.
+#[test]
+fn raw_reference_json_is_lossless() {
+    let reference = gvm_gateway_domain::NvtReference {
+        type_: "future-feed".into(),
+        id: "opaque / & id".into(),
+    };
+    let json = serde_json::to_value(super::NvtReferenceResponse::from(reference)).unwrap();
+    assert_eq!(
+        json,
+        serde_json::json!({"type": "future-feed", "id": "opaque / & id"})
+    );
+}
+
+#[test]
+fn raw_refs_survive_full_and_summary_without_fabricating_kev() {
+    // Intent (#742): reference collection survives the outer DTO mappings,
+    // preserving order/duplicates; CVE refs must never imply KEV membership.
+    let refs = serde_json::json!([
+        {"type":"cve","id":"CVE-2024-6387"},
+        {"type":"future-feed","id":"opaque / & id"},
+        {"type":"cve","id":"CVE-2024-6387"}
+    ]);
+    let nvt: NvtRef = serde_json::from_value(serde_json::json!({"refs":refs})).unwrap();
+    let full = serde_json::to_value(super::NvtRefResponse::from(nvt.clone())).unwrap();
+    let summary = serde_json::to_value(super::NvtRefSummaryResponse::from(nvt)).unwrap();
+    for value in [full, summary] {
+        assert_eq!(value["refs"], refs);
+        assert!(value.get("kev").is_none());
+    }
+    let absent: NvtRef = serde_json::from_value(serde_json::json!({})).unwrap();
+    let value = serde_json::to_value(super::NvtRefResponse::from(absent)).unwrap();
+    assert!(value.get("refs").is_none());
+    assert!(value.get("kev").is_none());
 }

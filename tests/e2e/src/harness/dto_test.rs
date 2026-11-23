@@ -176,3 +176,19 @@ fn summary_nvt_reference_rejects_epss() {
 
     assert!(result.is_err(), "summary NVT references must reject EPSS");
 }
+
+#[test]
+fn summary_nvt_reference_accepts_open_type_discriminators() {
+    // Regression coverage for the live note/override response shape: summary
+    // NVTs share the open `type` discriminator with ordinary result NVTs even
+    // though they intentionally remain EPSS-free.
+    let nvt: NvtRefSummary = serde_json::from_value(json!({
+        "oid": "1.3.6.1.4.1.25623.1.0.11913",
+        "name": "DCN HELLO detection",
+        "family": "nvt",
+        "type": "future-backend-type"
+    }))
+    .expect("open NVT type should deserialize");
+
+    assert_eq!(nvt.type_.as_deref(), Some("future-backend-type"));
+}

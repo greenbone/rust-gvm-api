@@ -1,11 +1,10 @@
 # Planned REST contracts: GMP feature adoption (#727–736)
 
-> **Design supplement only — not implemented REST behavior.** This document
-> specifies downstream adoption work for rust-gvm #847–857. It does not add routes,
-> parameters or response fields to the shipped API, complete API issues #727–736,
-> or change the dependency pin. Clients must use the implemented
+> **Mixed implementation/design supplement.** Agent slices #730–733 and AD credential/discovery/provenance slices #727–729 are implemented in runtime and OpenAPI; other sections remain planned. This document
+> specifies downstream adoption work for rust-gvm #847–857. Planned sections do not add routes,
+> parameters or response fields to the shipped API. The immutable typed dependency is adopted in this stack. Clients must use the implemented
 > [OpenAPI root](openapi.yaml) and [REST design](openspec.md) for current behavior.
-> In particular, `anonymized=true` is not currently an API anonymization guarantee.
+> Anonymization is forwarded to gvmd; it is not a promise that every bundle is safe to share.
 
 ## 1. Status, evidence and ownership
 
@@ -117,7 +116,7 @@ sensitive too: return only authorized data and exclude payloads from telemetry.
 Use safe operation/resource identifiers for diagnostics. Backend wire-trace
 redaction does not make gateway JSON logging safe.
 
-## 3. AD credentials and verification — #727
+## 3. AD credentials and verification — #727 (implemented)
 
 Extend existing credential create/update/read shapes with type `ad` and a nested
 `activeDirectory` object. `CredentialKind::ActiveDirectory`/typed credential
@@ -141,7 +140,7 @@ matching the upstream partial-modify API. Read metadata includes optional
 `host`, `port`, `bindDn`, `baseDn`, `tlsMode`, `caCertificate`, but not `bindPassword` or
 `clearPort`. Read `tlsMode` is an open string so future backend values survive.
 
-Proposed verification resources/actions:
+Implemented verification resources/actions:
 
 - `POST /credentials/{id}/actions/verify-active-directory`, no inline fields:
   `VerifyActiveDirectoryCredentialRequest::Saved`.
@@ -150,7 +149,7 @@ Proposed verification resources/actions:
 - Both return `204 No Content` on status-only success; no fabricated connection
   details, credential resource or Location. The saved action is a deliberate
   controller exception to the resource-first rule; the inline operation creates
-  no durable saved credential. Final route naming is subject to #727 review.
+  no durable saved credential. These route names are the implemented contract.
 
 Tests must prove required/type/range validation, escaped values, partial updates,
 CA clearing, port clearing/default omission, saved-vs-inline mutual exclusion,
@@ -158,9 +157,9 @@ status-only success, denied/disabled/destination/TLS failures, and password
 redaction through capture of gateway requests, responses and diagnostics. No
 built-in mock success should be represented as a real LDAP bind.
 
-## 4. AD object discovery — #728
+## 4. AD object discovery — #728 (implemented)
 
-Proposed `POST /active-directory/object-searches` accepts a bounded JSON search
+Implemented `POST /active-directory/object-searches` accepts a bounded JSON search
 body; this avoids sensitive DN selectors in access-log query strings. It is a
 read-only controller search (no stored search/target/task), returning `200` and
 no Location. This is an explicit proposed action-style exception, not a reason
@@ -181,7 +180,7 @@ handling, destination and visibility policy. No DN normalization or local
 comparison. No implicit persistence, client-side completeness claim or invented
 page cursor; this is a limited fetched subset, not REST page/perPage pagination.
 
-Proposed response: `{ "objects": { "truncated": false, "counts": { "ou": 0,
+Response: `{ "objects": { "truncated": false, "counts": { "ou": 0,
 "container": 0, "group": 0, "computer": { "total": 0 } }, "items": [] } }`.
 The `objects` envelope itself is optional because the typed response permits
 absence: preserve absence rather than inventing an empty successful collection.
@@ -203,7 +202,7 @@ counts, excluded disabled count, populated/details/empty expansions and unreadab
 config omission; denial/unavailability/policy failures must not become empty
 results. Prove no target/task creation occurs.
 
-## 5. Target provenance — #729
+## 5. Target provenance — #729 (implemented)
 
 Add optional `source` to existing target create/modify and list/detail
 representations, mapping typed request/response `source`. Write values are
@@ -221,25 +220,25 @@ retains it, explicit `manual`, invalid empty/unknown writes, older payload
 omission, future source on reads, source filter forwarding and no synthesized
 provenance.
 
-## 6. Structured schedules and scheduler delay — #730
+## 6. Structured schedules and scheduler delay — #730 (implemented)
 
 The current REST `config.agentScriptExecutor.schedulerCronTime` is an array of
 strings. Planned entries are `{ "cron": "0 */6 * * *", "maxDelaySeconds": 30 }`,
 mapping `AgentSchedule { cron, max_delay_seconds }` for reads and agent/default
 updates. `cron` is a required string; cron interpretation remains backend-owned.
-`maxDelaySeconds` is optional integer 0–2147483647. Omission delegates the request
-default (zero) to gvmd but remains absent on reads; explicit zero stays zero.
+`maxDelaySeconds` is an optional, non-null integer: writes accept 0–2147483647,
+while read observations preserve the full typed 0–4294967295 range. Omission
+delegates the request default (zero) to gvmd but remains absent on reads; explicit
+zero stays zero.
 Agent-group `schedulerCronTime` remains a **single string**, not this array;
 add optional top-level `maxDelaySeconds` to create/modify/read with the same
-range and omission rules. Do not conflate group synchronization and agent
-executor schedules.
+read/write ranges and omission rules. Do not conflate group synchronization and
+agent executor schedules.
 
-Migration proposal: accept legacy string entries on writes as `{cron: value}`
+Implemented Tech Preview migration: accept legacy string entries on writes as `{cron: value}`
 with omitted delay (as supported by upstream deserialization), while publishing
 structured response entries. This response-type change is **not additive** for
-existing clients. #730 must choose a versioned contract or negotiated migration
-before shipment; do not silently switch the current v1 output. Document that
-choice and client conversion examples in the implementation release. An empty
+existing clients. #730 deliberately adopts an explicit Tech Preview breaking v1 response change, documented in docs/user/migration.md. No negotiation or version endpoint is invented. An empty
 schedule array currently emits no scheduler subtree upstream; do not promise
 that it clears schedules without separate typed backend support.
 
@@ -249,16 +248,16 @@ group create/modify/read delay, and a compatibility test proving the selected
 migration preserves existing client behavior. Verify canonical nested cron
 encoding via typed integration, not gateway XML assertions/parsing.
 
-## 7. Agent inventory token — #731
+## 7. Agent inventory token — #731 (implemented)
 
-Proposed `POST /agents/inventory-token`, no body or agent ID, returns `200` JSON
+Implemented `POST /agents/inventory-token`, no body or agent ID, returns `200` JSON
 `{ "token": "<opaque confidential value>" }` with `Cache-Control: no-store`.
 POST reflects confidential issuance, not a cached agent read; this is an explicit
 proposed controller exception. No expiration, JWT claims, rotation or signer is
 invented; no local issuance, caching, or persistence. Map the no-argument
 `GetAgentInventoryTokenRequest` and unwrap `AgentInventoryToken` only for the
 intended response. A session token and inventory token are distinct credentials.
-Route/method remains a #731 review choice; it is not present in current OpenAPI.
+This controller exception is implemented in runtime and OpenAPI.
 
 Tests: authorized success and exact no-argument typed dispatch, `get_agents`
 denial (source GMP 400 => HTTP 403), absent capability/disabled build,
@@ -267,7 +266,7 @@ temporarily unavailable issuance (source 503 => HTTP 503), generation failure
 redaction of tokens in all logs/traces/errors. Deterministic mock tokens are
 nonfunctional fixtures, not evidence of working inventory authentication.
 
-## 8. Agent operating-system metadata — #732
+## 8. Agent operating-system metadata — #732 (implemented)
 
 Add read-only optional open strings `operatingSystem`, `architecture`, `osCpe`,
 `osStatus` on existing Agent list/detail responses. Map the four typed Agent
@@ -280,7 +279,7 @@ Tests: all four populated, unknown status/architecture preserved, independent
 absence, empty-to-absent normalization and list/detail serialization/schema
 coverage. This is a projection change, not a live agent compatibility claim.
 
-## 9. Support-bundle anonymization — #733
+## 9. Support-bundle anonymization — #733 (implemented)
 
 Add optional boolean query `anonymized` on the existing
 `GET /agents/{id}/support-bundle`; retain `days` and `encryption`. Map to typed
@@ -295,8 +294,7 @@ of archives, supplies the guarantee.
 
 Tests: all nine omitted/false/true encryption × anonymized combinations, days
 unchanged, malformed input rejection, typed command receives explicit true,
-unsupported/error propagation and confidential download/log handling. Current
-clients must not rely on this query until #733 is implemented and qualified.
+unsupported/error propagation and confidential download/log handling. The query is now implemented; real-backend anonymization qualification remains separate.
 
 ## 10. Report application counts — #734
 
