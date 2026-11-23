@@ -210,7 +210,7 @@ pub async fn get_scanner(
 // OpenAPI transforms
 // ============================================================================
 
-/// OpenAPI transform for `GET /api/v1/scanners`.
+/// OpenAPI transform for `GET /gvm/public/v1/scanners`.
 pub(crate) fn list_scanners_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getScanners")
@@ -224,7 +224,7 @@ pub(crate) fn list_scanners_docs(op: TransformOperation<'_>) -> TransformOperati
     problem_response::<401>(op, "Authentication required or session expired")
 }
 
-/// OpenAPI transform for `GET /api/v1/scanners/{id}`.
+/// OpenAPI transform for `GET /gvm/public/v1/scanners/{id}`.
 pub(crate) fn get_scanner_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getScanner")

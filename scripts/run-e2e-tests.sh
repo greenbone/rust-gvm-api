@@ -177,7 +177,7 @@ create_session() {
   status="$(
     curl -sS -o "${response}" -w '%{http_code}' \
       -u "${USERNAME}:${PASSWORD}" \
-      -X POST "${BASE_URL}/api/v1/session"
+      -X POST "${BASE_URL}/gvm/public/v1/session"
   )"
   local body
   body="$(cat "${response}")"
@@ -195,7 +195,7 @@ delete_session() {
   local token="$1"
   curl -sS -o /dev/null -X DELETE \
     -H "Authorization: Bearer ${token}" \
-    "${BASE_URL}/api/v1/session" \
+    "${BASE_URL}/gvm/public/v1/session" \
     || true
 }
 
@@ -207,7 +207,7 @@ print_feed_status() {
   status="$(
     curl -sS -o "${response}" -w '%{http_code}' \
       -H "Authorization: Bearer ${token}" \
-      "${BASE_URL}/api/v1/feeds" \
+      "${BASE_URL}/gvm/public/v1/feeds" \
       || true
   )"
   local body
@@ -299,10 +299,10 @@ trap 'delete_session "${SESSION_TOKEN}"' EXIT
 
 print_feed_status "${SESSION_TOKEN}"
 RESOURCE_DEADLINE="$(( $(date +%s) + RESOURCE_TIMEOUT_SECS ))"
-wait_for_rest_resource "${SESSION_TOKEN}" "scan configs" "scan-configs" "/api/v1/scan-configs" "${RESOURCE_DEADLINE}"
-wait_for_rest_resource "${SESSION_TOKEN}" "scanners" "scanners" "/api/v1/scanners" "${RESOURCE_DEADLINE}"
-wait_for_rest_resource "${SESSION_TOKEN}" "port lists" "port-lists" "/api/v1/port-lists" "${RESOURCE_DEADLINE}"
-wait_for_rest_resource "${SESSION_TOKEN}" "report formats" "report-formats" "/api/v1/report-formats" "${RESOURCE_DEADLINE}"
+wait_for_rest_resource "${SESSION_TOKEN}" "scan configs" "scan-configs" "/gvm/public/v1/scan-configs" "${RESOURCE_DEADLINE}"
+wait_for_rest_resource "${SESSION_TOKEN}" "scanners" "scanners" "/gvm/public/v1/scanners" "${RESOURCE_DEADLINE}"
+wait_for_rest_resource "${SESSION_TOKEN}" "port lists" "port-lists" "/gvm/public/v1/port-lists" "${RESOURCE_DEADLINE}"
+wait_for_rest_resource "${SESSION_TOKEN}" "report formats" "report-formats" "/gvm/public/v1/report-formats" "${RESOURCE_DEADLINE}"
 delete_session "${SESSION_TOKEN}"
 trap - EXIT
 

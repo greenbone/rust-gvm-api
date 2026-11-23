@@ -11,7 +11,7 @@ impl E2eHarness {
         in_assets: Option<bool>,
         report_xml: &[u8],
     ) -> Result<CreatedResource> {
-        let mut path = format!("/api/v1/reports?taskId={task_id}");
+        let mut path = format!("/gvm/public/v1/reports?taskId={task_id}");
         if let Some(in_assets) = in_assets {
             path.push_str(&format!("&inAssets={in_assets}"));
         }
@@ -36,7 +36,7 @@ impl E2eHarness {
             self.authed(
                 Method::GET,
                 &format!(
-                    "/api/v1/reports/{report_id}/{subresource}?page={page}&perPage={per_page}"
+                    "/gvm/public/v1/reports/{report_id}/{subresource}?page={page}&perPage={per_page}"
                 ),
                 token,
             ),
@@ -57,7 +57,7 @@ impl E2eHarness {
             self.authed(
                 Method::GET,
                 &format!(
-                    "/api/v1/reports/{report_id}/operating-systems?page={page}&perPage={per_page}"
+                    "/gvm/public/v1/reports/{report_id}/operating-systems?page={page}&perPage={per_page}"
                 ),
                 token,
             ),
@@ -71,7 +71,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/reports/{report_id}?perPage=1000"),
+                &format!("/gvm/public/v1/reports/{report_id}?perPage=1000"),
                 token,
             ),
             StatusCode::OK,
@@ -82,7 +82,7 @@ impl E2eHarness {
 
     pub async fn list_reports(&self, token: &str) -> Result<ListResponse<Report>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/reports?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/reports?perPage=1000", token),
             StatusCode::OK,
             "list reports",
         )
@@ -97,7 +97,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::POST,
-                &format!("/api/v1/reports/{report_id}/exports"),
+                &format!("/gvm/public/v1/reports/{report_id}/exports"),
                 token,
             )
             .json(&serde_json::json!({ "format": "json" })),
@@ -116,7 +116,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::POST,
-                &format!("/api/v1/reports/{report_id}/exports"),
+                &format!("/gvm/public/v1/reports/{report_id}/exports"),
                 token,
             )
             .json(&serde_json::json!({ "reportFormatId": report_format_id })),
@@ -128,7 +128,7 @@ impl E2eHarness {
 
     pub async fn get_job(&self, token: &str, job_id: &str) -> Result<ReportExportJob> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/jobs/{job_id}"), token),
+            self.authed(Method::GET, &format!("/gvm/public/v1/jobs/{job_id}"), token),
             StatusCode::OK,
             "get job",
         )
@@ -141,7 +141,11 @@ impl E2eHarness {
         job_id: &str,
     ) -> Result<ReportJsonExport> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/jobs/{job_id}/result"), token),
+            self.authed(
+                Method::GET,
+                &format!("/gvm/public/v1/jobs/{job_id}/result"),
+                token,
+            ),
             StatusCode::OK,
             "download JSON report export",
         )
@@ -153,10 +157,14 @@ impl E2eHarness {
         token: &str,
         job_id: &str,
     ) -> Result<reqwest::Response> {
-        self.authed(Method::GET, &format!("/api/v1/jobs/{job_id}/result"), token)
-            .send()
-            .await
-            .context("download report export")
+        self.authed(
+            Method::GET,
+            &format!("/gvm/public/v1/jobs/{job_id}/result"),
+            token,
+        )
+        .send()
+        .await
+        .context("download report export")
     }
 
     pub async fn get_report_tls_certificates_page(
@@ -170,7 +178,7 @@ impl E2eHarness {
             self.authed(
                 Method::GET,
                 &format!(
-                    "/api/v1/reports/{report_id}/tls-certificates?page={page}&perPage={per_page}"
+                    "/gvm/public/v1/reports/{report_id}/tls-certificates?page={page}&perPage={per_page}"
                 ),
                 token,
             ),
@@ -190,7 +198,9 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/reports/{report_id}/errors?page={page}&perPage={per_page}"),
+                &format!(
+                    "/gvm/public/v1/reports/{report_id}/errors?page={page}&perPage={per_page}"
+                ),
                 token,
             ),
             StatusCode::OK,
@@ -209,7 +219,9 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/reports/{report_id}/closed-cves?page={page}&perPage={per_page}"),
+                &format!(
+                    "/gvm/public/v1/reports/{report_id}/closed-cves?page={page}&perPage={per_page}"
+                ),
                 token,
             ),
             StatusCode::OK,
@@ -229,7 +241,7 @@ impl E2eHarness {
             self.authed(
                 Method::GET,
                 &format!(
-                    "/api/v1/reports/{report_id}/vulnerabilities?page={page}&perPage={per_page}"
+                    "/gvm/public/v1/reports/{report_id}/vulnerabilities?page={page}&perPage={per_page}"
                 ),
                 token,
             ),
@@ -250,7 +262,7 @@ impl E2eHarness {
             .authed(
                 Method::GET,
                 &format!(
-                    "/api/v1/reports/{report_id}/vulnerabilities?page={page}&perPage={per_page}"
+                    "/gvm/public/v1/reports/{report_id}/vulnerabilities?page={page}&perPage={per_page}"
                 ),
                 token,
             )
@@ -274,7 +286,7 @@ impl E2eHarness {
         let response = self
             .authed(
                 Method::GET,
-                &format!("/api/v1/reports/{report_id}/vulnerabilities?page=1&perPage=1"),
+                &format!("/gvm/public/v1/reports/{report_id}/vulnerabilities?page=1&perPage=1"),
                 token,
             )
             .send()

@@ -41,7 +41,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
         let agents = get_json(
             &harness,
             Method::GET,
-            "/api/v1/agents?page=1&perPage=1",
+            "/gvm/public/v1/agents?page=1&perPage=1",
             token,
             StatusCode::OK,
         )
@@ -61,7 +61,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
         let original = get_json(
             &harness,
             Method::GET,
-            &format!("/api/v1/agents/{agent_id}"),
+            &format!("/gvm/public/v1/agents/{agent_id}"),
             token,
             StatusCode::OK,
         )
@@ -89,7 +89,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
         let updated = send_json(
             &harness,
             Method::PUT,
-            &format!("/api/v1/agents/{agent_id}"),
+            &format!("/gvm/public/v1/agents/{agent_id}"),
             token,
             &mutation,
             StatusCode::OK,
@@ -99,7 +99,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
         let read_back = get_json(
             &harness,
             Method::GET,
-            &format!("/api/v1/agents/{agent_id}"),
+            &format!("/gvm/public/v1/agents/{agent_id}"),
             token,
             StatusCode::OK,
         )
@@ -118,7 +118,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
                 .request(
                     Method::PUT,
                     &format!(
-                        "/api/v1/agent-control-scan-configs/{AGENT_CONTROLLER_SCANNER_ID}"
+                        "/gvm/public/v1/agent-control-scan-configs/{AGENT_CONTROLLER_SCANNER_ID}"
                     ),
                 )
                 .bearer_auth(token)
@@ -132,7 +132,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
 
         assert_empty(
             harness
-                .request(Method::POST, "/api/v1/agents/sync")
+                .request(Method::POST, "/gvm/public/v1/agents/sync")
                 .bearer_auth(token)
                 .send()
                 .await?,
@@ -143,7 +143,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
         let synchronized = get_json(
             &harness,
             Method::GET,
-            &format!("/api/v1/agents/{agent_id}"),
+            &format!("/gvm/public/v1/agents/{agent_id}"),
             token,
             StatusCode::OK,
         )
@@ -167,7 +167,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
         let support = harness
             .request(
                 Method::GET,
-                &format!("/api/v1/agents/{agent_id}/support-bundle?days=1&encryption=false"),
+                &format!("/gvm/public/v1/agents/{agent_id}/support-bundle?days=1&encryption=false"),
             )
             .bearer_auth(token)
             .send()
@@ -195,7 +195,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
             &harness,
             Method::GET,
             &format!(
-                "/api/v1/scanners/{AGENT_CONTROLLER_SCANNER_ID}/agent-installer-instruction?originUrl=https%3A%2F%2Fmanager.example&language=en"
+                "/gvm/public/v1/scanners/{AGENT_CONTROLLER_SCANNER_ID}/agent-installer-instruction?originUrl=https%3A%2F%2Fmanager.example&language=en"
             ),
             token,
             StatusCode::OK,
@@ -211,7 +211,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
         let created = send_json_with_location(
             &harness,
             Method::POST,
-            "/api/v1/agent-groups",
+            "/gvm/public/v1/agent-groups",
             token,
             &json!({
                 "name": group_name,
@@ -220,7 +220,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
                 "agentIds": [agent_id]
             }),
             StatusCode::CREATED,
-            "/api/v1/agent-groups/",
+            "/gvm/public/v1/agent-groups/",
         )
         .await?;
         let created_group_id = required_string(&created, "id")?.to_string();
@@ -229,7 +229,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
         let modified_group = send_json(
             &harness,
             Method::PUT,
-            &format!("/api/v1/agent-groups/{created_group_id}"),
+            &format!("/gvm/public/v1/agent-groups/{created_group_id}"),
             token,
             &json!({
                 "name": modified_group_name,
@@ -244,7 +244,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
         let listed_groups = get_json(
             &harness,
             Method::GET,
-            "/api/v1/agent-groups?page=1&perPage=100",
+            "/gvm/public/v1/agent-groups?page=1&perPage=100",
             token,
             StatusCode::OK,
         )
@@ -256,11 +256,11 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
         let cloned = send_json_with_location(
             &harness,
             Method::POST,
-            &format!("/api/v1/agent-groups/{created_group_id}/clone"),
+            &format!("/gvm/public/v1/agent-groups/{created_group_id}/clone"),
             token,
             &Value::Null,
             StatusCode::CREATED,
-            "/api/v1/agent-groups/",
+            "/gvm/public/v1/agent-groups/",
         )
         .await?;
         clone_id = Some(required_string(&cloned, "id")?.to_string());
@@ -268,7 +268,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
         let task = send_json_with_location(
             &harness,
             Method::POST,
-            "/api/v1/tasks",
+            "/gvm/public/v1/tasks",
             token,
             &json!({
                 "name": harness.unique_name("issue-680-agent-backed-scan"),
@@ -278,14 +278,14 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
                 "scannerId": AGENT_CONTROLLER_SCANNER_ID
             }),
             StatusCode::CREATED,
-            "/api/v1/tasks/",
+            "/gvm/public/v1/tasks/",
         )
         .await?;
         task_id = Some(required_string(&task, "id")?.to_string());
         let task_read = get_json(
             &harness,
             Method::GET,
-            &format!("/api/v1/tasks/{}", task_id.as_deref().unwrap_or_default()),
+            &format!("/gvm/public/v1/tasks/{}", task_id.as_deref().unwrap_or_default()),
             token,
             StatusCode::OK,
         )
@@ -296,7 +296,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
             &harness,
             Method::POST,
             &format!(
-                "/api/v1/tasks/{}/start",
+                "/gvm/public/v1/tasks/{}/start",
                 task_id.as_deref().unwrap_or_default()
             ),
             token,
@@ -335,7 +335,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
         );
 
         let report_path = format!(
-            "/api/v1/reports/{}?page=1&perPage=100",
+            "/gvm/public/v1/reports/{}?page=1&perPage=100",
             report_id.as_deref().unwrap_or_default()
         );
         let report = get_json(&harness, Method::GET, &report_path, token, StatusCode::OK).await?;
@@ -351,7 +351,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
         );
 
         let results_path = format!(
-            "/api/v1/reports/{}/results?page=1&perPage=100",
+            "/gvm/public/v1/reports/{}/results?page=1&perPage=100",
             report_id.as_deref().unwrap_or_default()
         );
         let results = get_json(
@@ -396,11 +396,22 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
 
     // Reverse mutation order is intentional: report -> task -> clone -> group -> agent -> session.
     let report_cleanup = delete_report(&harness, token, report_id.as_deref()).await;
-    let task_cleanup = delete_resource(&harness, token, "/api/v1/tasks", task_id.as_deref()).await;
-    let clone_cleanup =
-        delete_resource(&harness, token, "/api/v1/agent-groups", clone_id.as_deref()).await;
-    let group_cleanup =
-        delete_resource(&harness, token, "/api/v1/agent-groups", group_id.as_deref()).await;
+    let task_cleanup =
+        delete_resource(&harness, token, "/gvm/public/v1/tasks", task_id.as_deref()).await;
+    let clone_cleanup = delete_resource(
+        &harness,
+        token,
+        "/gvm/public/v1/agent-groups",
+        clone_id.as_deref(),
+    )
+    .await;
+    let group_cleanup = delete_resource(
+        &harness,
+        token,
+        "/gvm/public/v1/agent-groups",
+        group_id.as_deref(),
+    )
+    .await;
     let agent_cleanup = match agent_restore {
         Some((agent_id, restoration)) => {
             restore_agent(&harness, token, &agent_id, &restoration).await
@@ -437,7 +448,7 @@ async fn rest_enterprise_agent_control_lifecycle_is_repeatable_and_fail_closed()
 async fn assert_route_auth_and_input_failures(harness: &E2eHarness) -> Result<()> {
     assert_eq!(
         harness
-            .request(Method::GET, "/api/v1/agents")
+            .request(Method::GET, "/gvm/public/v1/agents")
             .send()
             .await?
             .status(),
@@ -445,7 +456,7 @@ async fn assert_route_auth_and_input_failures(harness: &E2eHarness) -> Result<()
         "agents must reject missing authentication before backend access"
     );
     let invalid = harness
-        .request(Method::GET, "/api/v1/agents?page=0")
+        .request(Method::GET, "/gvm/public/v1/agents?page=0")
         .basic_auth(&harness.config.username, Some(&harness.config.password))
         .send()
         .await?;
@@ -457,7 +468,7 @@ async fn assert_route_auth_and_input_failures(harness: &E2eHarness) -> Result<()
     let unmatched = harness
         .request(
             Method::GET,
-            "/api/v1/agents/00000000-0000-0000-0000-000000000000",
+            "/gvm/public/v1/agents/00000000-0000-0000-0000-000000000000",
         )
         .basic_auth(&harness.config.username, Some(&harness.config.password))
         .send()
@@ -527,7 +538,7 @@ async fn assert_agent_control_failure_contracts(
     for (scenario, allowed) in expectations {
         select_proxy_scenario(harness, &control_url, &control_token, scenario).await?;
         let response = harness
-            .request(Method::PUT, &format!("/api/v1/agents/{agent_id}"))
+            .request(Method::PUT, &format!("/gvm/public/v1/agents/{agent_id}"))
             .bearer_auth(token)
             .json(no_op_update)
             .send()
@@ -557,7 +568,7 @@ async fn assert_agent_control_failure_contracts(
         let after_failure = get_json(
             harness,
             Method::GET,
-            &format!("/api/v1/agents/{agent_id}"),
+            &format!("/gvm/public/v1/agents/{agent_id}"),
             token,
             StatusCode::OK,
         )
@@ -758,7 +769,7 @@ async fn restore_agent(
     send_json(
         harness,
         Method::PUT,
-        &format!("/api/v1/agents/{id}"),
+        &format!("/gvm/public/v1/agents/{id}"),
         token,
         restoration,
         StatusCode::OK,
@@ -788,7 +799,7 @@ async fn delete_resource(
 
 async fn delete_report(harness: &E2eHarness, token: &str, id: Option<&str>) -> Result<()> {
     let Some(id) = id else { return Ok(()) };
-    let path = format!("/api/v1/reports/{id}");
+    let path = format!("/gvm/public/v1/reports/{id}");
     let response = harness
         .request(Method::DELETE, &path)
         .bearer_auth(token)

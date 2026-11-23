@@ -127,7 +127,7 @@ fn retry_after_header(description: &'static str) -> ReferenceOr<Header> {
 pub(crate) fn finalize_document(mut document: Value) -> Value {
     document["servers"] = json!([
         {
-            "url": "/api/v1",
+            "url": "/gvm/public/v1",
             "description": "Base path for versioned API endpoints"
         }
     ]);
@@ -447,7 +447,7 @@ fn operation_can_proxy_to_backend(path: &str, method_name: &str) -> bool {
             | RestRouteAuthPolicy::BearerOnly,
         ) => true,
         Some(RestRouteAuthPolicy::Public) => {
-            matches!(runtime_path.as_str(), "/ready" | "/api/v1/version")
+            matches!(runtime_path.as_str(), "/ready" | "/gvm/public/v1/version")
         }
         Some(RestRouteAuthPolicy::SessionCurrent) | None => false,
     }
@@ -546,7 +546,7 @@ fn normalize_paths(source_paths: &Map<String, Value>) -> Map<String, Value> {
     source_paths
         .iter()
         .map(|(source_path, path_item)| {
-            let normalized_path = source_path.strip_prefix("/api/v1").map_or_else(
+            let normalized_path = source_path.strip_prefix("/gvm/public/v1").map_or_else(
                 || source_path.clone(),
                 |suffix| {
                     if suffix.is_empty() {

@@ -84,7 +84,7 @@ async fn typed_scanner_error_status(status_text: &str) -> axum::http::StatusCode
         .expect_err("scripted scanner response should fail typed execution");
     let gateway_error = map_gvm_error(error);
 
-    RestError::from_gateway_error(gateway_error, "/api/v1/scanners")
+    RestError::from_gateway_error(gateway_error, "/gvm/public/v1/scanners")
         .into_response()
         .status()
 }
@@ -199,7 +199,7 @@ fn unclassified_typed_gmp_status_400_maps_to_rest_bad_request() {
             400,
             "backend rejected an unclassified request".to_string(),
         ),
-        "/api/v1/scanners",
+        "/gvm/public/v1/scanners",
     )
     .into_response();
 
@@ -376,7 +376,7 @@ fn operating_system_delete_classifications_survive_direct_and_parsed_server_erro
     for (error, expected_status) in cases {
         let response = RestError::from_gateway_error(
             map_gvm_error(error),
-            "/api/v1/operating-systems/550e8400-e29b-41d4-a716-446655440134",
+            "/gvm/public/v1/operating-systems/550e8400-e29b-41d4-a716-446655440134",
         )
         .into_response();
         assert_eq!(response.status(), expected_status);

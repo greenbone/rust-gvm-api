@@ -31,36 +31,36 @@ The `.env` file contains:
 
 ## GVM Data Flow
 
-Use the versioned GVM REST API base path `/api/v1`.
+Use the versioned GVM REST API base path `/gvm/public/v1`.
 
-1. Create a GVM session with `POST /api/v1/session` using HTTP Basic
+1. Create a GVM session with `POST /gvm/public/v1/session` using HTTP Basic
    credentials.
 2. Use the returned `sessionToken` as `Authorization: Bearer <sessionToken>` for
    all subsequent GVM requests.
-3. Fetch discovered hosts/assets with `GET /api/v1/hosts`.
+3. Fetch discovered hosts/assets with `GET /gvm/public/v1/hosts`.
    - Use host `id`, `name`, `hostname`, and `os` for OTOBO CMDB
      synchronization.
    - Optionally use host `ip` when the configured OTOBO CMDB class exposes a
      top-level IP address Dynamic Field.
    - Read all pages.
-4. Fetch reports with `GET /api/v1/reports`.
+4. Fetch reports with `GET /gvm/public/v1/reports`.
    - Select reports whose public `scanStart` is within the last 24 hours.
    - Compute a UTC cutoff timestamp at runtime: `now_utc - 24 hours`.
    - Use the report filter `scan_start>{cutoff_utc}`, where `{cutoff_utc}` is
      an RFC 3339 timestamp, for example `scan_start>2026-07-01T10:00:00Z`.
-   - Request shape: `GET /api/v1/reports?filter=scan_start>{cutoff_utc}&perPage=1000`.
+   - Request shape: `GET /gvm/public/v1/reports?filter=scan_start>{cutoff_utc}&perPage=1000`.
    - Read all pages.
    - After fetching reports, still check each returned report's `scanStart`
      client-side and ignore reports outside the 24-hour window.
 5. For each selected report, fetch results with
-   `GET /api/v1/reports/{id}/results`.
+   `GET /gvm/public/v1/reports/{id}/results`.
    - Read all pages.
    - Keep only results with `severity > 4.0`.
-6. Close the GVM session with `DELETE /api/v1/session` when the run finishes.
+6. Close the GVM session with `DELETE /gvm/public/v1/session` when the run finishes.
 
-Use `GET /api/v1/reports/{id}/results` as the finding source. Do not use the
-global `GET /api/v1/results` endpoint for this example. Do not use
-`GET /api/v1/reports/{id}/vulnerabilities`, because the OpenAPI spec allows it
+Use `GET /gvm/public/v1/reports/{id}/results` as the finding source. Do not use the
+global `GET /gvm/public/v1/results` endpoint for this example. Do not use
+`GET /gvm/public/v1/reports/{id}/vulnerabilities`, because the OpenAPI spec allows it
 to return `501 Not Implemented`.
 
 ## Finding Aggregation
@@ -114,7 +114,7 @@ Use direct per-request credentials in each OTOBO Generic Interface JSON
 payload. Include the configured OTOBO username and password as `UserLogin` and
 `Password` fields. Do not create an OTOBO session.
 
-Do not use the GVM REST API `/api/v1/tickets` endpoints for OTOBO ticket
+Do not use the GVM REST API `/gvm/public/v1/tickets` endpoints for OTOBO ticket
 operations. Those endpoints are part of the GVM ticket discovery surface, not
 the OTOBO Generic Interface.
 
@@ -163,7 +163,7 @@ before running the example.
 Sync GVM hosts to OTOBO config items before processing findings:
 
 1. Build an external CI key from the Greenbone host UUID returned by
-   `GET /api/v1/hosts`.
+   `GET /gvm/public/v1/hosts`.
 2. Search for a config item by the configured class and external key attribute.
 3. Upsert the config item with `ConfigItem::ConfigItemUpsert`.
    - If the search found an existing config item, pass its `ConfigItemID` to
@@ -176,7 +176,7 @@ Sync GVM hosts to OTOBO config items before processing findings:
 5. If a finding cannot be matched to a synchronized config item, still create
    or update the OTOBO ticket without a CMDB link and print a warning. This can
    happen while a scan is still completing and report results are visible before
-   the matching host asset appears in `GET /api/v1/hosts`.
+   the matching host asset appears in `GET /gvm/public/v1/hosts`.
 
 Config item upsert payloads must include the configured:
 

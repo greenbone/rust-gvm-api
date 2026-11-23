@@ -794,7 +794,7 @@ pub async fn import_report(State(service): State<GatewayService>, request: Reque
         )
         .await
     {
-        Ok(id) => created_resource("/api/v1/reports", &id),
+        Ok(id) => created_resource("/gvm/public/v1/reports", &id),
         Err(error) => RestError::from_gateway_error(error, instance).into_response(),
     }
 }
@@ -1211,7 +1211,7 @@ pub async fn get_report_cves(
 // OpenAPI transforms
 // ============================================================================
 
-/// OpenAPI transform for `POST /api/v1/reports`.
+/// OpenAPI transform for `POST /gvm/public/v1/reports`.
 pub(crate) fn import_report_docs(mut op: TransformOperation<'_>) -> TransformOperation<'_> {
     op = op
         .id("importReport")
@@ -1248,7 +1248,7 @@ pub(crate) fn import_report_docs(mut op: TransformOperation<'_>) -> TransformOpe
     problem_response::<504>(op, "Backend request timed out")
 }
 
-/// OpenAPI transform for `GET /api/v1/reports`.
+/// OpenAPI transform for `GET /gvm/public/v1/reports`.
 pub(crate) fn list_reports_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getReports")
@@ -1262,7 +1262,7 @@ pub(crate) fn list_reports_docs(op: TransformOperation<'_>) -> TransformOperatio
     problem_response::<401>(op, "Authentication required or session expired")
 }
 
-/// OpenAPI transform for `GET /api/v1/reports/{id}`.
+/// OpenAPI transform for `GET /gvm/public/v1/reports/{id}`.
 pub(crate) fn get_report_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getReport")
@@ -1281,7 +1281,7 @@ pub(crate) fn get_report_docs(op: TransformOperation<'_>) -> TransformOperation<
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `DELETE /api/v1/reports/{id}`.
+/// OpenAPI transform for `DELETE /gvm/public/v1/reports/{id}`.
 pub(crate) fn delete_report_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("deleteReport")
@@ -1297,7 +1297,7 @@ pub(crate) fn delete_report_docs(op: TransformOperation<'_>) -> TransformOperati
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `GET /api/v1/reports/{id}/results`.
+/// OpenAPI transform for `GET /gvm/public/v1/reports/{id}/results`.
 pub(crate) fn get_report_results_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getReportResults")
@@ -1312,7 +1312,7 @@ pub(crate) fn get_report_results_docs(op: TransformOperation<'_>) -> TransformOp
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `GET /api/v1/reports/{id}/vulnerabilities`.
+/// OpenAPI transform for `GET /gvm/public/v1/reports/{id}/vulnerabilities`.
 pub(crate) fn get_report_vulnerabilities_docs(
     op: TransformOperation<'_>,
 ) -> TransformOperation<'_> {
@@ -1336,7 +1336,7 @@ pub(crate) fn get_report_vulnerabilities_docs(
     problem_response::<502>(op, "Backend service unreachable or connection failed")
 }
 
-/// OpenAPI transform for `GET /api/v1/reports/{id}/tls-certificates`.
+/// OpenAPI transform for `GET /gvm/public/v1/reports/{id}/tls-certificates`.
 pub(crate) fn get_report_tls_certificates_docs(
     op: TransformOperation<'_>,
 ) -> TransformOperation<'_> {
@@ -1360,7 +1360,7 @@ pub(crate) fn get_report_tls_certificates_docs(
     problem_response::<502>(op, "Backend service unreachable or connection failed")
 }
 
-/// OpenAPI transform for `GET /api/v1/reports/{id}/errors`.
+/// OpenAPI transform for `GET /gvm/public/v1/reports/{id}/errors`.
 pub(crate) fn get_report_errors_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getReportErrors")
@@ -1382,7 +1382,7 @@ pub(crate) fn get_report_errors_docs(op: TransformOperation<'_>) -> TransformOpe
     problem_response::<502>(op, "Backend service unreachable or connection failed")
 }
 
-/// OpenAPI transform for `GET /api/v1/reports/{id}/closed-cves`.
+/// OpenAPI transform for `GET /gvm/public/v1/reports/{id}/closed-cves`.
 pub(crate) fn get_report_closed_cves_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getReportClosedCves")
@@ -1404,7 +1404,7 @@ pub(crate) fn get_report_closed_cves_docs(op: TransformOperation<'_>) -> Transfo
     problem_response::<502>(op, "Backend service unreachable or connection failed")
 }
 
-/// OpenAPI transform for `GET /api/v1/reports/{id}/hosts`.
+/// OpenAPI transform for `GET /gvm/public/v1/reports/{id}/hosts`.
 pub(crate) fn get_report_hosts_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getReportHosts")
@@ -1426,7 +1426,7 @@ pub(crate) fn get_report_hosts_docs(op: TransformOperation<'_>) -> TransformOper
     )
 }
 
-/// OpenAPI transform for `GET /api/v1/reports/{id}/ports`.
+/// OpenAPI transform for `GET /gvm/public/v1/reports/{id}/ports`.
 pub(crate) fn get_report_ports_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getReportPorts")
@@ -1448,7 +1448,7 @@ pub(crate) fn get_report_ports_docs(op: TransformOperation<'_>) -> TransformOper
     )
 }
 
-/// OpenAPI transform for `GET /api/v1/reports/{id}/applications`.
+/// OpenAPI transform for `GET /gvm/public/v1/reports/{id}/applications`.
 pub(crate) fn get_report_applications_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getReportApplications")
@@ -1470,7 +1470,7 @@ pub(crate) fn get_report_applications_docs(op: TransformOperation<'_>) -> Transf
     )
 }
 
-/// OpenAPI transform for `GET /api/v1/reports/{id}/operating-systems`.
+/// OpenAPI transform for `GET /gvm/public/v1/reports/{id}/operating-systems`.
 pub(crate) fn get_report_operating_systems_docs(
     op: TransformOperation<'_>,
 ) -> TransformOperation<'_> {
@@ -1494,7 +1494,7 @@ pub(crate) fn get_report_operating_systems_docs(
     )
 }
 
-/// OpenAPI transform for `GET /api/v1/reports/{id}/cves`.
+/// OpenAPI transform for `GET /gvm/public/v1/reports/{id}/cves`.
 pub(crate) fn get_report_cves_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getReportCves")

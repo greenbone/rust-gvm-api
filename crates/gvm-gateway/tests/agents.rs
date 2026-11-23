@@ -58,7 +58,7 @@ async fn created_id(response: reqwest::Response, collection: &str) -> String {
         .as_str()
         .unwrap()
         .to_string();
-    assert_eq!(location, format!("/api/v1/{collection}/{id}"));
+    assert_eq!(location, format!("/gvm/public/v1/{collection}/{id}"));
     id
 }
 
@@ -70,7 +70,7 @@ async fn agent_rest_routes_cover_typed_actions_and_downloads() {
 
     let list = harness
         .client
-        .get(harness.url("/api/v1/agents?filter=name%3DManaged%20Agent&page=1&perPage=10"))
+        .get(harness.url("/gvm/public/v1/agents?filter=name%3DManaged%20Agent&page=1&perPage=10"))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -81,7 +81,7 @@ async fn agent_rest_routes_cover_typed_actions_and_downloads() {
 
     let saved = harness
         .client
-        .get(harness.url(&format!("/api/v1/agents?filterId={SAVED_FILTER_ID}")))
+        .get(harness.url(&format!("/gvm/public/v1/agents?filterId={SAVED_FILTER_ID}")))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -91,7 +91,7 @@ async fn agent_rest_routes_cover_typed_actions_and_downloads() {
 
     let get = harness
         .client
-        .get(harness.url(&format!("/api/v1/agents/{AGENT_ID}")))
+        .get(harness.url(&format!("/gvm/public/v1/agents/{AGENT_ID}")))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -101,7 +101,7 @@ async fn agent_rest_routes_cover_typed_actions_and_downloads() {
 
     let update = harness
         .client
-        .put(harness.url(&format!("/api/v1/agents/{AGENT_ID}")))
+        .put(harness.url(&format!("/gvm/public/v1/agents/{AGENT_ID}")))
         .bearer_auth(&harness.token)
         .json(&json!({"authorized":false,"updateToLatest":false,"comment":"updated"}))
         .send()
@@ -112,7 +112,7 @@ async fn agent_rest_routes_cover_typed_actions_and_downloads() {
 
     let sync = harness
         .client
-        .post(harness.url("/api/v1/agents/sync"))
+        .post(harness.url("/gvm/public/v1/agents/sync"))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -121,7 +121,9 @@ async fn agent_rest_routes_cover_typed_actions_and_downloads() {
 
     let bundle = harness
         .client
-        .get(harness.url(&format!("/api/v1/agents/{AGENT_ID}/support-bundle?days=7")))
+        .get(harness.url(&format!(
+            "/gvm/public/v1/agents/{AGENT_ID}/support-bundle?days=7"
+        )))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -142,7 +144,9 @@ async fn agent_rest_routes_cover_typed_actions_and_downloads() {
 
     let control = harness
         .client
-        .put(harness.url(&format!("/api/v1/agent-control-scan-configs/{SCANNER_ID}")))
+        .put(harness.url(&format!(
+            "/gvm/public/v1/agent-control-scan-configs/{SCANNER_ID}"
+        )))
         .bearer_auth(&harness.token)
         .json(&json!({"updateToLatest":true}))
         .send()
@@ -153,7 +157,7 @@ async fn agent_rest_routes_cover_typed_actions_and_downloads() {
     let installer = harness
         .client
         .get(harness.url(&format!(
-            "/api/v1/scanners/{SCANNER_ID}/agent-installer-instruction?originUrl=https%3A%2F%2Fmanager.example.invalid&language=de"
+            "/gvm/public/v1/scanners/{SCANNER_ID}/agent-installer-instruction?originUrl=https%3A%2F%2Fmanager.example.invalid&language=de"
         )))
         .bearer_auth(&harness.token)
         .send()
@@ -169,7 +173,7 @@ async fn agent_rest_routes_cover_typed_actions_and_downloads() {
 
     let delete = harness
         .client
-        .delete(harness.url(&format!("/api/v1/agents/{AGENT_ID}")))
+        .delete(harness.url(&format!("/gvm/public/v1/agents/{AGENT_ID}")))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -223,7 +227,7 @@ async fn agent_group_rest_lifecycle_filter_trash_and_ultimate_delete() {
 
     let create = harness
         .client
-        .post(harness.url("/api/v1/agent-groups"))
+        .post(harness.url("/gvm/public/v1/agent-groups"))
         .bearer_auth(&harness.token)
         .json(&json!({
             "name": "Blue Team",
@@ -238,7 +242,7 @@ async fn agent_group_rest_lifecycle_filter_trash_and_ultimate_delete() {
 
     let get = harness
         .client
-        .get(harness.url(&format!("/api/v1/agent-groups/{id}")))
+        .get(harness.url(&format!("/gvm/public/v1/agent-groups/{id}")))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -248,7 +252,7 @@ async fn agent_group_rest_lifecycle_filter_trash_and_ultimate_delete() {
 
     let update = harness
         .client
-        .put(harness.url(&format!("/api/v1/agent-groups/{id}")))
+        .put(harness.url(&format!("/gvm/public/v1/agent-groups/{id}")))
         .bearer_auth(&harness.token)
         .json(&json!({
             "name": "Updated",
@@ -265,29 +269,32 @@ async fn agent_group_rest_lifecycle_filter_trash_and_ultimate_delete() {
 
     let clone = harness
         .client
-        .post(harness.url(&format!("/api/v1/agent-groups/{id}/clone")))
+        .post(harness.url(&format!("/gvm/public/v1/agent-groups/{id}/clone")))
         .bearer_auth(&harness.token)
         .send()
         .await
         .unwrap();
     let clone_id = created_id(clone, "agent-groups").await;
 
-    let list = harness
-        .client
-        .get(
-            harness.url("/api/v1/agent-groups?filter=name%3DUpdated&page=1&perPage=10&trash=false"),
-        )
-        .bearer_auth(&harness.token)
-        .send()
-        .await
-        .unwrap();
+    let list =
+        harness
+            .client
+            .get(harness.url(
+                "/gvm/public/v1/agent-groups?filter=name%3DUpdated&page=1&perPage=10&trash=false",
+            ))
+            .bearer_auth(&harness.token)
+            .send()
+            .await
+            .unwrap();
     assert_eq!(list.status(), StatusCode::OK);
     let list = list.json::<Value>().await.unwrap();
     assert_eq!(list["pagination"]["perPage"], 10);
 
     let saved = harness
         .client
-        .get(harness.url(&format!("/api/v1/agent-groups?filterId={SAVED_FILTER_ID}")))
+        .get(harness.url(&format!(
+            "/gvm/public/v1/agent-groups?filterId={SAVED_FILTER_ID}"
+        )))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -297,7 +304,7 @@ async fn agent_group_rest_lifecycle_filter_trash_and_ultimate_delete() {
 
     let trash = harness
         .client
-        .delete(harness.url(&format!("/api/v1/agent-groups/{clone_id}")))
+        .delete(harness.url(&format!("/gvm/public/v1/agent-groups/{clone_id}")))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -306,7 +313,7 @@ async fn agent_group_rest_lifecycle_filter_trash_and_ultimate_delete() {
 
     let trash_list = harness
         .client
-        .get(harness.url("/api/v1/agent-groups?trash=true"))
+        .get(harness.url("/gvm/public/v1/agent-groups?trash=true"))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -320,7 +327,7 @@ async fn agent_group_rest_lifecycle_filter_trash_and_ultimate_delete() {
 
     let delete = harness
         .client
-        .delete(harness.url(&format!("/api/v1/agent-groups/{id}?ultimate=true")))
+        .delete(harness.url(&format!("/gvm/public/v1/agent-groups/{id}?ultimate=true")))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -350,7 +357,7 @@ async fn agent_group_update_preserves_replaces_and_rejects_empty_agent_selection
     let harness = specialized_target_harness(|_| {}).await;
     let create = harness
         .client
-        .post(harness.url("/api/v1/agent-groups"))
+        .post(harness.url("/gvm/public/v1/agent-groups"))
         .bearer_auth(&harness.token)
         .json(&json!({
             "name": "Agent selection semantics",
@@ -365,7 +372,7 @@ async fn agent_group_update_preserves_replaces_and_rejects_empty_agent_selection
     harness.server.clear_history();
     let omitted = harness
         .client
-        .put(harness.url(&format!("/api/v1/agent-groups/{id}")))
+        .put(harness.url(&format!("/gvm/public/v1/agent-groups/{id}")))
         .bearer_auth(&harness.token)
         .json(&json!({
             "name": "Renamed without replacing agents",
@@ -389,7 +396,7 @@ async fn agent_group_update_preserves_replaces_and_rejects_empty_agent_selection
     harness.server.clear_history();
     let replaced = harness
         .client
-        .put(harness.url(&format!("/api/v1/agent-groups/{id}")))
+        .put(harness.url(&format!("/gvm/public/v1/agent-groups/{id}")))
         .bearer_auth(&harness.token)
         .json(&json!({
             "schedulerCronTime": "0 */45 * * *",
@@ -414,7 +421,7 @@ async fn agent_group_update_preserves_replaces_and_rejects_empty_agent_selection
     harness.server.clear_history();
     let clear = harness
         .client
-        .put(harness.url(&format!("/api/v1/agent-groups/{id}")))
+        .put(harness.url(&format!("/gvm/public/v1/agent-groups/{id}")))
         .bearer_auth(&harness.token)
         .json(&json!({
             "schedulerCronTime": "0 0 * * *",
@@ -441,7 +448,7 @@ async fn agent_routes_return_not_implemented_on_gmp_22_7() {
 
     let response = harness
         .client
-        .get(harness.url("/api/v1/agents"))
+        .get(harness.url("/gvm/public/v1/agents"))
         .bearer_auth(&harness.token)
         .send()
         .await

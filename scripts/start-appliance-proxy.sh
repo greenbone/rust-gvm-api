@@ -140,7 +140,7 @@ Starting gvm-gateway
   base URL:      http://${BIND_ADDR}
 
 Version endpoint:
-  curl -fsS http://${BIND_ADDR}/api/v1/version
+  curl -fsS http://${BIND_ADDR}/gvm/public/v1/version
 EOF
 
 GVM_GATEWAY_GVMD_ENDPOINT="unix://${LOCAL_SOCKET}" \

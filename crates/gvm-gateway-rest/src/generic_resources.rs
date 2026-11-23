@@ -480,7 +480,7 @@ pub async fn clone_config(
         headers,
         id,
         uri,
-        "/api/v1/configs",
+        "/gvm/public/v1/configs",
         |service, token, id| async move { service.clone_config(&token, &id).await },
     )
     .await
@@ -532,7 +532,7 @@ where
     problem_response::<502>(op, "Backend service unreachable or connection failed")
 }
 
-/// OpenAPI transform for `GET /api/v1/assets`.
+/// OpenAPI transform for `GET /gvm/public/v1/assets`.
 pub(crate) fn list_assets_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     list_docs::<AssetListQueryDoc, GenericAssetListResponse>(
         op,
@@ -543,7 +543,7 @@ pub(crate) fn list_assets_docs(op: TransformOperation<'_>) -> TransformOperation
     )
 }
 
-/// OpenAPI transform for `GET /api/v1/assets/{id}`.
+/// OpenAPI transform for `GET /gvm/public/v1/assets/{id}`.
 pub(crate) fn get_asset_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getAsset")
@@ -561,7 +561,7 @@ pub(crate) fn get_asset_docs(op: TransformOperation<'_>) -> TransformOperation<'
     problem_response::<502>(op, "Backend service unreachable or connection failed")
 }
 
-/// OpenAPI transform for `PUT /api/v1/assets/{id}`.
+/// OpenAPI transform for `PUT /gvm/public/v1/assets/{id}`.
 pub(crate) fn update_asset_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("modifyAsset")
@@ -582,7 +582,7 @@ pub(crate) fn update_asset_docs(op: TransformOperation<'_>) -> TransformOperatio
     problem_response::<502>(op, "Backend service unreachable or connection failed")
 }
 
-/// OpenAPI transform for `DELETE /api/v1/assets/{id}`.
+/// OpenAPI transform for `DELETE /gvm/public/v1/assets/{id}`.
 pub(crate) fn delete_asset_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("deleteAsset")
@@ -600,7 +600,7 @@ pub(crate) fn delete_asset_docs(op: TransformOperation<'_>) -> TransformOperatio
     problem_response::<502>(op, "Backend service unreachable or connection failed")
 }
 
-/// OpenAPI transform for `GET /api/v1/configs`.
+/// OpenAPI transform for `GET /gvm/public/v1/configs`.
 pub(crate) fn list_configs_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     list_docs::<ConfigListQueryDoc, GenericConfigListResponse>(
         op,
@@ -611,12 +611,12 @@ pub(crate) fn list_configs_docs(op: TransformOperation<'_>) -> TransformOperatio
     )
 }
 
-/// OpenAPI transform for `GET /api/v1/configs/{id}`.
+/// OpenAPI transform for `GET /gvm/public/v1/configs/{id}`.
 pub(crate) fn get_config_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     item_docs::<GenericConfigResponse>(op, "getConfig", "Configs", "Get a generic config")
 }
 
-/// OpenAPI transform for `DELETE /api/v1/configs/{id}`.
+/// OpenAPI transform for `DELETE /gvm/public/v1/configs/{id}`.
 pub(crate) fn delete_config_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("deleteConfig")
@@ -636,7 +636,7 @@ pub(crate) fn delete_config_docs(op: TransformOperation<'_>) -> TransformOperati
     problem_response::<502>(op, "Backend service unreachable or connection failed")
 }
 
-/// OpenAPI transform for `POST /api/v1/configs/{id}/clone`.
+/// OpenAPI transform for `POST /gvm/public/v1/configs/{id}/clone`.
 pub(crate) fn clone_config_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("cloneConfig")

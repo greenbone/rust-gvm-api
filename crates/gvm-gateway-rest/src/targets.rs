@@ -369,7 +369,7 @@ pub async fn clone_target(
         headers,
         id,
         uri,
-        "/api/v1/targets",
+        "/gvm/public/v1/targets",
         |service, session, id| async move { service.clone_target(&session, &id).await },
     )
     .await
@@ -451,7 +451,7 @@ fn validate_optional_uuid(field: &str, value: Option<&str>) -> Result<(), Gatewa
 // OpenAPI transforms
 // ============================================================================
 
-/// OpenAPI transform for `GET /api/v1/targets`.
+/// OpenAPI transform for `GET /gvm/public/v1/targets`.
 pub(crate) fn list_targets_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getTargets")
@@ -466,7 +466,7 @@ pub(crate) fn list_targets_docs(op: TransformOperation<'_>) -> TransformOperatio
     problem_response::<401>(op, "Authentication required or session expired")
 }
 
-/// OpenAPI transform for `POST /api/v1/targets`.
+/// OpenAPI transform for `POST /gvm/public/v1/targets`.
 pub(crate) fn create_target_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("createTarget")
@@ -481,7 +481,7 @@ pub(crate) fn create_target_docs(op: TransformOperation<'_>) -> TransformOperati
     problem_response::<401>(op, "Authentication required or session expired")
 }
 
-/// OpenAPI transform for `POST /api/v1/targets/{id}/clone`.
+/// OpenAPI transform for `POST /gvm/public/v1/targets/{id}/clone`.
 pub(crate) fn clone_target_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("cloneTarget")
@@ -497,7 +497,7 @@ pub(crate) fn clone_target_docs(op: TransformOperation<'_>) -> TransformOperatio
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `GET /api/v1/targets/{id}`.
+/// OpenAPI transform for `GET /gvm/public/v1/targets/{id}`.
 pub(crate) fn get_target_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getTarget")
@@ -513,7 +513,7 @@ pub(crate) fn get_target_docs(op: TransformOperation<'_>) -> TransformOperation<
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `PUT /api/v1/targets/{id}`.
+/// OpenAPI transform for `PUT /gvm/public/v1/targets/{id}`.
 pub(crate) fn update_target_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("modifyTarget")
@@ -529,7 +529,7 @@ pub(crate) fn update_target_docs(op: TransformOperation<'_>) -> TransformOperati
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `DELETE /api/v1/targets/{id}`.
+/// OpenAPI transform for `DELETE /gvm/public/v1/targets/{id}`.
 pub(crate) fn delete_target_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("deleteTarget")

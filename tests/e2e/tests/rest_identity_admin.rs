@@ -112,7 +112,7 @@ async fn rest_identity_group_lifecycle_creates_reads_lists_and_deletes() -> Resu
             .create_group(&session.token, &group_name)
             .await
             .context("create group for identity lifecycle coverage")?;
-        assert_created_location(&created, "/api/v1/groups");
+        assert_created_location(&created, "/gvm/public/v1/groups");
         group_id = Some(created.id.clone());
 
         let group = harness.get_group(&session.token, &created.id).await?;

@@ -39,7 +39,7 @@ impl ProblemDetailDoc {
             title: "Bad Request".to_string(),
             status: 400,
             detail: Some("request validation failed".to_string()),
-            instance: Some("/api/v1/targets".to_string()),
+            instance: Some("/gvm/public/v1/targets".to_string()),
         }
     }
 }

@@ -20,8 +20,8 @@ const REDOC_HTML: &str = r#"<!doctype html>
   <title>GVM REST API documentation</title>
 </head>
 <body>
-  <redoc spec-url="/api/v1/openapi.json"></redoc>
-  <script src="/api/v1/docs/redoc.standalone.js" integrity="sha512-qvBFYTqc2cW6IcK+smxCrHVwP6q9c6rXOWWadH5be4qs1lXPHoZ24xTdY6rk6Kf5Wu+L/xoP6VbkJoPP+KyHEQ=="></script>
+  <redoc spec-url="/gvm/public/v1/openapi.json"></redoc>
+  <script src="/gvm/public/v1/docs/redoc.standalone.js" integrity="sha512-qvBFYTqc2cW6IcK+smxCrHVwP6q9c6rXOWWadH5be4qs1lXPHoZ24xTdY6rk6Kf5Wu+L/xoP6VbkJoPP+KyHEQ=="></script>
 </body>
 </html>
 "#;

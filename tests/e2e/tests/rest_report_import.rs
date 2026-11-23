@@ -25,13 +25,16 @@ async fn rest_report_import_lifecycle_creates_reads_and_cleans_up() -> Result<()
             &harness.unique_name("nightly-report-import"),
         )
         .await?;
-    assert_eq!(task.location, format!("/api/v1/tasks/{}", task.id));
+    assert_eq!(task.location, format!("/gvm/public/v1/tasks/{}", task.id));
 
     let report_xml = br#"<report><name>Compose imported report</name><comment>issue 570 lifecycle</comment></report>"#;
     let report = harness
         .import_report(&session.token, &task.id, Some(false), report_xml)
         .await?;
-    assert_eq!(report.location, format!("/api/v1/reports/{}", report.id));
+    assert_eq!(
+        report.location,
+        format!("/gvm/public/v1/reports/{}", report.id)
+    );
 
     let readback = harness.get_report(&session.token, &report.id).await?;
     assert_eq!(readback.id, report.id);

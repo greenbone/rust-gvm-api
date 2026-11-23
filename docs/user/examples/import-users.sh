@@ -66,7 +66,7 @@ create_session() {
     -u "${USERNAME}:${PASSWORD}" \
     -H 'Accept: application/json' \
     -X POST \
-    "${BASE_URL}/api/v1/session"
+    "${BASE_URL}/gvm/public/v1/session"
 }
 
 delete_session() {
@@ -74,7 +74,7 @@ delete_session() {
     curl -fsS \
       -H "Authorization: Bearer ${SESSION_TOKEN}" \
       -X DELETE \
-      "${BASE_URL}/api/v1/session" >/dev/null || true
+      "${BASE_URL}/gvm/public/v1/session" >/dev/null || true
   fi
 }
 
@@ -171,7 +171,7 @@ fetch_collection() {
 
   while (( page <= total_pages )); do
     page_file="$(printf '%s/%s-page-%05d.json' "${TMP_DIR}" "${resource}" "${page}")"
-    api_get "/api/v1/${resource}?page=${page}&perPage=${per_page}" > "${page_file}"
+    api_get "/gvm/public/v1/${resource}?page=${page}&perPage=${per_page}" > "${page_file}"
 
     if (( page == 1 )); then
       total_pages="$(jq -r '.pagination.totalPages // 1' "${page_file}")"
@@ -297,14 +297,14 @@ while IFS=$'\t' read -r LOGIN ROLE_NAMES; do
           authenticationType: "file"
         }'
     )"
-    CREATED_JSON="$(api_post_json '/api/v1/users' "${BODY}")"
+    CREATED_JSON="$(api_post_json '/gvm/public/v1/users' "${BODY}")"
     CREATED_ID="$(printf '%s' "${CREATED_JSON}" | jq -er '.id')"
     created_count=$((created_count + 1))
     echo "created user ${LOGIN} (${CREATED_ID}) password=${GENERATED_PASSWORD}"
   else
     USER_ID="$(printf '%s' "${EXISTING_USER}" | jq -er '.id')"
     BODY="$(jq -n --argjson roles "${ROLE_IDS}" '{roles: $roles}')"
-    api_put_json "/api/v1/users/${USER_ID}" "${BODY}" >/dev/null
+    api_put_json "/gvm/public/v1/users/${USER_ID}" "${BODY}" >/dev/null
     updated_count=$((updated_count + 1))
     echo "updated user ${LOGIN} (${USER_ID})"
   fi

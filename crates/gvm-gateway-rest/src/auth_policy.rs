@@ -28,19 +28,19 @@ pub(crate) fn classify_runtime_route(method: &Method, path: &str) -> Option<Rest
 
     if matches!(
         path,
-        "/api/v1/version"
-            | "/api/v1/openapi.json"
-            | "/api/v1/docs"
-            | "/api/v1/docs/redoc.standalone.js"
+        "/gvm/public/v1/version"
+            | "/gvm/public/v1/openapi.json"
+            | "/gvm/public/v1/docs"
+            | "/gvm/public/v1/docs/redoc.standalone.js"
     ) {
         return Some(RestRouteAuthPolicy::Public);
     }
 
-    if path == "/api/v1/session" && *method == Method::POST {
+    if path == "/gvm/public/v1/session" && *method == Method::POST {
         return Some(RestRouteAuthPolicy::SessionCreate);
     }
 
-    if path == "/api/v1/session" {
+    if path == "/gvm/public/v1/session" {
         return Some(RestRouteAuthPolicy::SessionCurrent);
     }
 
@@ -48,7 +48,7 @@ pub(crate) fn classify_runtime_route(method: &Method, path: &str) -> Option<Rest
         return Some(RestRouteAuthPolicy::BearerOnly);
     }
 
-    if path.starts_with("/api/v1/") {
+    if path.starts_with("/gvm/public/v1/") {
         return Some(RestRouteAuthPolicy::Protected);
     }
 
@@ -56,7 +56,7 @@ pub(crate) fn classify_runtime_route(method: &Method, path: &str) -> Option<Rest
 }
 
 fn is_report_export_job_collection(path: &str) -> bool {
-    path.strip_prefix("/api/v1/reports/")
+    path.strip_prefix("/gvm/public/v1/reports/")
         .and_then(|path| path.strip_suffix("/exports"))
         .is_some_and(|report_id| !report_id.is_empty() && !report_id.contains('/'))
 }
@@ -65,9 +65,9 @@ fn is_report_export_job_collection(path: &str) -> bool {
 pub(crate) fn runtime_path_from_openapi_path(path: &str) -> String {
     match path {
         "/health" | "/ready" => path.to_string(),
-        "/version" => "/api/v1/version".to_string(),
-        "/openapi.json" => "/api/v1/openapi.json".to_string(),
-        _ => format!("/api/v1{path}"),
+        "/version" => "/gvm/public/v1/version".to_string(),
+        "/openapi.json" => "/gvm/public/v1/openapi.json".to_string(),
+        _ => format!("/gvm/public/v1{path}"),
     }
 }
 

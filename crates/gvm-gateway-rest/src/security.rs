@@ -233,7 +233,7 @@ pub(crate) fn apply_security_headers(
         HeaderName::from_static("referrer-policy"),
         HeaderValue::from_static("no-referrer"),
     );
-    if path == "/api/v1/docs" {
+    if path == "/gvm/public/v1/docs" {
         headers.insert(
             HeaderName::from_static("content-security-policy"),
             HeaderValue::from_static(
@@ -241,7 +241,7 @@ pub(crate) fn apply_security_headers(
             ),
         );
     }
-    if path.starts_with("/api/") {
+    if path.starts_with("/gvm/public/") {
         headers.insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
     }
     if native_tls_enabled {

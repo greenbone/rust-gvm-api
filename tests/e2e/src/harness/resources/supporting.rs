@@ -7,7 +7,7 @@ impl E2eHarness {
     pub async fn list_port_lists(&self, token: &str) -> Result<Vec<PortList>> {
         let response: ListResponse<PortList> = self
             .send_json(
-                self.authed(Method::GET, "/api/v1/port-lists", token),
+                self.authed(Method::GET, "/gvm/public/v1/port-lists", token),
                 StatusCode::OK,
                 "list port lists",
             )
@@ -27,7 +27,7 @@ impl E2eHarness {
             "portRange": port_range,
         });
         self.send_created_json(
-            self.authed(Method::POST, "/api/v1/port-lists", token)
+            self.authed(Method::POST, "/gvm/public/v1/port-lists", token)
                 .json(&body),
             "create port list",
         )
@@ -38,7 +38,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/port-lists/{port_list_id}"),
+                &format!("/gvm/public/v1/port-lists/{port_list_id}"),
                 token,
             ),
             StatusCode::OK,
@@ -59,7 +59,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::PUT,
-                &format!("/api/v1/port-lists/{port_list_id}"),
+                &format!("/gvm/public/v1/port-lists/{port_list_id}"),
                 token,
             )
             .json(&body),
@@ -73,7 +73,7 @@ impl E2eHarness {
         self.send_empty(
             self.authed(
                 Method::DELETE,
-                &format!("/api/v1/port-lists/{port_list_id}"),
+                &format!("/gvm/public/v1/port-lists/{port_list_id}"),
                 token,
             ),
             StatusCode::NO_CONTENT,
@@ -84,8 +84,8 @@ impl E2eHarness {
 
     pub async fn list_feeds(&self, token: &str, feed_type: Option<&str>) -> Result<FeedCatalog> {
         let path = feed_type.map_or_else(
-            || "/api/v1/feeds".to_string(),
-            |feed_type| format!("/api/v1/feeds?type={feed_type}"),
+            || "/gvm/public/v1/feeds".to_string(),
+            |feed_type| format!("/gvm/public/v1/feeds?type={feed_type}"),
         );
         self.send_json(
             self.authed(Method::GET, &path, token),
@@ -97,7 +97,7 @@ impl E2eHarness {
 
     pub async fn list_hosts(&self, token: &str) -> Result<ListResponse<HostResource>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/hosts?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/hosts?perPage=1000", token),
             StatusCode::OK,
             "list hosts",
         )
@@ -112,7 +112,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/assets?type={asset_type}&perPage=1000"),
+                &format!("/gvm/public/v1/assets?type={asset_type}&perPage=1000"),
                 token,
             ),
             StatusCode::OK,
@@ -130,7 +130,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/assets/{asset_id}?type={asset_type}"),
+                &format!("/gvm/public/v1/assets/{asset_id}?type={asset_type}"),
                 token,
             ),
             StatusCode::OK,
@@ -141,7 +141,7 @@ impl E2eHarness {
 
     pub async fn list_generic_configs(&self, token: &str) -> Result<ListResponse<GenericConfig>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/configs?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/configs?perPage=1000", token),
             StatusCode::OK,
             "list generic configs",
         )
@@ -150,7 +150,11 @@ impl E2eHarness {
 
     pub async fn get_generic_config(&self, token: &str, config_id: &str) -> Result<GenericConfig> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/configs/{config_id}"), token),
+            self.authed(
+                Method::GET,
+                &format!("/gvm/public/v1/configs/{config_id}"),
+                token,
+            ),
             StatusCode::OK,
             "get generic config",
         )
@@ -162,7 +166,11 @@ impl E2eHarness {
         token: &str,
     ) -> Result<ListResponse<OperatingSystemAsset>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/operating-systems?perPage=1000", token),
+            self.authed(
+                Method::GET,
+                "/gvm/public/v1/operating-systems?perPage=1000",
+                token,
+            ),
             StatusCode::OK,
             "list operating systems",
         )
@@ -177,7 +185,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/operating-systems/{operating_system_id}"),
+                &format!("/gvm/public/v1/operating-systems/{operating_system_id}"),
                 token,
             ),
             StatusCode::OK,
@@ -195,7 +203,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/hosts?page={page}&perPage={per_page}"),
+                &format!("/gvm/public/v1/hosts?page={page}&perPage={per_page}"),
                 token,
             ),
             StatusCode::OK,
@@ -206,7 +214,11 @@ impl E2eHarness {
 
     pub async fn get_host(&self, token: &str, host_id: &str) -> Result<HostResource> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/hosts/{host_id}"), token),
+            self.authed(
+                Method::GET,
+                &format!("/gvm/public/v1/hosts/{host_id}"),
+                token,
+            ),
             StatusCode::OK,
             "get host",
         )
@@ -215,7 +227,11 @@ impl E2eHarness {
 
     pub async fn list_report_formats(&self, token: &str) -> Result<ListResponse<ReportFormat>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/report-formats?perPage=1000", token),
+            self.authed(
+                Method::GET,
+                "/gvm/public/v1/report-formats?perPage=1000",
+                token,
+            ),
             StatusCode::OK,
             "list report formats",
         )
@@ -224,7 +240,7 @@ impl E2eHarness {
 
     pub async fn list_cves(&self, token: &str) -> Result<ListResponse<SecInfoEntry>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/cves?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/cves?perPage=1000", token),
             StatusCode::OK,
             "list cves",
         )
@@ -233,7 +249,7 @@ impl E2eHarness {
 
     pub async fn get_cve(&self, token: &str, cve_id: &str) -> Result<SecInfoEntry> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/cves/{cve_id}"), token),
+            self.authed(Method::GET, &format!("/gvm/public/v1/cves/{cve_id}"), token),
             StatusCode::OK,
             "get cve",
         )
@@ -242,7 +258,7 @@ impl E2eHarness {
 
     pub async fn list_cpes(&self, token: &str) -> Result<ListResponse<SecInfoEntry>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/cpes?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/cpes?perPage=1000", token),
             StatusCode::OK,
             "list cpes",
         )
@@ -251,7 +267,7 @@ impl E2eHarness {
 
     pub async fn get_cpe(&self, token: &str, cpe_id: &str) -> Result<SecInfoEntry> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/cpes/{cpe_id}"), token),
+            self.authed(Method::GET, &format!("/gvm/public/v1/cpes/{cpe_id}"), token),
             StatusCode::OK,
             "get cpe",
         )
@@ -265,7 +281,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                "/api/v1/cert-bund-advisories?perPage=1000",
+                "/gvm/public/v1/cert-bund-advisories?perPage=1000",
                 token,
             ),
             StatusCode::OK,
@@ -282,7 +298,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/cert-bund-advisories/{advisory_id}"),
+                &format!("/gvm/public/v1/cert-bund-advisories/{advisory_id}"),
                 token,
             ),
             StatusCode::OK,
@@ -298,7 +314,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                "/api/v1/dfn-cert-advisories?perPage=1000",
+                "/gvm/public/v1/dfn-cert-advisories?perPage=1000",
                 token,
             ),
             StatusCode::OK,
@@ -315,7 +331,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/dfn-cert-advisories/{advisory_id}"),
+                &format!("/gvm/public/v1/dfn-cert-advisories/{advisory_id}"),
                 token,
             ),
             StatusCode::OK,
@@ -332,7 +348,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/report-formats/{report_format_id}"),
+                &format!("/gvm/public/v1/report-formats/{report_format_id}"),
                 token,
             ),
             StatusCode::OK,
@@ -343,7 +359,7 @@ impl E2eHarness {
 
     pub async fn list_filters(&self, token: &str) -> Result<ListResponse<FilterResource>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/filters?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/filters?perPage=1000", token),
             StatusCode::OK,
             "list filters",
         )
@@ -352,7 +368,11 @@ impl E2eHarness {
 
     pub async fn get_filter(&self, token: &str, filter_id: &str) -> Result<FilterResource> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/filters/{filter_id}"), token),
+            self.authed(
+                Method::GET,
+                &format!("/gvm/public/v1/filters/{filter_id}"),
+                token,
+            ),
             StatusCode::OK,
             "get filter",
         )
@@ -361,7 +381,7 @@ impl E2eHarness {
 
     pub async fn list_tags(&self, token: &str) -> Result<ListResponse<TagResource>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/tags?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/tags?perPage=1000", token),
             StatusCode::OK,
             "list tags",
         )
@@ -370,7 +390,7 @@ impl E2eHarness {
 
     pub async fn get_tag(&self, token: &str, tag_id: &str) -> Result<TagResource> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/tags/{tag_id}"), token),
+            self.authed(Method::GET, &format!("/gvm/public/v1/tags/{tag_id}"), token),
             StatusCode::OK,
             "get tag",
         )
@@ -379,7 +399,7 @@ impl E2eHarness {
 
     pub async fn list_notes(&self, token: &str) -> Result<ListResponse<NoteResource>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/notes?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/notes?perPage=1000", token),
             StatusCode::OK,
             "list notes",
         )
@@ -394,7 +414,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/notes?perPage=1000&filter={filter}"),
+                &format!("/gvm/public/v1/notes?perPage=1000&filter={filter}"),
                 token,
             ),
             StatusCode::OK,
@@ -405,7 +425,11 @@ impl E2eHarness {
 
     pub async fn get_note(&self, token: &str, note_id: &str) -> Result<NoteResource> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/notes/{note_id}"), token),
+            self.authed(
+                Method::GET,
+                &format!("/gvm/public/v1/notes/{note_id}"),
+                token,
+            ),
             StatusCode::OK,
             "get note",
         )
@@ -429,7 +453,7 @@ impl E2eHarness {
             "orphan": false,
         });
         self.send_created_json(
-            self.authed(Method::POST, "/api/v1/notes", token)
+            self.authed(Method::POST, "/gvm/public/v1/notes", token)
                 .json(&body),
             "create note",
         )
@@ -448,8 +472,12 @@ impl E2eHarness {
             "active": active,
         });
         self.send_json(
-            self.authed(Method::PUT, &format!("/api/v1/notes/{note_id}"), token)
-                .json(&body),
+            self.authed(
+                Method::PUT,
+                &format!("/gvm/public/v1/notes/{note_id}"),
+                token,
+            )
+            .json(&body),
             StatusCode::OK,
             "update note",
         )
@@ -460,7 +488,7 @@ impl E2eHarness {
         self.send_empty(
             self.authed(
                 Method::DELETE,
-                &format!("/api/v1/notes/{note_id}?ultimate={ultimate}"),
+                &format!("/gvm/public/v1/notes/{note_id}?ultimate={ultimate}"),
                 token,
             ),
             StatusCode::NO_CONTENT,
@@ -471,7 +499,7 @@ impl E2eHarness {
 
     pub async fn list_overrides(&self, token: &str) -> Result<ListResponse<OverrideResource>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/overrides?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/overrides?perPage=1000", token),
             StatusCode::OK,
             "list overrides",
         )
@@ -486,7 +514,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/overrides?perPage=1000&filter={filter}"),
+                &format!("/gvm/public/v1/overrides?perPage=1000&filter={filter}"),
                 token,
             ),
             StatusCode::OK,
@@ -499,7 +527,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/overrides/{override_id}"),
+                &format!("/gvm/public/v1/overrides/{override_id}"),
                 token,
             ),
             StatusCode::OK,
@@ -526,7 +554,7 @@ impl E2eHarness {
             "active": true,
         });
         self.send_created_json(
-            self.authed(Method::POST, "/api/v1/overrides", token)
+            self.authed(Method::POST, "/gvm/public/v1/overrides", token)
                 .json(&body),
             "create override",
         )
@@ -549,7 +577,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::PUT,
-                &format!("/api/v1/overrides/{override_id}"),
+                &format!("/gvm/public/v1/overrides/{override_id}"),
                 token,
             )
             .json(&body),
@@ -568,7 +596,7 @@ impl E2eHarness {
         self.send_empty(
             self.authed(
                 Method::DELETE,
-                &format!("/api/v1/overrides/{override_id}?ultimate={ultimate}"),
+                &format!("/gvm/public/v1/overrides/{override_id}?ultimate={ultimate}"),
                 token,
             ),
             StatusCode::NO_CONTENT,
@@ -579,7 +607,7 @@ impl E2eHarness {
 
     pub async fn list_nvts(&self, token: &str) -> Result<ListResponse<NvtCatalogEntry>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/nvts?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/nvts?perPage=1000", token),
             StatusCode::OK,
             "list nvts",
         )
@@ -603,7 +631,7 @@ impl E2eHarness {
             .append_pair("sortField", "name")
             .finish();
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/nvts?{query}"), token),
+            self.authed(Method::GET, &format!("/gvm/public/v1/nvts?{query}"), token),
             StatusCode::OK,
             "list nvts with typed options",
         )
@@ -619,7 +647,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/nvts?page={page}&perPage={per_page}"),
+                &format!("/gvm/public/v1/nvts?page={page}&perPage={per_page}"),
                 token,
             ),
             StatusCode::OK,
@@ -630,7 +658,7 @@ impl E2eHarness {
 
     pub async fn get_nvt(&self, token: &str, oid: &str) -> Result<NvtCatalogEntry> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/nvts/{oid}"), token),
+            self.authed(Method::GET, &format!("/gvm/public/v1/nvts/{oid}"), token),
             StatusCode::OK,
             "get nvt",
         )
@@ -639,7 +667,11 @@ impl E2eHarness {
 
     pub async fn list_nvt_families(&self, token: &str) -> Result<ListResponse<NvtFamily>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/nvt-families?perPage=1000", token),
+            self.authed(
+                Method::GET,
+                "/gvm/public/v1/nvt-families?perPage=1000",
+                token,
+            ),
             StatusCode::OK,
             "list nvt families",
         )
@@ -651,7 +683,7 @@ impl E2eHarness {
         token: &str,
     ) -> Result<Option<Vec<CredentialStore>>> {
         let response = self
-            .authed(Method::GET, "/api/v1/credential-stores", token)
+            .authed(Method::GET, "/gvm/public/v1/credential-stores", token)
             .send()
             .await
             .context("list credential stores")?;
@@ -697,7 +729,11 @@ impl E2eHarness {
 
     pub async fn list_credentials(&self, token: &str) -> Result<ListResponse<Credential>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/credentials?perPage=1000", token),
+            self.authed(
+                Method::GET,
+                "/gvm/public/v1/credentials?perPage=1000",
+                token,
+            ),
             StatusCode::OK,
             "list credentials",
         )
@@ -719,7 +755,7 @@ impl E2eHarness {
             "password": password,
         });
         self.send_created_json(
-            self.authed(Method::POST, "/api/v1/credentials", token)
+            self.authed(Method::POST, "/gvm/public/v1/credentials", token)
                 .json(&body),
             "create credential",
         )
@@ -730,7 +766,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/credentials/{credential_id}"),
+                &format!("/gvm/public/v1/credentials/{credential_id}"),
                 token,
             ),
             StatusCode::OK,
@@ -743,7 +779,7 @@ impl E2eHarness {
         self.send_empty(
             self.authed(
                 Method::DELETE,
-                &format!("/api/v1/credentials/{credential_id}"),
+                &format!("/gvm/public/v1/credentials/{credential_id}"),
                 token,
             ),
             StatusCode::NO_CONTENT,

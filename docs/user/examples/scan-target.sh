@@ -125,7 +125,7 @@ create_session() {
     -u "${USERNAME}:${PASSWORD}" \
     -H 'Accept: application/json' \
     -X POST \
-    "${BASE_URL}/api/v1/session"
+    "${BASE_URL}/gvm/public/v1/session"
 }
 
 delete_session() {
@@ -133,7 +133,7 @@ delete_session() {
     curl -fsS \
       -H "Authorization: Bearer ${SESSION_TOKEN}" \
       -X DELETE \
-      "${BASE_URL}/api/v1/session" >/dev/null || true
+      "${BASE_URL}/gvm/public/v1/session" >/dev/null || true
   fi
 }
 
@@ -150,7 +150,7 @@ wait_for_task_done() {
   local progress
 
   while (( $(date +%s) < deadline )); do
-    task_json="$(api_get "/api/v1/tasks/${task_id}")"
+    task_json="$(api_get "/gvm/public/v1/tasks/${task_id}")"
     status="$(printf '%s' "${task_json}" | jq -r '.status')"
     progress="$(printf '%s' "${task_json}" | jq -r '.progress // "unknown"')"
     echo "task ${task_id}: status=${status} progress=${progress}" >&2
@@ -186,7 +186,7 @@ fetch_all_report_results() {
 
   while (( page <= total_pages )); do
     page_file="$(printf '%s/results-page-%05d.json' "${RESULTS_TMP_DIR}" "${page}")"
-    api_get "/api/v1/reports/${report_id}/results?page=${page}&perPage=${per_page}" > "${page_file}"
+    api_get "/gvm/public/v1/reports/${report_id}/results?page=${page}&perPage=${per_page}" > "${page_file}"
 
     if (( page == 1 )); then
       total_pages="$(jq -r '.pagination.totalPages // 1' "${page_file}")"
@@ -222,7 +222,7 @@ wait_for_export_job() {
   local progress
 
   while (( $(date +%s) < deadline )); do
-    job_json="$(api_get "/api/v1/jobs/${job_id}")"
+    job_json="$(api_get "/gvm/public/v1/jobs/${job_id}")"
     status="$(printf '%s' "${job_json}" | jq -r '.status')"
     progress="$(printf '%s' "${job_json}" | jq -r '.progress.percent // "unknown"')"
     echo "export job ${job_id}: status=${status} progress=${progress}" >&2
@@ -284,9 +284,9 @@ SESSION_JSON="$(create_session)"
 SESSION_TOKEN="$(printf '%s' "${SESSION_JSON}" | jq -er '.sessionToken')"
 GMP_VERSION="$(printf '%s' "${SESSION_JSON}" | jq -r '.gmpVersion')"
 
-SCAN_CONFIGS_JSON="$(api_get '/api/v1/scan-configs?perPage=1000')"
-SCANNERS_JSON="$(api_get '/api/v1/scanners?perPage=1000')"
-PORT_LISTS_JSON="$(api_get '/api/v1/port-lists?perPage=1000')"
+SCAN_CONFIGS_JSON="$(api_get '/gvm/public/v1/scan-configs?perPage=1000')"
+SCANNERS_JSON="$(api_get '/gvm/public/v1/scanners?perPage=1000')"
+PORT_LISTS_JSON="$(api_get '/gvm/public/v1/port-lists?perPage=1000')"
 
 SCAN_CONFIG_ID="${GVM_SCAN_CONFIG_ID:-$(printf '%s' "${SCAN_CONFIGS_JSON}" | select_scan_config_id)}"
 SCANNER_ID="${GVM_SCANNER_ID:-$(printf '%s' "${SCANNERS_JSON}" | select_scanner_id)}"
@@ -308,7 +308,7 @@ TARGET_BODY="$(
       portListId: $portListId
     }'
 )"
-TARGET_JSON="$(api_post_json '/api/v1/targets' "${TARGET_BODY}")"
+TARGET_JSON="$(api_post_json '/gvm/public/v1/targets' "${TARGET_BODY}")"
 TARGET_ID="$(printf '%s' "${TARGET_JSON}" | jq -er '.id')"
 
 TASK_BODY="$(
@@ -324,10 +324,10 @@ TASK_BODY="$(
       scannerId: $scannerId
     }'
 )"
-TASK_JSON="$(api_post_json '/api/v1/tasks' "${TASK_BODY}")"
+TASK_JSON="$(api_post_json '/gvm/public/v1/tasks' "${TASK_BODY}")"
 TASK_ID="$(printf '%s' "${TASK_JSON}" | jq -er '.id')"
 
-START_JSON="$(api_post "/api/v1/tasks/${TASK_ID}/start")"
+START_JSON="$(api_post "/gvm/public/v1/tasks/${TASK_ID}/start")"
 REPORT_ID="$(printf '%s' "${START_JSON}" | jq -er '.reportId')"
 
 cat <<EOF
@@ -354,12 +354,12 @@ EXPORT_BODY="$(
     --arg reportFormatId "${PDF_REPORT_FORMAT_ID}" \
     '{reportFormatId: $reportFormatId}'
 )"
-EXPORT_JSON="$(api_post_json "/api/v1/reports/${REPORT_ID}/exports" "${EXPORT_BODY}")"
+EXPORT_JSON="$(api_post_json "/gvm/public/v1/reports/${REPORT_ID}/exports" "${EXPORT_BODY}")"
 EXPORT_JOB_ID="$(printf '%s' "${EXPORT_JSON}" | jq -er '.id')"
 EXPORT_DONE_JSON="$(wait_for_export_job "${EXPORT_JOB_ID}")"
 
 PDF_FILE="${OUTPUT_DIR}/report-${REPORT_ID}.pdf"
-api_download_file "/api/v1/jobs/${EXPORT_JOB_ID}/result" "${PDF_FILE}" "application/pdf"
+api_download_file "/gvm/public/v1/jobs/${EXPORT_JOB_ID}/result" "${PDF_FILE}" "application/pdf"
 
 cat <<EOF
 scan complete

@@ -725,7 +725,7 @@ pub(crate) fn list_credentials_docs(op: TransformOperation<'_>) -> TransformOper
     problem_response::<401>(op, "Authentication required or session expired")
 }
 
-/// OpenAPI transform for `GET /api/v1/credential-stores`.
+/// OpenAPI transform for `GET /gvm/public/v1/credential-stores`.
 pub(crate) fn list_credential_stores_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getCredentialStores")

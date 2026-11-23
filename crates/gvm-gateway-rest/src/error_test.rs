@@ -7,7 +7,7 @@ use super::*;
 fn session_expired_problem_uses_https_type_and_public_code() {
     let error = RestError::from_gateway_error(
         GatewayError::SessionExpired("session expired".to_string()),
-        "/api/v1/targets",
+        "/gvm/public/v1/targets",
     );
 
     assert_eq!(error.status, StatusCode::UNAUTHORIZED);
@@ -42,7 +42,7 @@ fn backend_unavailable_problem_hides_private_detail() {
     let private_detail = "failed to connect to /run/gvmd/gvmd.sock as admin";
     let error = RestError::from_gateway_error(
         GatewayError::BackendUnavailable(private_detail.to_string()),
-        "/api/v1/tasks",
+        "/gvm/public/v1/tasks",
     );
 
     assert_eq!(error.status, StatusCode::BAD_GATEWAY);
@@ -60,7 +60,7 @@ fn invalid_input_problem_keeps_client_actionable_detail() {
     let public_detail = "field 'name' is required";
     let error = RestError::from_gateway_error(
         GatewayError::InvalidInput(public_detail.to_string()),
-        "/api/v1/targets",
+        "/gvm/public/v1/targets",
     );
 
     assert_eq!(error.status, StatusCode::BAD_REQUEST);
@@ -83,7 +83,7 @@ fn route_not_found_problem_uses_public_code() {
 
 #[test]
 fn service_unavailable_problem_uses_public_code() {
-    let error = RestError::service_unavailable("draining", "/api/v1/targets");
+    let error = RestError::service_unavailable("draining", "/gvm/public/v1/targets");
 
     assert_eq!(error.status, StatusCode::SERVICE_UNAVAILABLE);
     let json = serde_json::to_value(&error.problem).unwrap();
@@ -98,7 +98,7 @@ fn service_unavailable_problem_uses_public_code() {
 fn not_implemented_problem_uses_public_code() {
     let error = RestError::from_gateway_error(
         GatewayError::NotImplemented("backend does not support this command".to_string()),
-        "/api/v1/reports/123/vulnerabilities",
+        "/gvm/public/v1/reports/123/vulnerabilities",
     );
 
     assert_eq!(error.status, StatusCode::NOT_IMPLEMENTED);

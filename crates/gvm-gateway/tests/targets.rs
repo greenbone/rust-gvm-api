@@ -219,7 +219,7 @@ async fn create_target() {
     let json = response.json::<serde_json::Value>().await.unwrap();
     let id = json["id"].as_str().unwrap();
     assert!(Uuid::parse_str(id).is_ok());
-    assert_eq!(location, format!("/api/v1/targets/{id}"));
+    assert_eq!(location, format!("/gvm/public/v1/targets/{id}"));
     assert!(harness
         .server
         .command_history()
@@ -396,7 +396,7 @@ async fn update_target_response_includes_credential_refs() {
     let response = harness
         .client
         .put(format!(
-            "http://{}/api/v1/targets/{target_id}",
+            "http://{}/gvm/public/v1/targets/{target_id}",
             harness.addr
         ))
         .bearer_auth(&harness.token)
@@ -458,7 +458,7 @@ async fn update_target_accepts_reverse_lookup_flags() {
     let response = harness
         .client
         .put(format!(
-            "http://{}/api/v1/targets/{target_id}",
+            "http://{}/gvm/public/v1/targets/{target_id}",
             harness.addr
         ))
         .bearer_auth(&harness.token)
@@ -519,7 +519,7 @@ async fn method_not_allowed() {
 
     let response = harness
         .client
-        .patch(harness.url("/api/v1/targets"))
+        .patch(harness.url("/gvm/public/v1/targets"))
         .bearer_auth(&harness.token)
         .send()
         .await

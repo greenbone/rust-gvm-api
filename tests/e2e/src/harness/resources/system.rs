@@ -24,7 +24,7 @@ impl E2eHarness {
 
     pub async fn get_version(&self) -> Result<VersionResponse> {
         self.send_json(
-            self.request(Method::GET, "/api/v1/version"),
+            self.request(Method::GET, "/gvm/public/v1/version"),
             StatusCode::OK,
             "get gateway version",
         )
@@ -36,7 +36,7 @@ impl E2eHarness {
         token: &str,
     ) -> Result<UnpaginatedListResponse<TimezoneEntry>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/timezones", token),
+            self.authed(Method::GET, "/gvm/public/v1/timezones", token),
             StatusCode::OK,
             "get backend timezones",
         )

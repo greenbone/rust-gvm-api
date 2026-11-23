@@ -117,7 +117,7 @@ async fn draining_router_rejects_new_non_probe_requests() {
     let response = app
         .oneshot(
             Request::builder()
-                .uri("/api/v1/version")
+                .uri("/gvm/public/v1/version")
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -161,7 +161,7 @@ async fn specialized_target_routes_require_authentication() {
     let response = app
         .oneshot(
             Request::builder()
-                .uri("/api/v1/oci-image-targets")
+                .uri("/gvm/public/v1/oci-image-targets")
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -183,7 +183,7 @@ async fn user_setting_routes_preserve_auth_validation_and_problem_contracts() {
         .clone()
         .oneshot(
             Request::builder()
-                .uri("/api/v1/user-settings")
+                .uri("/gvm/public/v1/user-settings")
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -200,7 +200,7 @@ async fn user_setting_routes_preserve_auth_validation_and_problem_contracts() {
         .oneshot(
             Request::builder()
                 .method(Method::PUT)
-                .uri(format!("/api/v1/user-settings/{id}"))
+                .uri(format!("/gvm/public/v1/user-settings/{id}"))
                 .header(axum::http::header::AUTHORIZATION, "Basic YWRtaW46c2VjcmV0")
                 .header(CONTENT_TYPE, "application/json")
                 .body(Body::from("{}"))
@@ -224,7 +224,7 @@ async fn user_setting_routes_preserve_auth_validation_and_problem_contracts() {
         .oneshot(
             Request::builder()
                 .method(Method::PUT)
-                .uri(format!("/api/v1/user-settings/{id}"))
+                .uri(format!("/gvm/public/v1/user-settings/{id}"))
                 .header(axum::http::header::AUTHORIZATION, "Basic YWRtaW46c2VjcmV0")
                 .header(CONTENT_TYPE, "application/json")
                 .body(Body::from(r#"{"value":""}"#))
@@ -243,18 +243,30 @@ async fn generic_resource_routes_dispatch_to_typed_services() {
     let app = build_router(static_gateway_service());
     let id = "123e4567-e89b-12d3-a456-426614174000";
     for (method, uri, body) in [
-        (Method::GET, "/api/v1/assets?type=host".to_string(), ""),
-        (Method::GET, format!("/api/v1/assets/{id}?type=host"), ""),
+        (
+            Method::GET,
+            "/gvm/public/v1/assets?type=host".to_string(),
+            "",
+        ),
+        (
+            Method::GET,
+            format!("/gvm/public/v1/assets/{id}?type=host"),
+            "",
+        ),
         (
             Method::PUT,
-            format!("/api/v1/assets/{id}?type=host"),
+            format!("/gvm/public/v1/assets/{id}?type=host"),
             r#"{"comment":"updated"}"#,
         ),
-        (Method::DELETE, format!("/api/v1/assets/{id}"), ""),
-        (Method::GET, "/api/v1/configs".to_string(), ""),
-        (Method::GET, format!("/api/v1/configs/{id}"), ""),
-        (Method::DELETE, format!("/api/v1/configs/{id}"), ""),
-        (Method::POST, format!("/api/v1/configs/{id}/clone"), ""),
+        (Method::DELETE, format!("/gvm/public/v1/assets/{id}"), ""),
+        (Method::GET, "/gvm/public/v1/configs".to_string(), ""),
+        (Method::GET, format!("/gvm/public/v1/configs/{id}"), ""),
+        (Method::DELETE, format!("/gvm/public/v1/configs/{id}"), ""),
+        (
+            Method::POST,
+            format!("/gvm/public/v1/configs/{id}/clone"),
+            "",
+        ),
     ] {
         let response = app
             .clone()
@@ -280,11 +292,11 @@ async fn generic_resource_routes_dispatch_to_typed_services() {
     // Unsupported generic creation/config modification methods are omitted
     // from the contract and use the normal known-path 405 response.
     for (method, uri) in [
-        (Method::POST, "/api/v1/assets"),
-        (Method::POST, "/api/v1/configs"),
+        (Method::POST, "/gvm/public/v1/assets"),
+        (Method::POST, "/gvm/public/v1/configs"),
         (
             Method::PUT,
-            "/api/v1/configs/123e4567-e89b-12d3-a456-426614174000",
+            "/gvm/public/v1/configs/123e4567-e89b-12d3-a456-426614174000",
         ),
     ] {
         let response = app
@@ -312,7 +324,7 @@ async fn browser_docs_use_repository_bundled_redoc() {
         .clone()
         .oneshot(
             Request::builder()
-                .uri("/api/v1/docs")
+                .uri("/gvm/public/v1/docs")
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -333,15 +345,15 @@ async fn browser_docs_use_repository_bundled_redoc() {
         .await
         .unwrap();
     let html = String::from_utf8(body.to_vec()).unwrap();
-    assert!(html.contains("spec-url=\"/api/v1/openapi.json\""));
-    assert!(html.contains("src=\"/api/v1/docs/redoc.standalone.js\""));
+    assert!(html.contains("spec-url=\"/gvm/public/v1/openapi.json\""));
+    assert!(html.contains("src=\"/gvm/public/v1/docs/redoc.standalone.js\""));
     assert!(html.contains("integrity=\"sha512-"));
     assert!(!html.contains("cdn.redoc.ly"));
 
     let response = app
         .oneshot(
             Request::builder()
-                .uri("/api/v1/docs/redoc.standalone.js")
+                .uri("/gvm/public/v1/docs/redoc.standalone.js")
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -376,8 +388,8 @@ async fn current_gvmd_report_and_operating_system_routes_dispatch_to_backend_bou
     let app = build_router(service);
 
     for path in [
-        "/api/v1/reports/123e4567-e89b-12d3-a456-426614174000/hosts",
-        "/api/v1/operating-systems",
+        "/gvm/public/v1/reports/123e4567-e89b-12d3-a456-426614174000/hosts",
+        "/gvm/public/v1/operating-systems",
     ] {
         let response = app
             .clone()
@@ -473,7 +485,7 @@ async fn session_trace_labels_do_not_include_bearer_tokens() {
         .oneshot(
             Request::builder()
                 .method("POST")
-                .uri("/api/v1/session")
+                .uri("/gvm/public/v1/session")
                 .header(axum::http::header::AUTHORIZATION, "Basic YWRtaW46c2VjcmV0")
                 .body(Body::empty())
                 .unwrap(),
@@ -491,7 +503,7 @@ async fn session_trace_labels_do_not_include_bearer_tokens() {
     let response = app
         .oneshot(
             Request::builder()
-                .uri("/api/v1/session")
+                .uri("/gvm/public/v1/session")
                 .header(axum::http::header::AUTHORIZATION, format!("Bearer {token}"))
                 .body(Body::empty())
                 .unwrap(),
@@ -502,7 +514,7 @@ async fn session_trace_labels_do_not_include_bearer_tokens() {
     assert_eq!(response.status(), StatusCode::OK);
 
     let output = String::from_utf8(logs.lock().unwrap().clone()).unwrap();
-    assert!(output.contains("http_route=/api/v1/session"));
+    assert!(output.contains("http_route=/gvm/public/v1/session"));
     assert!(!output.contains(token));
 }
 
@@ -514,16 +526,16 @@ async fn unsupported_methods_on_known_paths_return_problem_responses() {
     // Covers the centralized 405 fallback so published paths cannot fall
     // through to the unknown-route fallback when a method is unsupported.
     for (method, uri) in [
-        ("PATCH", "/api/v1/scan-configs"),
+        ("PATCH", "/gvm/public/v1/scan-configs"),
         (
             "PATCH",
-            "/api/v1/scanners/123e4567-e89b-12d3-a456-426614174000",
+            "/gvm/public/v1/scanners/123e4567-e89b-12d3-a456-426614174000",
         ),
-        ("POST", "/api/v1/report-formats"),
-        ("POST", "/api/v1/user-settings"),
+        ("POST", "/gvm/public/v1/report-formats"),
+        ("POST", "/gvm/public/v1/user-settings"),
         (
             "DELETE",
-            "/api/v1/user-settings/123e4567-e89b-12d3-a456-426614174000",
+            "/gvm/public/v1/user-settings/123e4567-e89b-12d3-a456-426614174000",
         ),
     ] {
         let response = app
@@ -552,7 +564,7 @@ async fn unsupported_methods_on_known_paths_return_problem_responses() {
     let response = app
         .oneshot(
             Request::builder()
-                .uri("/api/v1/does-not-exist")
+                .uri("/gvm/public/v1/does-not-exist")
                 .body(Body::empty())
                 .unwrap(),
         )
@@ -576,8 +588,8 @@ async fn removed_ticket_routes_use_the_unknown_route_problem_contract() {
     let app = build_router(static_gateway_service());
 
     for uri in [
-        "/api/v1/tickets",
-        "/api/v1/tickets/123e4567-e89b-12d3-a456-426614174000",
+        "/gvm/public/v1/tickets",
+        "/gvm/public/v1/tickets/123e4567-e89b-12d3-a456-426614174000",
     ] {
         let response = app
             .clone()
@@ -608,5 +620,27 @@ async fn removed_ticket_routes_use_the_unknown_route_problem_contract() {
         let problem: serde_json::Value = serde_json::from_slice(&body).unwrap();
         assert_eq!(problem["code"], serde_json::json!("not_found"));
         assert_eq!(problem["instance"], serde_json::json!(uri));
+    }
+}
+
+#[tokio::test]
+async fn public_prefix_keeps_probes_at_root_and_does_not_alias_legacy_routes() {
+    // Clients migrate to the public prefix, while operational probes retain
+    // their existing root URLs independently of container deployment.
+    let app = build_router(static_gateway_service());
+    for (path, expected) in [
+        ("/health", StatusCode::OK),
+        ("/ready", StatusCode::OK),
+        ("/gvm/public/v1/openapi.json", StatusCode::OK),
+        ("/api/v1/openapi.json", StatusCode::NOT_FOUND),
+        ("/api/v1/docs", StatusCode::NOT_FOUND),
+        ("/api/v1/version", StatusCode::NOT_FOUND),
+    ] {
+        let response = app
+            .clone()
+            .oneshot(Request::builder().uri(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), expected, "{path}");
     }
 }

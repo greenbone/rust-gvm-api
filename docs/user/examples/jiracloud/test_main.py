@@ -190,8 +190,8 @@ class ConfigTests(unittest.TestCase):
 
     def test_config_load_rejects_versioned_urls(self) -> None:
         """Users configure service roots; the clients append API paths internally."""
-        with self.assertRaisesRegex(utils.IntegrationError, "must not include /api/v1"):
-            utils.Config.load(write_env(self, base_env(GVM_GATEWAY_BASE_URL="http://gvm.example/api/v1")))
+        with self.assertRaisesRegex(utils.IntegrationError, "must not include /gvm/public/v1"):
+            utils.Config.load(write_env(self, base_env(GVM_GATEWAY_BASE_URL="http://gvm.example/gvm/public/v1")))
 
         with self.assertRaisesRegex(utils.IntegrationError, "must not include /rest/api/3"):
             utils.Config.load(write_env(self, base_env(JIRA_SITE_URL="https://jira.example/rest/api/3")))

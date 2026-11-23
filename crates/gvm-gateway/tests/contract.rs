@@ -45,7 +45,7 @@ async fn generated_openapi_endpoint_exposes_implemented_contract() {
     let adapter = StaticGvmdAdapter::ready("22.7");
     let (addr, handle) = spawn_server(adapter.clone(), adapter).await;
     let response = Client::new()
-        .get(format!("http://{addr}/api/v1/openapi.json"))
+        .get(format!("http://{addr}/gvm/public/v1/openapi.json"))
         .send()
         .await
         .unwrap();
@@ -124,7 +124,7 @@ async fn report_drill_down_and_operating_system_routes_expose_typed_contracts() 
         let response = harness
             .client
             .get(harness.url(&format!(
-                "/api/v1/reports/{report_id}/{subresource}?filter=severity%3E3&page=1&perPage=10"
+                "/gvm/public/v1/reports/{report_id}/{subresource}?filter=severity%3E3&page=1&perPage=10"
             )))
             .bearer_auth(&harness.token)
             .send()
@@ -155,7 +155,7 @@ async fn report_drill_down_and_operating_system_routes_expose_typed_contracts() 
     let response = harness
         .client
         .get(harness.url(&format!(
-            "/api/v1/reports/{report_id}/operating-systems?filter=severity%3E3&page=1&perPage=10"
+            "/gvm/public/v1/reports/{report_id}/operating-systems?filter=severity%3E3&page=1&perPage=10"
         )))
         .bearer_auth(&harness.token)
         .send()
@@ -184,7 +184,7 @@ async fn report_drill_down_and_operating_system_routes_expose_typed_contracts() 
 
     let response = harness
         .client
-        .get(harness.url("/api/v1/operating-systems?page=1&perPage=10"))
+        .get(harness.url("/gvm/public/v1/operating-systems?page=1&perPage=10"))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -200,7 +200,9 @@ async fn report_drill_down_and_operating_system_routes_expose_typed_contracts() 
 
     let response = harness
         .client
-        .get(harness.url(&format!("/api/v1/operating-systems/{removable_os_id}")))
+        .get(harness.url(&format!(
+            "/gvm/public/v1/operating-systems/{removable_os_id}"
+        )))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -212,7 +214,9 @@ async fn report_drill_down_and_operating_system_routes_expose_typed_contracts() 
 
     let response = harness
         .client
-        .put(harness.url(&format!("/api/v1/operating-systems/{removable_os_id}")))
+        .put(harness.url(&format!(
+            "/gvm/public/v1/operating-systems/{removable_os_id}"
+        )))
         .bearer_auth(&harness.token)
         .json(&serde_json::json!({ "comment": "reviewed" }))
         .send()
@@ -236,7 +240,7 @@ async fn report_drill_down_and_operating_system_routes_expose_typed_contracts() 
     let response = harness
         .client
         .delete(harness.url(&format!(
-            "/api/v1/operating-systems/{removable_os_id}?ultimate=true"
+            "/gvm/public/v1/operating-systems/{removable_os_id}?ultimate=true"
         )))
         .bearer_auth(&harness.token)
         .send()
@@ -246,7 +250,7 @@ async fn report_drill_down_and_operating_system_routes_expose_typed_contracts() 
 
     let response = harness
         .client
-        .delete(harness.url(&format!("/api/v1/operating-systems/{in_use_os_id}")))
+        .delete(harness.url(&format!("/gvm/public/v1/operating-systems/{in_use_os_id}")))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -263,7 +267,9 @@ async fn report_drill_down_and_operating_system_routes_expose_typed_contracts() 
 
     let response = harness
         .client
-        .delete(harness.url(&format!("/api/v1/operating-systems/{removable_os_id}")))
+        .delete(harness.url(&format!(
+            "/gvm/public/v1/operating-systems/{removable_os_id}"
+        )))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -296,7 +302,9 @@ async fn assert_operating_system_delete_server_error(message: &str, expected: St
 
     let response = harness
         .client
-        .delete(harness.url(&format!("/api/v1/operating-systems/{operating_system_id}")))
+        .delete(harness.url(&format!(
+            "/gvm/public/v1/operating-systems/{operating_system_id}"
+        )))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -345,37 +353,41 @@ async fn config_family_mutation_routes_return_not_found_without_dispatching_writ
     let cases = [
         (
             Method::PUT,
-            format!("/api/v1/scan-configs/{policy_id}"),
+            format!("/gvm/public/v1/scan-configs/{policy_id}"),
             Some(serde_json::json!({ "name": "must not be applied" })),
         ),
         (
             Method::DELETE,
-            format!("/api/v1/scan-configs/{policy_id}"),
+            format!("/gvm/public/v1/scan-configs/{policy_id}"),
             None,
         ),
         (
             Method::PUT,
-            format!("/api/v1/scan-configs/{policy_id}/families/General/nvts"),
+            format!("/gvm/public/v1/scan-configs/{policy_id}/families/General/nvts"),
             Some(serde_json::json!({ "nvtOids": ["1.3.6.1.4.1"] })),
         ),
         (
             Method::PUT,
-            format!("/api/v1/scan-configs/{policy_id}/family-selection"),
+            format!("/gvm/public/v1/scan-configs/{policy_id}/family-selection"),
             Some(serde_json::json!({
                 "families": [{ "name": "General", "growing": false, "all": true }]
             })),
         ),
         (
             Method::PUT,
-            format!("/api/v1/scan-configs/{policy_id}/preferences/Timeout"),
+            format!("/gvm/public/v1/scan-configs/{policy_id}/preferences/Timeout"),
             Some(serde_json::json!({ "value": "10" })),
         ),
         (
             Method::PUT,
-            format!("/api/v1/policies/{scan_id}"),
+            format!("/gvm/public/v1/policies/{scan_id}"),
             Some(serde_json::json!({ "name": "must not be applied" })),
         ),
-        (Method::DELETE, format!("/api/v1/policies/{scan_id}"), None),
+        (
+            Method::DELETE,
+            format!("/gvm/public/v1/policies/{scan_id}"),
+            None,
+        ),
     ];
 
     for (method, path, body) in cases {
@@ -430,7 +442,9 @@ async fn qod_is_consistent_across_shared_result_endpoints() {
     let client = Client::new();
 
     let list = client
-        .get(format!("http://{addr}/api/v1/results?page=1&perPage=10"))
+        .get(format!(
+            "http://{addr}/gvm/public/v1/results?page=1&perPage=10"
+        ))
         .bearer_auth(&token)
         .send()
         .await
@@ -441,7 +455,7 @@ async fn qod_is_consistent_across_shared_result_endpoints() {
         .await
         .expect("result list JSON");
     let detail = client
-        .get(format!("http://{addr}/api/v1/results/{result_id}"))
+        .get(format!("http://{addr}/gvm/public/v1/results/{result_id}"))
         .bearer_auth(&token)
         .send()
         .await
@@ -453,7 +467,7 @@ async fn qod_is_consistent_across_shared_result_endpoints() {
         .expect("result detail JSON");
     let report_results = client
         .get(format!(
-            "http://{addr}/api/v1/reports/{report_id}/results?page=1&perPage=10"
+            "http://{addr}/gvm/public/v1/reports/{report_id}/results?page=1&perPage=10"
         ))
         .bearer_auth(&token)
         .send()
@@ -466,7 +480,7 @@ async fn qod_is_consistent_across_shared_result_endpoints() {
         .expect("report results JSON");
     let report = client
         .get(format!(
-            "http://{addr}/api/v1/reports/{report_id}?page=1&perPage=10"
+            "http://{addr}/gvm/public/v1/reports/{report_id}?page=1&perPage=10"
         ))
         .bearer_auth(&token)
         .send()
@@ -497,7 +511,7 @@ async fn bounded_report_import_contract_creates_readable_resource_and_redacts_fa
     let harness = specialized_target_harness(|_| {}).await;
     let task_response = harness
         .client
-        .post(harness.url("/api/v1/tasks"))
+        .post(harness.url("/gvm/public/v1/tasks"))
         .bearer_auth(&harness.token)
         .json(&serde_json::json!({
             "type": "import",
@@ -514,7 +528,7 @@ async fn bounded_report_import_contract_creates_readable_resource_and_redacts_fa
         .as_str()
         .expect("created task ID")
         .to_string();
-    let endpoint = format!("/api/v1/reports?taskId={task_id}&inAssets=false");
+    let endpoint = format!("/gvm/public/v1/reports?taskId={task_id}&inAssets=false");
 
     let unauthorized = harness
         .client
@@ -539,7 +553,7 @@ async fn bounded_report_import_contract_creates_readable_resource_and_redacts_fa
 
     let invalid_task = harness
         .client
-        .post(harness.url("/api/v1/reports?taskId=not-a-uuid"))
+        .post(harness.url("/gvm/public/v1/reports?taskId=not-a-uuid"))
         .bearer_auth(&harness.token)
         .header("Content-Type", "application/xml")
         .body("<report/>")
@@ -550,7 +564,7 @@ async fn bounded_report_import_contract_creates_readable_resource_and_redacts_fa
 
     let missing_task = harness
         .client
-        .post(harness.url("/api/v1/reports?taskId=aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"))
+        .post(harness.url("/gvm/public/v1/reports?taskId=aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"))
         .bearer_auth(&harness.token)
         .header("Content-Type", "application/xml")
         .body("<report/>")
@@ -622,7 +636,7 @@ async fn bounded_report_import_contract_creates_readable_resource_and_redacts_fa
         .as_str()
         .expect("created report ID")
         .to_string();
-    assert_eq!(location, format!("/api/v1/reports/{report_id}"));
+    assert_eq!(location, format!("/gvm/public/v1/reports/{report_id}"));
 
     let readback = harness
         .client
@@ -649,7 +663,7 @@ async fn bounded_report_import_contract_creates_readable_resource_and_redacts_fa
     assert_eq!(deleted_report.status(), StatusCode::NO_CONTENT);
     let deleted_task = harness
         .client
-        .delete(harness.url(&format!("/api/v1/tasks/{task_id}")))
+        .delete(harness.url(&format!("/gvm/public/v1/tasks/{task_id}")))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -718,7 +732,7 @@ async fn update_task_preserves_preferences_through_handler() {
     // full REST route path, not just direct request validation or gvmd emission.
     let response = Client::new()
         .put(format!(
-            "http://{addr}/api/v1/tasks/550e8400-e29b-41d4-a716-446655440000"
+            "http://{addr}/gvm/public/v1/tasks/550e8400-e29b-41d4-a716-446655440000"
         ))
         .bearer_auth(&token)
         .json(&serde_json::json!({
@@ -760,7 +774,9 @@ async fn create_report_export_job_bearer_survives_delayed_execution() {
     // a job location, deliberately delayed work keeps using the persistent
     // session after the response, and polling reaches a downloadable result.
     let create_response = client
-        .post(format!("http://{addr}/api/v1/reports/{report_id}/exports"))
+        .post(format!(
+            "http://{addr}/gvm/public/v1/reports/{report_id}/exports"
+        ))
         .bearer_auth(&token)
         .json(&serde_json::json!({ "format": "json" }))
         .send()
@@ -779,12 +795,12 @@ async fn create_report_export_job_bearer_survives_delayed_execution() {
     assert_eq!(created["report"]["id"], report_id);
 
     let job_id = created["id"].as_str().unwrap();
-    assert_eq!(location, format!("/api/v1/jobs/{job_id}"));
+    assert_eq!(location, format!("/gvm/public/v1/jobs/{job_id}"));
 
     let mut completed = None;
     for _ in 0..20 {
         let job = client
-            .get(format!("http://{addr}/api/v1/jobs/{job_id}"))
+            .get(format!("http://{addr}/gvm/public/v1/jobs/{job_id}"))
             .bearer_auth(&token)
             .send()
             .await
@@ -801,13 +817,13 @@ async fn create_report_export_job_bearer_survives_delayed_execution() {
     let completed = completed.expect("report export job should succeed");
     assert_eq!(
         completed["resultLocation"],
-        format!("/api/v1/jobs/{job_id}/result")
+        format!("/gvm/public/v1/jobs/{job_id}/result")
     );
     assert_eq!(completed["result"]["contentType"], "application/json");
     assert!(completed["expiresAt"].as_str().is_some());
 
     let result_response = client
-        .get(format!("http://{addr}/api/v1/jobs/{job_id}/result"))
+        .get(format!("http://{addr}/gvm/public/v1/jobs/{job_id}/result"))
         .bearer_auth(&token)
         .send()
         .await
@@ -852,7 +868,7 @@ async fn report_delete_rejects_obsolete_permanence_choice_before_permanent_delet
     // run. This prevents a successful response from implying trash semantics.
     let rejected = client
         .delete(format!(
-            "http://{addr}/api/v1/reports/{report_id}?ultimate=false"
+            "http://{addr}/gvm/public/v1/reports/{report_id}?ultimate=false"
         ))
         .bearer_auth(&token)
         .send()
@@ -869,7 +885,10 @@ async fn report_delete_rejects_obsolete_permanence_choice_before_permanent_delet
     let problem = rejected.json::<Value>().await.expect("RFC 9457 response");
     assert_eq!(problem["code"], "bad_request");
     assert_eq!(problem["status"], 400);
-    assert_eq!(problem["instance"], format!("/api/v1/reports/{report_id}"));
+    assert_eq!(
+        problem["instance"],
+        format!("/gvm/public/v1/reports/{report_id}")
+    );
     assert!(problem["detail"]
         .as_str()
         .is_some_and(|detail| detail.contains("always permanent")));
@@ -885,7 +904,7 @@ async fn report_delete_rejects_obsolete_permanence_choice_before_permanent_delet
     // and the no-choice delete contract reaches the port exactly once.
     let deleted = client
         .delete(format!(
-            "http://{addr}/api/v1/reports/{report_id}?reason=cleanup"
+            "http://{addr}/gvm/public/v1/reports/{report_id}?reason=cleanup"
         ))
         .bearer_auth(&token)
         .send()
@@ -913,7 +932,9 @@ async fn report_export_jobs_are_hidden_from_other_users() {
     // contract: a different authenticated gvmd user must not be able to infer,
     // cancel, or download another user's export job.
     let created = client
-        .post(format!("http://{addr}/api/v1/reports/{report_id}/exports"))
+        .post(format!(
+            "http://{addr}/gvm/public/v1/reports/{report_id}/exports"
+        ))
         .bearer_auth(&owner_token)
         .json(&serde_json::json!({ "format": "json" }))
         .send()
@@ -925,7 +946,7 @@ async fn report_export_jobs_are_hidden_from_other_users() {
     let job_id = created["id"].as_str().unwrap();
 
     let status_response = client
-        .get(format!("http://{addr}/api/v1/jobs/{job_id}"))
+        .get(format!("http://{addr}/gvm/public/v1/jobs/{job_id}"))
         .bearer_auth(&other_token)
         .send()
         .await
@@ -933,7 +954,7 @@ async fn report_export_jobs_are_hidden_from_other_users() {
     assert_eq!(status_response.status(), StatusCode::NOT_FOUND);
 
     let cancel_response = client
-        .delete(format!("http://{addr}/api/v1/jobs/{job_id}"))
+        .delete(format!("http://{addr}/gvm/public/v1/jobs/{job_id}"))
         .bearer_auth(&other_token)
         .send()
         .await
@@ -941,7 +962,7 @@ async fn report_export_jobs_are_hidden_from_other_users() {
     assert_eq!(cancel_response.status(), StatusCode::NOT_FOUND);
 
     let result_response = client
-        .get(format!("http://{addr}/api/v1/jobs/{job_id}/result"))
+        .get(format!("http://{addr}/gvm/public/v1/jobs/{job_id}/result"))
         .bearer_auth(&other_token)
         .send()
         .await
@@ -949,7 +970,7 @@ async fn report_export_jobs_are_hidden_from_other_users() {
     assert_eq!(result_response.status(), StatusCode::NOT_FOUND);
 
     let owner_response = client
-        .get(format!("http://{addr}/api/v1/jobs/{job_id}"))
+        .get(format!("http://{addr}/gvm/public/v1/jobs/{job_id}"))
         .bearer_auth(&owner_token)
         .send()
         .await
@@ -968,7 +989,9 @@ async fn report_export_job_create_returns_not_found_for_missing_report() {
     // contract at job creation time instead of hiding the failure in a later
     // background status poll.
     let response = Client::new()
-        .post(format!("http://{addr}/api/v1/reports/{report_id}/exports"))
+        .post(format!(
+            "http://{addr}/gvm/public/v1/reports/{report_id}/exports"
+        ))
         .bearer_auth(&token)
         .json(&serde_json::json!({ "format": "json" }))
         .send()
@@ -992,7 +1015,7 @@ async fn credential_store_capability_absence_returns_501_problem() {
     // generic bad gateway so clients can distinguish unsupported setup flows
     // from transient backend outages.
     let response = Client::new()
-        .get(format!("http://{addr}/api/v1/credential-stores"))
+        .get(format!("http://{addr}/gvm/public/v1/credential-stores"))
         .bearer_auth(&token)
         .send()
         .await
@@ -1005,7 +1028,7 @@ async fn credential_store_capability_absence_returns_501_problem() {
     assert_eq!(json["status"], serde_json::json!(501));
     assert_eq!(
         json["instance"],
-        serde_json::json!("/api/v1/credential-stores")
+        serde_json::json!("/gvm/public/v1/credential-stores")
     );
 
     handle.abort();
@@ -1021,7 +1044,7 @@ async fn credential_store_backend_outage_returns_502_problem() {
     // Unrelated backend failures on the same route must not be widened into
     // the credential-store capability fallback; clients still receive 502.
     let response = Client::new()
-        .get(format!("http://{addr}/api/v1/credential-stores"))
+        .get(format!("http://{addr}/gvm/public/v1/credential-stores"))
         .bearer_auth(&token)
         .send()
         .await
@@ -1034,7 +1057,7 @@ async fn credential_store_backend_outage_returns_502_problem() {
     assert_eq!(json["status"], serde_json::json!(502));
     assert_eq!(
         json["instance"],
-        serde_json::json!("/api/v1/credential-stores")
+        serde_json::json!("/gvm/public/v1/credential-stores")
     );
 
     handle.abort();
@@ -1065,7 +1088,7 @@ async fn representative_request_bodies_reject_unknown_fields_with_rfc9457_400() 
         Case {
             name: "create target",
             method: Method::POST,
-            path: "/api/v1/targets".to_string(),
+            path: "/gvm/public/v1/targets".to_string(),
             body: serde_json::json!({
                 "name": "Example target",
                 "hosts": ["192.0.2.1"],
@@ -1076,7 +1099,7 @@ async fn representative_request_bodies_reject_unknown_fields_with_rfc9457_400() 
         Case {
             name: "update task",
             method: Method::PUT,
-            path: format!("/api/v1/tasks/{task_id}"),
+            path: format!("/gvm/public/v1/tasks/{task_id}"),
             body: serde_json::json!({
                 "preferences": {
                     "scanner.max_hosts": "64"
@@ -1090,7 +1113,7 @@ async fn representative_request_bodies_reject_unknown_fields_with_rfc9457_400() 
         Case {
             name: "create alert",
             method: Method::POST,
-            path: "/api/v1/alerts".to_string(),
+            path: "/gvm/public/v1/alerts".to_string(),
             body: serde_json::json!({
                 "name": "Notify ops",
                 "event": "task_run_status_changed",
@@ -1108,7 +1131,7 @@ async fn representative_request_bodies_reject_unknown_fields_with_rfc9457_400() 
         Case {
             name: "create report export job",
             method: Method::POST,
-            path: format!("/api/v1/reports/{report_id}/exports"),
+            path: format!("/gvm/public/v1/reports/{report_id}/exports"),
             body: serde_json::json!({
                 "reportFormatId": "123e4567-e89b-12d3-a456-426614174000",
                 "formatHint": "csv"
@@ -1147,7 +1170,7 @@ async fn credential_store_capability_probe_does_not_change_credentials_list_cont
     // `/credentials` is unavailable for the same authenticated session.
     let client = Client::new();
     let store_response = client
-        .get(format!("http://{addr}/api/v1/credential-stores"))
+        .get(format!("http://{addr}/gvm/public/v1/credential-stores"))
         .bearer_auth(&token)
         .send()
         .await
@@ -1155,7 +1178,9 @@ async fn credential_store_capability_probe_does_not_change_credentials_list_cont
     assert_eq!(store_response.status(), StatusCode::NOT_IMPLEMENTED);
 
     let credentials_response = client
-        .get(format!("http://{addr}/api/v1/credentials?perPage=1000"))
+        .get(format!(
+            "http://{addr}/gvm/public/v1/credentials?perPage=1000"
+        ))
         .bearer_auth(&token)
         .send()
         .await
@@ -1200,7 +1225,7 @@ async fn representative_request_bodies_accept_valid_payloads() {
         Case {
             name: "create target",
             method: Method::POST,
-            path: "/api/v1/targets".to_string(),
+            path: "/gvm/public/v1/targets".to_string(),
             body: serde_json::json!({
                 "name": "Example target",
                 "hosts": ["192.0.2.1"],
@@ -1213,7 +1238,7 @@ async fn representative_request_bodies_accept_valid_payloads() {
         Case {
             name: "update task",
             method: Method::PUT,
-            path: format!("/api/v1/tasks/{task_id}"),
+            path: format!("/gvm/public/v1/tasks/{task_id}"),
             body: serde_json::json!({
                 "preferences": {
                     "scanner.max_hosts": "64",
@@ -1227,7 +1252,7 @@ async fn representative_request_bodies_accept_valid_payloads() {
         Case {
             name: "create alert",
             method: Method::POST,
-            path: "/api/v1/alerts".to_string(),
+            path: "/gvm/public/v1/alerts".to_string(),
             body: serde_json::json!({
                 "name": "Notify ops",
                 "event": "task_run_status_changed",
@@ -1251,7 +1276,7 @@ async fn representative_request_bodies_accept_valid_payloads() {
         Case {
             name: "create report export job",
             method: Method::POST,
-            path: format!("/api/v1/reports/{report_id}/exports"),
+            path: format!("/gvm/public/v1/reports/{report_id}/exports"),
             body: serde_json::json!({
                 "format": "json"
             }),
@@ -2392,7 +2417,7 @@ async fn problem_details_shape_on_error() {
     let adapter = StaticGvmdAdapter::not_ready("backend offline", "22.7");
     let (addr, handle) = spawn_server(adapter.clone(), adapter).await;
     let response = Client::new()
-        .get(format!("http://{addr}/api/v1/version"))
+        .get(format!("http://{addr}/gvm/public/v1/version"))
         .send()
         .await
         .unwrap();
@@ -2412,7 +2437,10 @@ async fn problem_details_shape_on_error() {
         serde_json::json!("The backend service is unavailable.")
     );
     assert_ne!(json["detail"], serde_json::json!("backend offline"));
-    assert_eq!(json["instance"], serde_json::json!("/api/v1/version"));
+    assert_eq!(
+        json["instance"],
+        serde_json::json!("/gvm/public/v1/version")
+    );
 
     handle.abort();
 }
@@ -2427,7 +2455,7 @@ async fn secinfo_item_routes_accept_non_uuid_ids() {
     // SecInfo ids are backend-defined strings like CVE and advisory names, so
     // item routes must not reject them through UUID-only path validation.
     let response = client
-        .get(format!("http://{addr}/api/v1/cves/CVE-2026-1000"))
+        .get(format!("http://{addr}/gvm/public/v1/cves/CVE-2026-1000"))
         .bearer_auth(&session_token)
         .send()
         .await
@@ -2854,8 +2882,8 @@ fn build_route_probe_request(
     );
 
     match runtime_path.as_str() {
-        "/health" | "/ready" | "/api/v1/version" | "/api/v1/openapi.json" => request,
-        "/api/v1/session" if method == "post" => {
+        "/health" | "/ready" | "/gvm/public/v1/version" | "/gvm/public/v1/openapi.json" => request,
+        "/gvm/public/v1/session" if method == "post" => {
             request.header("Authorization", "Basic YWRtaW46c2VjcmV0")
         }
         _ => request.bearer_auth(session_token),
@@ -2864,7 +2892,7 @@ fn build_route_probe_request(
 
 async fn create_route_probe_session(client: &Client, addr: std::net::SocketAddr) -> String {
     client
-        .post(format!("http://{addr}/api/v1/session"))
+        .post(format!("http://{addr}/gvm/public/v1/session"))
         .header("Authorization", "Basic YWRtaW46c2VjcmV0")
         .send()
         .await

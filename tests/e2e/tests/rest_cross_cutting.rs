@@ -22,7 +22,7 @@ async fn rest_cross_cutting_headers_are_present_on_success_and_problem_responses
 
     let run = async {
         let success = harness
-            .request(Method::GET, "/api/v1/targets")
+            .request(Method::GET, "/gvm/public/v1/targets")
             .bearer_auth(&session.token)
             .header("traceparent", TRACEPARENT)
             .header("tracestate", TRACESTATE)
@@ -36,7 +36,7 @@ async fn rest_cross_cutting_headers_are_present_on_success_and_problem_responses
         assert_trace_headers(success.headers(), "success response");
 
         let problem = harness
-            .request(Method::GET, "/api/v1/targets")
+            .request(Method::GET, "/gvm/public/v1/targets")
             .header("traceparent", TRACEPARENT)
             .header("tracestate", TRACESTATE)
             .header("baggage", "user_id=123")

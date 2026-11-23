@@ -83,12 +83,15 @@ crates/
 ### Base URL
 
 ```
-/api/v1
+/gvm/public/v1
 ```
+
+The default API base path is `/gvm/public/`. The application-owned operational
+probes remain unversioned at `/health` and `/ready`, outside this prefix.
 
 ### Versioning Strategy
 
-URL-based versioning (`/api/v1/`, `/api/v2/`). Major breaking changes increment version. Minor additions are non-breaking.
+URL-based versioning (`/gvm/public/v1/`, `/gvm/public/v2/`). Major breaking changes increment version. Minor additions are non-breaking.
 
 ### REST Design Constraints
 
@@ -158,45 +161,45 @@ feeds; supporting resources; SecInfo resources; and system endpoints.
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/v1/targets` | List targets (paginated, filterable) |
-| `POST` | `/api/v1/targets` | Create a target (`201 Created` + `Location`) |
-| `GET` | `/api/v1/targets/{id}` | Get target by ID |
-| `PUT` | `/api/v1/targets/{id}` | Update target |
-| `DELETE` | `/api/v1/targets/{id}` | Delete target |
+| `GET` | `/gvm/public/v1/targets` | List targets (paginated, filterable) |
+| `POST` | `/gvm/public/v1/targets` | Create a target (`201 Created` + `Location`) |
+| `GET` | `/gvm/public/v1/targets/{id}` | Get target by ID |
+| `PUT` | `/gvm/public/v1/targets/{id}` | Update target |
+| `DELETE` | `/gvm/public/v1/targets/{id}` | Delete target |
 
 #### Tasks
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/v1/tasks` | List tasks |
-| `POST` | `/api/v1/tasks` | Create task (`201 Created` + `Location`) |
-| `GET` | `/api/v1/tasks/{id}` | Get task |
-| `PUT` | `/api/v1/tasks/{id}` | Update task |
-| `DELETE` | `/api/v1/tasks/{id}` | Delete task |
-| `POST` | `/api/v1/tasks/{id}/start` | Start task |
-| `POST` | `/api/v1/tasks/{id}/stop` | Stop task |
-| `POST` | `/api/v1/tasks/{id}/resume` | Resume task |
+| `GET` | `/gvm/public/v1/tasks` | List tasks |
+| `POST` | `/gvm/public/v1/tasks` | Create task (`201 Created` + `Location`) |
+| `GET` | `/gvm/public/v1/tasks/{id}` | Get task |
+| `PUT` | `/gvm/public/v1/tasks/{id}` | Update task |
+| `DELETE` | `/gvm/public/v1/tasks/{id}` | Delete task |
+| `POST` | `/gvm/public/v1/tasks/{id}/start` | Start task |
+| `POST` | `/gvm/public/v1/tasks/{id}/stop` | Stop task |
+| `POST` | `/gvm/public/v1/tasks/{id}/resume` | Resume task |
 
 #### Reports
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/v1/reports` | List reports |
-| `POST` | `/api/v1/reports?taskId={taskId}&inAssets={bool}` | Import one bounded XML report into an existing import task (`201 Created` + `Location`) |
-| `GET` | `/api/v1/reports/{id}` | Get report with an embedded result page |
-| `POST` | `/api/v1/reports/{id}/exports` | Start a Bearer-authenticated asynchronous report export job (`202 Accepted` + `Location`) |
-| `GET` | `/api/v1/reports/{id}/results` | Get report results (paginated) |
-| `GET` | `/api/v1/reports/{id}/vulnerabilities` | Get report vulnerability findings (paginated) |
-| `GET` | `/api/v1/reports/{id}/tls-certificates` | Get TLS certificates observed in a report (paginated) |
-| `GET` | `/api/v1/reports/{id}/errors` | Get report error findings (paginated) |
-| `GET` | `/api/v1/reports/{id}/closed-cves` | Get closed CVE findings for a report (paginated) |
-| `DELETE` | `/api/v1/reports/{id}` | Permanently delete report (no trash or permanence selector) |
+| `GET` | `/gvm/public/v1/reports` | List reports |
+| `POST` | `/gvm/public/v1/reports?taskId={taskId}&inAssets={bool}` | Import one bounded XML report into an existing import task (`201 Created` + `Location`) |
+| `GET` | `/gvm/public/v1/reports/{id}` | Get report with an embedded result page |
+| `POST` | `/gvm/public/v1/reports/{id}/exports` | Start a Bearer-authenticated asynchronous report export job (`202 Accepted` + `Location`) |
+| `GET` | `/gvm/public/v1/reports/{id}/results` | Get report results (paginated) |
+| `GET` | `/gvm/public/v1/reports/{id}/vulnerabilities` | Get report vulnerability findings (paginated) |
+| `GET` | `/gvm/public/v1/reports/{id}/tls-certificates` | Get TLS certificates observed in a report (paginated) |
+| `GET` | `/gvm/public/v1/reports/{id}/errors` | Get report error findings (paginated) |
+| `GET` | `/gvm/public/v1/reports/{id}/closed-cves` | Get closed CVE findings for a report (paginated) |
+| `DELETE` | `/gvm/public/v1/reports/{id}` | Permanently delete report (no trash or permanence selector) |
 
 Report export is intentionally modeled as a job because gvmd may need to
 materialize the full report and run report-format generation scripts before an
-artifact exists. `POST /api/v1/reports/{id}/exports` returns `202 Accepted` with
-`Location: /api/v1/jobs/{jobId}`. Clients poll `GET /api/v1/jobs/{jobId}` and
-download completed artifacts from `GET /api/v1/jobs/{jobId}/result`.
+artifact exists. `POST /gvm/public/v1/reports/{id}/exports` returns `202 Accepted` with
+`Location: /gvm/public/v1/jobs/{jobId}`. Clients poll `GET /gvm/public/v1/jobs/{jobId}` and
+download completed artifacts from `GET /gvm/public/v1/jobs/{jobId}/result`.
 Export requests either reference a gvmd report format with `reportFormatId` or
 select the API JSON export with `format: "json"`.
 
@@ -205,7 +208,7 @@ Report deletion is always permanent in gvmd. The REST endpoint exposes no
 caller-level permanence choice and rejects the obsolete `ultimate` query
 parameter with the standard RFC 9457 `400 bad_request` response.
 
-Report import is synchronous collection creation. `POST /api/v1/reports`
+Report import is synchronous collection creation. `POST /gvm/public/v1/reports`
 requires an existing import-task UUID in `taskId`, accepts optional `inAssets`
 with omission distinct from explicit `false`, and accepts only one
 `application/xml` report envelope. The gateway treats the XML as opaque bytes;
@@ -217,16 +220,16 @@ places report contents in logs, traces, metrics labels, or problem details.
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/v1/jobs/{id}` | Get asynchronous job status |
-| `DELETE` | `/api/v1/jobs/{id}` | Request job cancellation |
-| `GET` | `/api/v1/jobs/{id}/result` | Download a completed job artifact |
+| `GET` | `/gvm/public/v1/jobs/{id}` | Get asynchronous job status |
+| `DELETE` | `/gvm/public/v1/jobs/{id}` | Request job cancellation |
+| `GET` | `/gvm/public/v1/jobs/{id}/result` | Download a completed job artifact |
 
 #### Results
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/v1/results` | List results (paginated, filterable) |
-| `GET` | `/api/v1/results/{id}` | Get individual result |
+| `GET` | `/gvm/public/v1/results` | List results (paginated, filterable) |
+| `GET` | `/gvm/public/v1/results/{id}` | Get individual result |
 
 Result NVT references may include optional source-shaped `typeMetadata` text.
 The gateway preserves it without parsing so future gvmd metadata shapes do not
@@ -236,17 +239,17 @@ become a lossy or prematurely fixed REST schema.
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/v1/scan-configs` | List scan configurations |
-| `POST` | `/api/v1/scan-configs` | Copy an explicit active scan-config base (`baseScanConfigId`; `201 Created` + `Location`) |
-| `GET` | `/api/v1/scan-configs/{id}` | Get scan config |
-| `PUT` | `/api/v1/scan-configs/{id}` | Update scan config |
-| `DELETE` | `/api/v1/scan-configs/{id}` | Delete scan config |
-| `GET` | `/api/v1/scan-configs/{id}/nvts` | List selected NVTs |
-| `GET` | `/api/v1/scan-configs/{id}/nvts/{oid}` | Get one selected NVT |
-| `GET` | `/api/v1/scan-configs/{id}/preferences` | List scanner preferences |
-| `GET`, `PUT` | `/api/v1/scan-configs/{id}/preferences/{name}` | Read or update one scanner preference |
-| `PUT` | `/api/v1/scan-configs/{id}/families/{family}/nvts` | Replace one family's NVT selection |
-| `PUT` | `/api/v1/scan-configs/{id}/family-selection` | Replace family selection |
+| `GET` | `/gvm/public/v1/scan-configs` | List scan configurations |
+| `POST` | `/gvm/public/v1/scan-configs` | Copy an explicit active scan-config base (`baseScanConfigId`; `201 Created` + `Location`) |
+| `GET` | `/gvm/public/v1/scan-configs/{id}` | Get scan config |
+| `PUT` | `/gvm/public/v1/scan-configs/{id}` | Update scan config |
+| `DELETE` | `/gvm/public/v1/scan-configs/{id}` | Delete scan config |
+| `GET` | `/gvm/public/v1/scan-configs/{id}/nvts` | List selected NVTs |
+| `GET` | `/gvm/public/v1/scan-configs/{id}/nvts/{oid}` | Get one selected NVT |
+| `GET` | `/gvm/public/v1/scan-configs/{id}/preferences` | List scanner preferences |
+| `GET`, `PUT` | `/gvm/public/v1/scan-configs/{id}/preferences/{name}` | Read or update one scanner preference |
+| `PUT` | `/gvm/public/v1/scan-configs/{id}/families/{family}/nvts` | Replace one family's NVT selection |
+| `PUT` | `/gvm/public/v1/scan-configs/{id}/family-selection` | Replace family selection |
 
 Scan-config creation does not select an implicit backend default. The request
 must name an active scan configuration in `baseScanConfigId`; missing,
@@ -261,83 +264,83 @@ Policy creation likewise requires an explicit active policy base in
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/v1/scanners` | List scanners |
-| `GET` | `/api/v1/scanners/{id}` | Get scanner |
+| `GET` | `/gvm/public/v1/scanners` | List scanners |
+| `GET` | `/gvm/public/v1/scanners/{id}` | Get scanner |
 
 #### Alerts
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/v1/alerts` | List alerts |
-| `POST` | `/api/v1/alerts` | Create alert |
-| `GET` | `/api/v1/alerts/{id}` | Get alert |
-| `PUT` | `/api/v1/alerts/{id}` | Update alert |
-| `DELETE` | `/api/v1/alerts/{id}` | Delete alert |
+| `GET` | `/gvm/public/v1/alerts` | List alerts |
+| `POST` | `/gvm/public/v1/alerts` | Create alert |
+| `GET` | `/gvm/public/v1/alerts/{id}` | Get alert |
+| `PUT` | `/gvm/public/v1/alerts/{id}` | Update alert |
+| `DELETE` | `/gvm/public/v1/alerts/{id}` | Delete alert |
 
 #### Schedules
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/v1/schedules` | List schedules |
-| `POST` | `/api/v1/schedules` | Create schedule |
-| `GET` | `/api/v1/schedules/{id}` | Get schedule |
-| `PUT` | `/api/v1/schedules/{id}` | Update schedule |
-| `DELETE` | `/api/v1/schedules/{id}` | Delete schedule |
+| `GET` | `/gvm/public/v1/schedules` | List schedules |
+| `POST` | `/gvm/public/v1/schedules` | Create schedule |
+| `GET` | `/gvm/public/v1/schedules/{id}` | Get schedule |
+| `PUT` | `/gvm/public/v1/schedules/{id}` | Update schedule |
+| `DELETE` | `/gvm/public/v1/schedules/{id}` | Delete schedule |
 
 #### Credentials
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/v1/credential-stores` | List available credential stores |
-| `GET` | `/api/v1/credential-stores/{id}` | Get a credential store without exposing preference values |
-| `PUT` | `/api/v1/credential-stores/{id}` | Update credential-store connection settings and write-only preferences |
-| `POST` | `/api/v1/credential-stores/{id}/actions/verify` | Verify the credential-store connection |
-| `GET` | `/api/v1/credentials` | List credentials |
-| `POST` | `/api/v1/credentials` | Create credential |
-| `GET` | `/api/v1/credentials/{id}` | Get credential |
-| `PUT` | `/api/v1/credentials/{id}` | Update credential |
-| `DELETE` | `/api/v1/credentials/{id}` | Delete credential |
+| `GET` | `/gvm/public/v1/credential-stores` | List available credential stores |
+| `GET` | `/gvm/public/v1/credential-stores/{id}` | Get a credential store without exposing preference values |
+| `PUT` | `/gvm/public/v1/credential-stores/{id}` | Update credential-store connection settings and write-only preferences |
+| `POST` | `/gvm/public/v1/credential-stores/{id}/actions/verify` | Verify the credential-store connection |
+| `GET` | `/gvm/public/v1/credentials` | List credentials |
+| `POST` | `/gvm/public/v1/credentials` | Create credential |
+| `GET` | `/gvm/public/v1/credentials/{id}` | Get credential |
+| `PUT` | `/gvm/public/v1/credentials/{id}` | Update credential |
+| `DELETE` | `/gvm/public/v1/credentials/{id}` | Delete credential |
 
 #### Port Lists
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/v1/port-lists` | List port lists |
-| `POST` | `/api/v1/port-lists` | Create port list |
-| `GET` | `/api/v1/port-lists/{id}` | Get port list |
-| `PUT` | `/api/v1/port-lists/{id}` | Update port list |
-| `DELETE` | `/api/v1/port-lists/{id}` | Delete port list |
+| `GET` | `/gvm/public/v1/port-lists` | List port lists |
+| `POST` | `/gvm/public/v1/port-lists` | Create port list |
+| `GET` | `/gvm/public/v1/port-lists/{id}` | Get port list |
+| `PUT` | `/gvm/public/v1/port-lists/{id}` | Update port list |
+| `DELETE` | `/gvm/public/v1/port-lists/{id}` | Delete port list |
 
 #### Identity & Access Control
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/v1/users` | List users |
-| `POST` | `/api/v1/users` | Create user |
-| `GET` | `/api/v1/users/{id}` | Get user |
-| `PUT` | `/api/v1/users/{id}` | Update user |
-| `DELETE` | `/api/v1/users/{id}` | Delete user |
-| `GET` | `/api/v1/groups` | List groups |
-| `POST` | `/api/v1/groups` | Create group |
-| `GET` | `/api/v1/groups/{id}` | Get group |
-| `PUT` | `/api/v1/groups/{id}` | Update group |
-| `DELETE` | `/api/v1/groups/{id}` | Delete group |
-| `GET` | `/api/v1/roles` | List roles |
-| `POST` | `/api/v1/roles` | Create role |
-| `GET` | `/api/v1/roles/{id}` | Get role |
-| `PUT` | `/api/v1/roles/{id}` | Update role |
-| `DELETE` | `/api/v1/roles/{id}` | Delete role |
-| `GET` | `/api/v1/permissions` | List permission grants |
-| `POST` | `/api/v1/permissions` | Create permission grant |
-| `GET` | `/api/v1/permissions/{id}` | Get permission grant |
-| `PUT` | `/api/v1/permissions/{id}` | Update permission grant |
-| `DELETE` | `/api/v1/permissions/{id}` | Delete permission grant |
-| `GET` | `/api/v1/user-settings` | List current-user settings |
-| `GET` | `/api/v1/user-settings/{id}` | Get one current-user setting |
-| `PUT` | `/api/v1/user-settings/{id}` | Update one current-user setting |
+| `GET` | `/gvm/public/v1/users` | List users |
+| `POST` | `/gvm/public/v1/users` | Create user |
+| `GET` | `/gvm/public/v1/users/{id}` | Get user |
+| `PUT` | `/gvm/public/v1/users/{id}` | Update user |
+| `DELETE` | `/gvm/public/v1/users/{id}` | Delete user |
+| `GET` | `/gvm/public/v1/groups` | List groups |
+| `POST` | `/gvm/public/v1/groups` | Create group |
+| `GET` | `/gvm/public/v1/groups/{id}` | Get group |
+| `PUT` | `/gvm/public/v1/groups/{id}` | Update group |
+| `DELETE` | `/gvm/public/v1/groups/{id}` | Delete group |
+| `GET` | `/gvm/public/v1/roles` | List roles |
+| `POST` | `/gvm/public/v1/roles` | Create role |
+| `GET` | `/gvm/public/v1/roles/{id}` | Get role |
+| `PUT` | `/gvm/public/v1/roles/{id}` | Update role |
+| `DELETE` | `/gvm/public/v1/roles/{id}` | Delete role |
+| `GET` | `/gvm/public/v1/permissions` | List permission grants |
+| `POST` | `/gvm/public/v1/permissions` | Create permission grant |
+| `GET` | `/gvm/public/v1/permissions/{id}` | Get permission grant |
+| `PUT` | `/gvm/public/v1/permissions/{id}` | Update permission grant |
+| `DELETE` | `/gvm/public/v1/permissions/{id}` | Delete permission grant |
+| `GET` | `/gvm/public/v1/user-settings` | List current-user settings |
+| `GET` | `/gvm/public/v1/user-settings/{id}` | Get one current-user setting |
+| `PUT` | `/gvm/public/v1/user-settings/{id}` | Update one current-user setting |
 
 User deletion supports only the canonical plain
-`DELETE /api/v1/users/{id}` operation. Typed gvmd user deletion has no
+`DELETE /gvm/public/v1/users/{id}` operation. Typed gvmd user deletion has no
 caller-selectable permanence mode, so every supplied `ultimate` query form is
 rejected with the standard RFC 9457 `400 bad_request` response before backend
 dispatch.
@@ -346,17 +349,17 @@ dispatch.
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/api/v1/session` | Authenticate with HTTP Basic credentials and create a session (`201 Created` + `Location`) |
-| `GET` | `/api/v1/session` | Inspect current session state |
-| `DELETE` | `/api/v1/session` | Close and destroy a session |
+| `POST` | `/gvm/public/v1/session` | Authenticate with HTTP Basic credentials and create a session (`201 Created` + `Location`) |
+| `GET` | `/gvm/public/v1/session` | Inspect current session state |
+| `DELETE` | `/gvm/public/v1/session` | Close and destroy a session |
 
-Protected routes accept either an existing Bearer session token or request-scoped HTTP Basic credentials unless an operation is explicitly classified as Bearer-only. `POST /api/v1/session` remains the persistent-session creation path. `POST /api/v1/reports/{id}/exports` is Bearer-only.
+Protected routes accept either an existing Bearer session token or request-scoped HTTP Basic credentials unless an operation is explicitly classified as Bearer-only. `POST /gvm/public/v1/session` remains the persistent-session creation path. `POST /gvm/public/v1/reports/{id}/exports` is Bearer-only.
 
 #### Feeds
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/v1/feeds` | List feed status |
+| `GET` | `/gvm/public/v1/feeds` | List feed status |
 
 Existing agent support-bundle downloads accept optional `days` and
 `encryption` query parameters. `encryption` preserves omission independently
@@ -370,12 +373,12 @@ it is omitted when absent.
 |--------|------|-------------|
 | `GET` | `/health` | Liveness probe |
 | `GET` | `/ready` | Readiness probe (checks gvmd connectivity) |
-| `GET` | `/api/v1/version` | GMP protocol version reported by the proxied gvmd; `apiVersion` is the REST contract and gateway package version |
-| `GET` | `/api/v1/timezones` | Authenticated backend-sourced timezone catalog from gvmd; returns `501` on backends that do not support `get_timezones` |
-| `GET` | `/api/v1/openapi.json` | OpenAPI 3.1 spec |
+| `GET` | `/gvm/public/v1/version` | GMP protocol version reported by the proxied gvmd; `apiVersion` is the REST contract and gateway package version |
+| `GET` | `/gvm/public/v1/timezones` | Authenticated backend-sourced timezone catalog from gvmd; returns `501` on backends that do not support `get_timezones` |
+| `GET` | `/gvm/public/v1/openapi.json` | OpenAPI 3.1 spec |
 
 The gateway also serves a browser documentation UI backed by
-`/api/v1/openapi.json`. That operational UI is intentionally outside the API
+`/gvm/public/v1/openapi.json`. That operational UI is intentionally outside the API
 contract.
 
 ### Request/Response Conventions
@@ -383,7 +386,7 @@ contract.
 #### Pagination
 
 ```http
-GET /api/v1/targets?page=1&perPage=25&sort=name&order=asc
+GET /gvm/public/v1/targets?page=1&perPage=25&sort=name&order=asc
 ```
 
 Response includes pagination metadata:
@@ -410,7 +413,7 @@ values.
 GMP filter strings exposed as query parameters:
 
 ```http
-GET /api/v1/results?severity_min=7.0&host=192.168.1.0/24&task_id=<uuid>
+GET /gvm/public/v1/results?severity_min=7.0&host=192.168.1.0/24&task_id=<uuid>
 ```
 
 #### Error Responses
@@ -424,7 +427,7 @@ RFC 9457 Problem Details:
   "title": "Not Found",
   "status": 404,
   "detail": "Target with ID '550e8400-e29b-41d4-a716-446655440000' not found.",
-  "instance": "/api/v1/targets/550e8400-e29b-41d4-a716-446655440000"
+  "instance": "/gvm/public/v1/targets/550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
@@ -442,28 +445,28 @@ When a create operation returns a canonical resource identifier, the response mu
 
 Current required coverage:
 
-- `POST /api/v1/session` → `Location: /api/v1/session`
-- `POST /api/v1/targets` → `Location: /api/v1/targets/{id}`
-- `POST /api/v1/tasks` → `Location: /api/v1/tasks/{id}`
-- `POST /api/v1/reports` → `Location: /api/v1/reports/{id}`
-- `POST /api/v1/scan-configs` → `Location: /api/v1/scan-configs/{id}`
+- `POST /gvm/public/v1/session` → `Location: /gvm/public/v1/session`
+- `POST /gvm/public/v1/targets` → `Location: /gvm/public/v1/targets/{id}`
+- `POST /gvm/public/v1/tasks` → `Location: /gvm/public/v1/tasks/{id}`
+- `POST /gvm/public/v1/reports` → `Location: /gvm/public/v1/reports/{id}`
+- `POST /gvm/public/v1/scan-configs` → `Location: /gvm/public/v1/scan-configs/{id}`
 
 ### Authentication & Authorization
 
 1. **Session token flow** — Persistent auth model
-   - `POST /api/v1/session` with Basic credentials
+   - `POST /gvm/public/v1/session` with Basic credentials
    - API returns an opaque session token
    - Subsequent requests use `Authorization: Bearer <sessionToken>`
 
 2. **Request-scoped Basic auth** — Single-call auth model
    - Protected resource routes may use `Authorization: Basic <base64(username:password)>`
-   - `POST /api/v1/reports/{id}/exports` does not accept request-scoped Basic authentication and requires an existing Bearer session
+   - `POST /gvm/public/v1/reports/{id}/exports` does not accept request-scoped Basic authentication and requires an existing Bearer session
    - The gateway authenticates those credentials, creates a backend execution context for exactly one request, then tears it down before returning
    - Bearer authentication takes precedence whenever the `Authorization` scheme is `Bearer`; malformed Basic credentials fail with `401 Unauthorized`
 
 3. **Session lifecycle controls**
-   - `GET /api/v1/session` to inspect session state
-   - `DELETE /api/v1/session` for explicit teardown
+   - `GET /gvm/public/v1/session` to inspect session state
+   - `DELETE /gvm/public/v1/session` for explicit teardown
    - Session creation and use flow through the shared `SessionManager` / gvmd connection-store model.
    - One active session token maps to one authenticated backend execution context.
    - Requests that reuse the same session token must serialize against that backend context; queue saturation/timeouts are surfaced as backpressure errors rather than hidden retries.

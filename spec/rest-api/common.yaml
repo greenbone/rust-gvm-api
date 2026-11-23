@@ -245,7 +245,7 @@ components:
           format: uri-reference
           description: URI reference identifying the specific occurrence.
           examples:
-            - "/api/v1/targets/550e8400-e29b-41d4-a716-446655440000"
+            - "/gvm/public/v1/targets/550e8400-e29b-41d4-a716-446655440000"
 
     # ─── Pagination ───────────────────────────────────────────
     Pagination:

@@ -18,17 +18,17 @@ info:
 
     ## Authentication flow
 
-    1. `POST /api/v1/session` with HTTP Basic credentials.
+    1. `POST /gvm/public/v1/session` with HTTP Basic credentials.
     2. On success the API returns an opaque `sessionToken`.
     3. Include the token on subsequent requests as:
        `Authorization: Bearer <sessionToken>`
-    4. `DELETE /api/v1/session` ends the session.
+    4. `DELETE /gvm/public/v1/session` ends the session.
 
     Alternatively, send `Authorization: Basic <credentials>` directly to a
     protected operation unless that operation explicitly requires Bearer
     authentication. The gateway creates a backend execution context for that
     request and tears it down before returning. `GET` and `DELETE`
-    `/api/v1/session` and `POST /api/v1/reports/{id}/exports` are bearer-only.
+    `/gvm/public/v1/session` and `POST /gvm/public/v1/reports/{id}/exports` are bearer-only.
 
     Sessions expire after a configurable idle timeout (default 5 min).
     One active session token maps to one authenticated backend execution
@@ -52,7 +52,7 @@ info:
     identifier: AGPL-3.0-or-later
 
 servers:
-  - url: /api/v1
+  - url: /gvm/public/v1
     description: Base path for versioned API endpoints
 
 security:
@@ -398,13 +398,13 @@ components:
       scheme: basic
       description: |
         GVM username and password. Used to create a persistent session
-        (`POST /api/v1/session`) or to authenticate one protected request
+        (`POST /gvm/public/v1/session`) or to authenticate one protected request
         with request-scoped backend cleanup, except operations that explicitly
         require Bearer authentication.
     bearerAuth:
       type: http
       scheme: bearer
       description: |
-        Opaque session token returned by `POST /api/v1/session`.
+        Opaque session token returned by `POST /gvm/public/v1/session`.
         May be presented on subsequent protected requests instead of Basic
         credentials.

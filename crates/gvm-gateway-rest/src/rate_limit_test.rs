@@ -40,7 +40,7 @@ fn trusted_loopback() -> Vec<TrustedProxyCidr> {
 fn bearer_subject_uses_intentional_stable_digest() {
     // This locks the rate-limit bucket contract so Rust hasher changes or
     // process restarts cannot reshuffle authenticated subjects.
-    let mut request = request("/api/v1/targets");
+    let mut request = request("/gvm/public/v1/targets");
     request.headers_mut().insert(
         header::AUTHORIZATION,
         "Bearer gvm_sess_secret".parse().unwrap(),
@@ -53,7 +53,7 @@ fn bearer_subject_uses_intentional_stable_digest() {
 fn basic_subject_uses_intentional_stable_digest() {
     // Request-scoped Basic auth remains separately bucketed without keeping
     // the credential material in the bucket key.
-    let mut request = request("/api/v1/targets");
+    let mut request = request("/gvm/public/v1/targets");
     request.headers_mut().insert(
         header::AUTHORIZATION,
         "Basic YWRtaW46YWRtaW4=".parse().unwrap(),
@@ -66,7 +66,7 @@ fn basic_subject_uses_intentional_stable_digest() {
 fn session_creation_uses_source_ip_even_when_basic_auth_is_present() {
     // Session creation happens before the caller has an authenticated
     // subject, so brute-force pressure is bucketed by source address.
-    let mut request = request("/api/v1/session");
+    let mut request = request("/gvm/public/v1/session");
     request.headers_mut().insert(
         header::AUTHORIZATION,
         "Basic YWRtaW46YWRtaW4=".parse().unwrap(),
@@ -88,14 +88,14 @@ fn session_creation_uses_source_ip_even_when_basic_auth_is_present() {
 fn session_creation_source_key_ignores_ephemeral_port() {
     // Multiple TCP connections from the same client IP must share the same
     // unauthenticated session-creation bucket.
-    let mut first = request("/api/v1/session");
+    let mut first = request("/gvm/public/v1/session");
     first
         .extensions_mut()
         .insert(ConnectInfo(ClientPeerAddr(SocketAddr::new(
             IpAddr::V4(Ipv4Addr::new(192, 0, 2, 10)),
             40_000,
         ))));
-    let mut second = request("/api/v1/session");
+    let mut second = request("/gvm/public/v1/session");
     second
         .extensions_mut()
         .insert(ConnectInfo(ClientPeerAddr(SocketAddr::new(
@@ -113,8 +113,16 @@ fn session_creation_source_key_ignores_ephemeral_port() {
 fn anonymous_subject_uses_source_ip_for_protected_routes() {
     // Missing credentials on protected routes must not collapse every
     // unauthenticated caller into one shared subject bucket.
-    let first = request_from_ip("/api/v1/targets", Ipv4Addr::new(192, 0, 2, 10), 40_000);
-    let second = request_from_ip("/api/v1/targets", Ipv4Addr::new(192, 0, 2, 11), 40_001);
+    let first = request_from_ip(
+        "/gvm/public/v1/targets",
+        Ipv4Addr::new(192, 0, 2, 10),
+        40_000,
+    );
+    let second = request_from_ip(
+        "/gvm/public/v1/targets",
+        Ipv4Addr::new(192, 0, 2, 11),
+        40_001,
+    );
 
     assert_eq!(rate_limit_subject(&first, &[]), "anonymous:ip:192.0.2.10");
     assert_eq!(rate_limit_subject(&second, &[]), "anonymous:ip:192.0.2.11");
@@ -124,8 +132,16 @@ fn anonymous_subject_uses_source_ip_for_protected_routes() {
 fn anonymous_subject_ignores_ephemeral_port_for_protected_routes() {
     // A caller opening multiple connections from the same IP should still
     // consume the same unauthenticated protected-route bucket.
-    let first = request_from_ip("/api/v1/targets", Ipv4Addr::new(192, 0, 2, 10), 40_000);
-    let second = request_from_ip("/api/v1/targets", Ipv4Addr::new(192, 0, 2, 10), 40_001);
+    let first = request_from_ip(
+        "/gvm/public/v1/targets",
+        Ipv4Addr::new(192, 0, 2, 10),
+        40_000,
+    );
+    let second = request_from_ip(
+        "/gvm/public/v1/targets",
+        Ipv4Addr::new(192, 0, 2, 10),
+        40_001,
+    );
 
     assert_eq!(
         rate_limit_subject(&first, &[]),
@@ -138,7 +154,11 @@ fn trusted_proxy_session_creation_uses_forwarded_client_ip() {
     // In the container proxy deployment, the direct TCP peer is the proxy.
     // When that proxy is explicitly trusted, unauthenticated login pressure
     // must bucket by the original client IP instead of the shared proxy IP.
-    let mut request = request_from_ip("/api/v1/session", Ipv4Addr::new(127, 0, 0, 1), 40_000);
+    let mut request = request_from_ip(
+        "/gvm/public/v1/session",
+        Ipv4Addr::new(127, 0, 0, 1),
+        40_000,
+    );
     request
         .headers_mut()
         .insert(X_FORWARDED_FOR, "198.51.100.10".parse().unwrap());
@@ -153,7 +173,11 @@ fn trusted_proxy_session_creation_uses_forwarded_client_ip() {
 fn untrusted_peer_ignores_forwarded_client_ip() {
     // X-Forwarded-For is caller-controlled unless the direct peer is a
     // configured proxy, so spoofed headers must not move the bucket key.
-    let mut request = request_from_ip("/api/v1/session", Ipv4Addr::new(203, 0, 113, 20), 40_000);
+    let mut request = request_from_ip(
+        "/gvm/public/v1/session",
+        Ipv4Addr::new(203, 0, 113, 20),
+        40_000,
+    );
     request
         .headers_mut()
         .insert(X_FORWARDED_FOR, "198.51.100.10".parse().unwrap());
@@ -168,7 +192,11 @@ fn untrusted_peer_ignores_forwarded_client_ip() {
 fn malformed_forwarded_client_ip_falls_back_to_proxy_peer() {
     // A trusted proxy with a malformed forwarded header should fail closed
     // to the direct peer instead of creating an attacker-chosen bucket.
-    let mut request = request_from_ip("/api/v1/session", Ipv4Addr::new(127, 0, 0, 1), 40_000);
+    let mut request = request_from_ip(
+        "/gvm/public/v1/session",
+        Ipv4Addr::new(127, 0, 0, 1),
+        40_000,
+    );
     request
         .headers_mut()
         .insert(X_FORWARDED_FOR, "not-an-ip".parse().unwrap());
@@ -183,7 +211,11 @@ fn malformed_forwarded_client_ip_falls_back_to_proxy_peer() {
 fn trusted_proxy_uses_first_forwarded_client_ip() {
     // X-Forwarded-For is an ordered chain. The first address is the client
     // that should receive the unauthenticated session-creation bucket.
-    let mut request = request_from_ip("/api/v1/session", Ipv4Addr::new(127, 0, 0, 1), 40_000);
+    let mut request = request_from_ip(
+        "/gvm/public/v1/session",
+        Ipv4Addr::new(127, 0, 0, 1),
+        40_000,
+    );
     request.headers_mut().insert(
         X_FORWARDED_FOR,
         "198.51.100.10, 203.0.113.30".parse().unwrap(),
@@ -223,7 +255,10 @@ fn poisoned_rate_limit_state_fails_closed() {
     }))
     .is_err());
 
-    assert_eq!(limiter.check_request(&request("/api/v1/targets")), Some(60));
+    assert_eq!(
+        limiter.check_request(&request("/gvm/public/v1/targets")),
+        Some(60)
+    );
 }
 
 #[test]

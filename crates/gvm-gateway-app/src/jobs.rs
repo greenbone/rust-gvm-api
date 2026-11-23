@@ -646,7 +646,7 @@ impl GatewayService {
             state_changed.notify_waiters();
             return Ok(());
         }
-        let result_location = format!("/api/v1/jobs/{job_id}/result");
+        let result_location = format!("/gvm/public/v1/jobs/{job_id}/result");
         record.job.status = JobStatus::Succeeded;
         record.job.completed_at = Some(format_epoch_secs(now));
         record.job.expires_at = Some(format_epoch_secs(now + retention_secs));

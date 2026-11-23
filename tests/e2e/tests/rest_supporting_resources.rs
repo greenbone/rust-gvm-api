@@ -193,7 +193,7 @@ async fn rest_supporting_triage_resource_lifecycle_mutates_notes_and_overrides()
                 "created by compose-backed note triage coverage",
             )
             .await?;
-        assert_created_location(&created_note, "/api/v1/notes");
+        assert_created_location(&created_note, "/gvm/public/v1/notes");
         note_id = Some(created_note.id.clone());
 
         let created_note_resource = harness.get_note(&session.token, &created_note.id).await?;
@@ -239,7 +239,7 @@ async fn rest_supporting_triage_resource_lifecycle_mutates_notes_and_overrides()
                 "0.0",
             )
             .await?;
-        assert_created_location(&created_override, "/api/v1/overrides");
+        assert_created_location(&created_override, "/gvm/public/v1/overrides");
         override_id = Some(created_override.id.clone());
 
         let created_override_resource = harness
@@ -336,7 +336,7 @@ async fn rest_supporting_scan_config_lifecycle_copies_updates_and_deletes() -> R
                 &base_config.id,
             )
             .await?;
-        assert_created_location(&created, "/api/v1/scan-configs");
+        assert_created_location(&created, "/gvm/public/v1/scan-configs");
         scan_config_id = Some(created.id.clone());
 
         let scan_config = harness.get_scan_config(&session.token, &created.id).await?;
@@ -390,7 +390,7 @@ async fn rest_supporting_port_list_lifecycle_creates_reads_lists_and_deletes() -
         let created = harness
             .create_port_list(&session.token, &port_list_name, "T:1")
             .await?;
-        assert_created_location(&created, "/api/v1/port-lists");
+        assert_created_location(&created, "/gvm/public/v1/port-lists");
         port_list_id = Some(created.id.clone());
 
         let port_list = harness.get_port_list(&session.token, &created.id).await?;
@@ -439,7 +439,7 @@ async fn rest_supporting_credential_lifecycle_creates_reads_lists_and_deletes() 
                 "nightly-password",
             )
             .await?;
-        assert_created_location(&created, "/api/v1/credentials");
+        assert_created_location(&created, "/gvm/public/v1/credentials");
         credential_id = Some(created.id.clone());
 
         let credential = harness.get_credential(&session.token, &created.id).await?;

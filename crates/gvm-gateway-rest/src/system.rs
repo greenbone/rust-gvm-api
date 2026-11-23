@@ -57,7 +57,7 @@ pub(crate) struct ReadinessStatusResponse {
     reason: Option<String>,
 }
 
-/// JSON body returned by `GET /api/v1/version`.
+/// JSON body returned by `GET /gvm/public/v1/version`.
 #[derive(Clone, Debug, Serialize, JsonSchema)]
 #[schemars(rename = "VersionInfo")]
 pub(crate) struct VersionInfoResponse {
@@ -87,7 +87,7 @@ impl From<gvm_gateway_domain::Timezone> for TimezoneResponse {
     }
 }
 
-/// JSON body returned by `GET /api/v1/timezones`.
+/// JSON body returned by `GET /gvm/public/v1/timezones`.
 #[derive(Clone, Debug, Serialize, JsonSchema)]
 #[schemars(rename = "TimezoneList")]
 pub(crate) struct TimezoneListResponse {
@@ -152,7 +152,9 @@ pub(crate) async fn version(State(service): State<GatewayService>) -> Response {
             }),
         )
             .into_response(),
-        Err(error) => RestError::from_gateway_error(error, "/api/v1/version").into_response(),
+        Err(error) => {
+            RestError::from_gateway_error(error, "/gvm/public/v1/version").into_response()
+        }
     }
 }
 
@@ -216,7 +218,7 @@ pub(crate) fn ready_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     problem_response::<400>(op, "Invalid request")
 }
 
-/// OpenAPI transform for `GET /api/v1/version`.
+/// OpenAPI transform for `GET /gvm/public/v1/version`.
 pub(crate) fn version_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getVersion")
@@ -234,7 +236,7 @@ pub(crate) fn version_docs(op: TransformOperation<'_>) -> TransformOperation<'_>
     problem_response::<502>(op, "Backend service unreachable or connection failed")
 }
 
-/// OpenAPI transform for `GET /api/v1/timezones`.
+/// OpenAPI transform for `GET /gvm/public/v1/timezones`.
 pub(crate) fn list_timezones_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getTimezones")

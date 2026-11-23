@@ -16,7 +16,7 @@ async fn rest_negative_contract_returns_problem_responses() -> Result<()> {
 
     let run = async {
         let unknown_route = harness
-            .request(Method::GET, "/api/v1/does-not-exist")
+            .request(Method::GET, "/gvm/public/v1/does-not-exist")
             .bearer_auth(&session.token)
             .send()
             .await
@@ -26,8 +26,8 @@ async fn rest_negative_contract_returns_problem_responses() -> Result<()> {
         // Ticket support is intentionally unpublished: authenticated requests
         // to both former shapes must use the same unknown-route 404 contract.
         for path in [
-            "/api/v1/tickets",
-            "/api/v1/tickets/123e4567-e89b-12d3-a456-426614174000",
+            "/gvm/public/v1/tickets",
+            "/gvm/public/v1/tickets/123e4567-e89b-12d3-a456-426614174000",
         ] {
             let removed_ticket_route = harness
                 .request(Method::GET, path)
@@ -44,7 +44,7 @@ async fn rest_negative_contract_returns_problem_responses() -> Result<()> {
         }
 
         let method_not_allowed = harness
-            .request(Method::PATCH, "/api/v1/targets")
+            .request(Method::PATCH, "/gvm/public/v1/targets")
             .bearer_auth(&session.token)
             .send()
             .await
@@ -57,7 +57,7 @@ async fn rest_negative_contract_returns_problem_responses() -> Result<()> {
         .await?;
 
         let report_formats_patch = harness
-            .request(Method::PATCH, "/api/v1/report-formats")
+            .request(Method::PATCH, "/gvm/public/v1/report-formats")
             .bearer_auth(&session.token)
             .send()
             .await
@@ -70,7 +70,7 @@ async fn rest_negative_contract_returns_problem_responses() -> Result<()> {
         .await?;
 
         let hosts_patch = harness
-            .request(Method::PATCH, "/api/v1/hosts")
+            .request(Method::PATCH, "/gvm/public/v1/hosts")
             .bearer_auth(&session.token)
             .send()
             .await
@@ -83,7 +83,7 @@ async fn rest_negative_contract_returns_problem_responses() -> Result<()> {
         .await?;
 
         let notes_patch = harness
-            .request(Method::PATCH, "/api/v1/notes")
+            .request(Method::PATCH, "/gvm/public/v1/notes")
             .bearer_auth(&session.token)
             .send()
             .await
@@ -96,7 +96,7 @@ async fn rest_negative_contract_returns_problem_responses() -> Result<()> {
         .await?;
 
         let overrides_patch = harness
-            .request(Method::PATCH, "/api/v1/overrides")
+            .request(Method::PATCH, "/gvm/public/v1/overrides")
             .bearer_auth(&session.token)
             .send()
             .await
@@ -109,7 +109,7 @@ async fn rest_negative_contract_returns_problem_responses() -> Result<()> {
         .await?;
 
         let nvts_post = harness
-            .request(Method::POST, "/api/v1/nvts")
+            .request(Method::POST, "/gvm/public/v1/nvts")
             .bearer_auth(&session.token)
             .send()
             .await
@@ -122,7 +122,7 @@ async fn rest_negative_contract_returns_problem_responses() -> Result<()> {
         .await?;
 
         let nvt_families_post = harness
-            .request(Method::POST, "/api/v1/nvt-families")
+            .request(Method::POST, "/gvm/public/v1/nvt-families")
             .bearer_auth(&session.token)
             .send()
             .await
@@ -135,7 +135,7 @@ async fn rest_negative_contract_returns_problem_responses() -> Result<()> {
         .await?;
 
         let invalid_uuid = harness
-            .request(Method::GET, "/api/v1/targets/not-a-uuid")
+            .request(Method::GET, "/gvm/public/v1/targets/not-a-uuid")
             .bearer_auth(&session.token)
             .send()
             .await
@@ -143,7 +143,7 @@ async fn rest_negative_contract_returns_problem_responses() -> Result<()> {
         assert_problem_response(invalid_uuid, StatusCode::BAD_REQUEST, "invalid UUID").await?;
 
         let malformed_json = harness
-            .request(Method::POST, "/api/v1/targets")
+            .request(Method::POST, "/gvm/public/v1/targets")
             .bearer_auth(&session.token)
             .header(CONTENT_TYPE, "application/json")
             .body("{")
@@ -153,7 +153,10 @@ async fn rest_negative_contract_returns_problem_responses() -> Result<()> {
         assert_problem_response(malformed_json, StatusCode::BAD_REQUEST, "malformed JSON").await?;
 
         let missing_target = harness
-            .request(Method::GET, &format!("/api/v1/targets/{MISSING_UUID}"))
+            .request(
+                Method::GET,
+                &format!("/gvm/public/v1/targets/{MISSING_UUID}"),
+            )
             .bearer_auth(&session.token)
             .send()
             .await

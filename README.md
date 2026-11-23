@@ -9,7 +9,7 @@
 
 > [!IMPORTANT]
 > **Breaking Technology Preview change:** GMP ticket discovery is not exposed by
-> `rust-gvm-api`; the former `/api/v1/tickets` routes were removed under
+> `rust-gvm-api`; the former `/gvm/public/v1/tickets` routes were removed under
 > [issue #500](https://github.com/greenbone-hive/rust-gvm-api/issues/500).
 > Direct GMP consumers may continue using `rust-gvm`, while gateway integrations
 > should manage tickets through their external ticketing system.
@@ -229,8 +229,8 @@ Useful follow-up commands:
 - [Documentation index](docs/README.md)
 - [Developer guide](docs/development.md)
 - [Human-readable REST API reference](docs/user/api-reference.md)
-- Runtime API documentation: `GET /api/v1/docs`
-- Runtime-generated OpenAPI: `GET /api/v1/openapi.json`
+- Runtime API documentation: `GET /gvm/public/v1/docs`
+- Runtime-generated OpenAPI: `GET /gvm/public/v1/openapi.json`
 - Release-shipped user docs source:
   - [docs/user/index.md](docs/user/index.md)
   - [docs/user/usage.md](docs/user/usage.md)

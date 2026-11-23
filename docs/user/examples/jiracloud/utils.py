@@ -46,8 +46,8 @@ class Config:
             raise IntegrationError(f"Missing required configuration value(s): {joined}. Check {env_path}.")
 
         gvm_gateway_base_url = values["GVM_GATEWAY_BASE_URL"].rstrip("/")
-        if gvm_gateway_base_url.endswith("/api/v1"):
-            raise IntegrationError("GVM_GATEWAY_BASE_URL must not include /api/v1; use the gateway root URL.")
+        if gvm_gateway_base_url.endswith("/gvm/public/v1"):
+            raise IntegrationError("GVM_GATEWAY_BASE_URL must not include /gvm/public/v1; use the gateway root URL.")
         validate_http_url(gvm_gateway_base_url, "GVM_GATEWAY_BASE_URL")
 
         jira_site_url = values["JIRA_SITE_URL"].rstrip("/")

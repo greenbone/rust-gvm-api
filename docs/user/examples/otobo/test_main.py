@@ -112,10 +112,10 @@ class ConfigTests(IsolatedEnvTest):
         self.assertEqual(("closed successful", "closed unsuccessful"), config.closed_states)
 
     def test_config_load_rejects_gateway_base_url_with_versioned_api_path(self) -> None:
-        """Gateway env vars match shell examples, so /api/v1 is appended by the script."""
-        path = write_env(self, base_env(GVM_GATEWAY_BASE_URL="http://gvm.example/api/v1"))
+        """Gateway env vars match shell examples, so /gvm/public/v1 is appended by the script."""
+        path = write_env(self, base_env(GVM_GATEWAY_BASE_URL="http://gvm.example/gvm/public/v1"))
 
-        with self.assertRaisesRegex(utils.IntegrationError, "must not include /api/v1"):
+        with self.assertRaisesRegex(utils.IntegrationError, "must not include /gvm/public/v1"):
             utils.Config.load(path)
 
     def test_config_load_rejects_non_http_urls(self) -> None:
@@ -160,8 +160,8 @@ class HttpErrorFormattingTests(IsolatedEnvTest):
     def test_non_empty_http_error_keeps_response_body(self) -> None:
         """When the server does explain the failure, preserve that detail in the error."""
         message = utils.format_http_failure(
-            "GVM GET /api/v1/hosts page 1",
-            "http://gvm.example/api/v1/hosts?page=1&perPage=1000",
+            "GVM GET /gvm/public/v1/hosts page 1",
+            "http://gvm.example/gvm/public/v1/hosts?page=1&perPage=1000",
             502,
             '{"detail":"backend unavailable"}',
         )
@@ -174,7 +174,7 @@ class HttpErrorFormattingTests(IsolatedEnvTest):
 
         with mock.patch("requests.request", side_effect=requests.Timeout("timed out")):
             with self.assertRaisesRegex(utils.IntegrationError, "timed out after 1 seconds"):
-                client.request_json("GET", "http://gvm.example/api/v1/hosts", context="GVM hosts")
+                client.request_json("GET", "http://gvm.example/gvm/public/v1/hosts", context="GVM hosts")
 
 
 class GvmClientTests(IsolatedEnvTest):

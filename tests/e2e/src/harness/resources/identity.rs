@@ -6,7 +6,7 @@ use super::super::*;
 impl E2eHarness {
     pub async fn list_users(&self, token: &str) -> Result<ListResponse<User>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/users?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/users?perPage=1000", token),
             StatusCode::OK,
             "list users",
         )
@@ -15,7 +15,11 @@ impl E2eHarness {
 
     pub async fn get_user(&self, token: &str, user_id: &str) -> Result<User> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/users/{user_id}"), token),
+            self.authed(
+                Method::GET,
+                &format!("/gvm/public/v1/users/{user_id}"),
+                token,
+            ),
             StatusCode::OK,
             "get user",
         )
@@ -24,7 +28,7 @@ impl E2eHarness {
 
     pub async fn list_groups(&self, token: &str) -> Result<ListResponse<Group>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/groups?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/groups?perPage=1000", token),
             StatusCode::OK,
             "list groups",
         )
@@ -38,7 +42,7 @@ impl E2eHarness {
             "users": [],
         });
         self.send_created_json(
-            self.authed(Method::POST, "/api/v1/groups", token)
+            self.authed(Method::POST, "/gvm/public/v1/groups", token)
                 .json(&body),
             "create group",
         )
@@ -47,7 +51,11 @@ impl E2eHarness {
 
     pub async fn get_group(&self, token: &str, group_id: &str) -> Result<Group> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/groups/{group_id}"), token),
+            self.authed(
+                Method::GET,
+                &format!("/gvm/public/v1/groups/{group_id}"),
+                token,
+            ),
             StatusCode::OK,
             "get group",
         )
@@ -56,7 +64,11 @@ impl E2eHarness {
 
     pub async fn delete_group(&self, token: &str, group_id: &str) -> Result<()> {
         self.send_empty(
-            self.authed(Method::DELETE, &format!("/api/v1/groups/{group_id}"), token),
+            self.authed(
+                Method::DELETE,
+                &format!("/gvm/public/v1/groups/{group_id}"),
+                token,
+            ),
             StatusCode::NO_CONTENT,
             "delete group",
         )
@@ -65,7 +77,7 @@ impl E2eHarness {
 
     pub async fn list_roles(&self, token: &str) -> Result<ListResponse<Role>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/roles?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/roles?perPage=1000", token),
             StatusCode::OK,
             "list roles",
         )
@@ -74,7 +86,11 @@ impl E2eHarness {
 
     pub async fn get_role(&self, token: &str, role_id: &str) -> Result<Role> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/roles/{role_id}"), token),
+            self.authed(
+                Method::GET,
+                &format!("/gvm/public/v1/roles/{role_id}"),
+                token,
+            ),
             StatusCode::OK,
             "get role",
         )
@@ -83,7 +99,11 @@ impl E2eHarness {
 
     pub async fn list_permissions(&self, token: &str) -> Result<ListResponse<Permission>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/permissions?perPage=1000", token),
+            self.authed(
+                Method::GET,
+                "/gvm/public/v1/permissions?perPage=1000",
+                token,
+            ),
             StatusCode::OK,
             "list permissions",
         )
@@ -94,7 +114,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/permissions/{permission_id}"),
+                &format!("/gvm/public/v1/permissions/{permission_id}"),
                 token,
             ),
             StatusCode::OK,
@@ -108,7 +128,7 @@ impl E2eHarness {
         token: &str,
     ) -> Result<UnpaginatedListResponse<UserSetting>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/user-settings", token),
+            self.authed(Method::GET, "/gvm/public/v1/user-settings", token),
             StatusCode::OK,
             "list user settings",
         )
@@ -119,7 +139,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/user-settings/{setting_id}"),
+                &format!("/gvm/public/v1/user-settings/{setting_id}"),
                 token,
             ),
             StatusCode::OK,
@@ -140,7 +160,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::PUT,
-                &format!("/api/v1/user-settings/{setting_id}"),
+                &format!("/gvm/public/v1/user-settings/{setting_id}"),
                 token,
             )
             .json(&body),

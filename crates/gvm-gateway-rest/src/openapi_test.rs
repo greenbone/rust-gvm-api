@@ -1857,8 +1857,8 @@ fn normalize_paths_strips_runtime_api_prefix() {
     let source_paths = serde_json::from_value::<Map<String, Value>>(serde_json::json!({
         "/health": { "get": {} },
         "/ready": { "get": {} },
-        "/api/v1/version": { "get": {} },
-        "/api/v1/reports/{id}/exports": { "post": {} }
+        "/gvm/public/v1/version": { "get": {} },
+        "/gvm/public/v1/reports/{id}/exports": { "post": {} }
     }))
     .unwrap();
 
@@ -1868,8 +1868,8 @@ fn normalize_paths_strips_runtime_api_prefix() {
     assert!(normalized.contains_key("/ready"));
     assert!(normalized.contains_key("/version"));
     assert!(normalized.contains_key("/reports/{id}/exports"));
-    assert!(!normalized.contains_key("/api/v1/version"));
-    assert!(!normalized.contains_key("/api/v1/reports/{id}/exports"));
+    assert!(!normalized.contains_key("/gvm/public/v1/version"));
+    assert!(!normalized.contains_key("/gvm/public/v1/reports/{id}/exports"));
 }
 
 fn root_spec() -> Value {

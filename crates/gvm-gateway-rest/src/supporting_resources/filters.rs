@@ -242,7 +242,7 @@ pub async fn clone_filter(
         Err(error) => return gateway_error(error, instance),
     };
     match service.clone_filter(&session, &id).await {
-        Ok(new_id) => created_resource("/api/v1/filters", &new_id),
+        Ok(new_id) => created_resource("/gvm/public/v1/filters", &new_id),
         Err(error) => gateway_error(error, instance),
     }
 }

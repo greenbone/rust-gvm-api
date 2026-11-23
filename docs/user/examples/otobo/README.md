@@ -30,24 +30,24 @@ Set these groups of values:
 - CMDB mapping: class, deployment state, incident state, and config item
   attribute names.
 
-`GVM_GATEWAY_BASE_URL` is the gateway root URL without `/api/v1`, for example:
+`GVM_GATEWAY_BASE_URL` is the gateway root URL without `/gvm/public/v1`, for example:
 
 ```text
 GVM_GATEWAY_BASE_URL=http://127.0.0.1:8080
 ```
 
-The script appends `/api/v1` internally.
+The script appends `/gvm/public/v1` internally.
 
 ## 2. Prepare GVM Access
 
 The GVM user configured in `.env` must be able to create sessions and read the
 data being synchronized:
 
-- `POST /api/v1/session`
-- `DELETE /api/v1/session`
-- `GET /api/v1/hosts`
-- `GET /api/v1/reports`
-- `GET /api/v1/reports/{id}/results`
+- `POST /gvm/public/v1/session`
+- `DELETE /gvm/public/v1/session`
+- `GET /gvm/public/v1/hosts`
+- `GET /gvm/public/v1/reports`
+- `GET /gvm/public/v1/reports/{id}/results`
 
 The script fetches reports visible to that GVM user. It does not bypass GVM
 permissions.
@@ -162,7 +162,7 @@ uv run python -m unittest
 The script reads reports started in the last 24 hours:
 
 ```text
-GET /api/v1/reports?filter=scan_start>{cutoff_utc}&perPage=1000
+GET /gvm/public/v1/reports?filter=scan_start>{cutoff_utc}&perPage=1000
 ```
 
 It reads all pages, fetches results for each selected report, and keeps only
@@ -177,7 +177,7 @@ nvt_oid|result.host|result.port
 `result.port` is treated as an opaque value. If a severity-eligible result is
 missing `nvt.oid`, `host`, or `port`, the script stops with an error.
 
-If a finding host is not available in `GET /api/v1/hosts` yet, the ticket is
+If a finding host is not available in `GET /gvm/public/v1/hosts` yet, the ticket is
 created or updated without a CMDB link. A later run adds the link once the host
 asset appears.
 

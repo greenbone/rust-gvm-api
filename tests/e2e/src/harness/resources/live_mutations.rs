@@ -50,7 +50,7 @@ impl E2eHarness {
                 .finish();
             let response: ListResponse<NvtCatalogEntry> = self
                 .send_json(
-                    self.authed(Method::GET, &format!("/api/v1/nvts?{query}"), token),
+                    self.authed(Method::GET, &format!("/gvm/public/v1/nvts?{query}"), token),
                     StatusCode::OK,
                     "list feed NVTs for selected family",
                 )
@@ -263,7 +263,7 @@ impl E2eHarness {
         request: &StoreBackedCredentialRequest,
     ) -> Result<CreatedResource> {
         let response = self
-            .authed(Method::POST, "/api/v1/credentials", token)
+            .authed(Method::POST, "/gvm/public/v1/credentials", token)
             .json(request)
             .send()
             .await
@@ -354,7 +354,7 @@ impl E2eHarness {
             ),
             (
                 "create store-backed credential",
-                self.authed(Method::POST, "/api/v1/credentials", token)
+                self.authed(Method::POST, "/gvm/public/v1/credentials", token)
                     .json(request),
             ),
         ];

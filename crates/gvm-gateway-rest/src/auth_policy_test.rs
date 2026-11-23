@@ -15,19 +15,19 @@ fn classifies_public_routes() {
         Some(RestRouteAuthPolicy::Public)
     );
     assert_eq!(
-        classify_runtime_route(&Method::GET, "/api/v1/version"),
+        classify_runtime_route(&Method::GET, "/gvm/public/v1/version"),
         Some(RestRouteAuthPolicy::Public)
     );
     assert_eq!(
-        classify_runtime_route(&Method::GET, "/api/v1/openapi.json"),
+        classify_runtime_route(&Method::GET, "/gvm/public/v1/openapi.json"),
         Some(RestRouteAuthPolicy::Public)
     );
     assert_eq!(
-        classify_runtime_route(&Method::GET, "/api/v1/docs"),
+        classify_runtime_route(&Method::GET, "/gvm/public/v1/docs"),
         Some(RestRouteAuthPolicy::Public)
     );
     assert_eq!(
-        classify_runtime_route(&Method::GET, "/api/v1/docs/redoc.standalone.js"),
+        classify_runtime_route(&Method::GET, "/gvm/public/v1/docs/redoc.standalone.js"),
         Some(RestRouteAuthPolicy::Public)
     );
 }
@@ -35,11 +35,11 @@ fn classifies_public_routes() {
 #[test]
 fn classifies_session_routes() {
     assert_eq!(
-        classify_runtime_route(&Method::POST, "/api/v1/session"),
+        classify_runtime_route(&Method::POST, "/gvm/public/v1/session"),
         Some(RestRouteAuthPolicy::SessionCreate)
     );
     assert_eq!(
-        classify_runtime_route(&Method::GET, "/api/v1/session"),
+        classify_runtime_route(&Method::GET, "/gvm/public/v1/session"),
         Some(RestRouteAuthPolicy::SessionCurrent)
     );
 }
@@ -50,8 +50,8 @@ fn classifies_only_report_export_job_creation_as_bearer_only() {
     // retain a persistent bearer session instead of a request-scoped Basic
     // session that middleware tears down as soon as the response is returned.
     for path in [
-        "/api/v1/reports/550e8400-e29b-41d4-a716-446655440000/exports",
-        "/api/v1/reports/{id}/exports",
+        "/gvm/public/v1/reports/550e8400-e29b-41d4-a716-446655440000/exports",
+        "/gvm/public/v1/reports/{id}/exports",
     ] {
         assert_eq!(
             classify_runtime_route(&Method::POST, path),
@@ -62,12 +62,12 @@ fn classifies_only_report_export_job_creation_as_bearer_only() {
     assert_eq!(
         classify_runtime_route(
             &Method::GET,
-            "/api/v1/reports/550e8400-e29b-41d4-a716-446655440000/exports"
+            "/gvm/public/v1/reports/550e8400-e29b-41d4-a716-446655440000/exports"
         ),
         Some(RestRouteAuthPolicy::Protected)
     );
     assert_eq!(
-        classify_runtime_route(&Method::POST, "/api/v1/reports/exports"),
+        classify_runtime_route(&Method::POST, "/gvm/public/v1/reports/exports"),
         Some(RestRouteAuthPolicy::Protected)
     );
 }
@@ -75,15 +75,15 @@ fn classifies_only_report_export_job_creation_as_bearer_only() {
 #[test]
 fn treats_non_session_api_routes_as_protected_by_default() {
     assert_eq!(
-        classify_runtime_route(&Method::GET, "/api/v1/alerts"),
+        classify_runtime_route(&Method::GET, "/gvm/public/v1/alerts"),
         Some(RestRouteAuthPolicy::Protected)
     );
     assert_eq!(
-        classify_runtime_route(&Method::GET, "/api/v1/future-resource"),
+        classify_runtime_route(&Method::GET, "/gvm/public/v1/future-resource"),
         Some(RestRouteAuthPolicy::Protected)
     );
     assert_eq!(
-        classify_runtime_route(&Method::POST, "/api/v1/reports"),
+        classify_runtime_route(&Method::POST, "/gvm/public/v1/reports"),
         Some(RestRouteAuthPolicy::Protected)
     );
 }
@@ -93,10 +93,10 @@ fn maps_openapi_paths_back_to_runtime_paths() {
     assert_eq!(runtime_path_from_openapi_path("/health"), "/health");
     assert_eq!(
         runtime_path_from_openapi_path("/version"),
-        "/api/v1/version"
+        "/gvm/public/v1/version"
     );
     assert_eq!(
         runtime_path_from_openapi_path("/reports/{id}/exports"),
-        "/api/v1/reports/{id}/exports"
+        "/gvm/public/v1/reports/{id}/exports"
     );
 }
