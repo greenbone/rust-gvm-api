@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "lane": "community-direct-openvasd-shadow",
+  "scenarios": [
+    {
+      "gatewayMapping": "task:Interrupted",
+      "injectedAt": "openvasd-http-boundary",
+      "outcome": "pass",
+      "scenario": "http-400",
+      "target": "e2e-target"
+    },
+    {
+      "gatewayMapping": "task:Interrupted",
+      "injectedAt": "openvasd-http-boundary",
+      "outcome": "pass",
+      "scenario": "http-500",
+      "target": "e2e-target"
+    },
+    {
+      "gatewayMapping": "task:Interrupted",
+      "injectedAt": "openvasd-http-boundary",
+      "outcome": "pass",
+      "scenario": "malformed-body",
+      "target": "e2e-target"
+    },
+    {
+      "gatewayMapping": "task:Interrupted",
+      "injectedAt": "openvasd-http-boundary",
+      "outcome": "pass",
+      "scenario": "malformed-header",
+      "target": "e2e-target"
+    },
+    {
+      "gatewayMapping": "task:Interrupted",
+      "injectedAt": "openvasd-http-boundary",
+      "outcome": "pass",
+      "scenario": "timeout",
+      "target": "e2e-target"
+    }
+  ]
+}
