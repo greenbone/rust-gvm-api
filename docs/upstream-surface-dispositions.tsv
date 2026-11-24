@@ -1,6 +1,6 @@
-# rust-gvm-reference	stack-commit
-# rust-gvm-tag	gmp-feature-stack
-# rust-gvm-revision	bcac05492244f55df51b971184cc63ddc7bd7bed
+# rust-gvm-reference	release-tag
+# rust-gvm-tag	v0.12.0
+# rust-gvm-revision	ab437cfaab51b636b0ef69bddde09103dbb16b92
 method	disposition	rationale	evidence
 authenticate	internal	Authentication establishes gateway execution contexts and is not exposed as a raw GMP operation.	spec/rest-api/sessions.yaml; crates/gvm-gateway-gvmd/src/gvmd_adapter/session.rs
 cancel_report_export	mapped	The typed lifecycle operation is used internally for race-safe cancellation of active backend exports; terminal exports remain subject to gvmd retention.	spec/rest-api/report-exports.yaml DELETE /jobs/{id}; crates/gvm-gateway-app/src/jobs.rs; crates/gvm-gateway-gvmd/src/gvmd_adapter/ports/reports.rs
