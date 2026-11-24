@@ -144,7 +144,7 @@ components:
           type: string
           description: REST API contract version, aligned with the gateway package version.
           examples:
-            - "0.7.0"
+            - "0.8.0"
         gmpVersion:
           type: string
           description: GMP protocol version reported by the proxied gvmd.
