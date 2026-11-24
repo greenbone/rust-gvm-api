@@ -1,6 +1,11 @@
-# Adopted feature-stack baseline
+# Adopted rust-gvm v0.12.0 baseline
 
-All five workspace components now pin immutable rust-gvm `bcac05492244f55df51b971184cc63ddc7bd7bed` (0.11.1 development stack). The reviewed facade now has 270 helpers. AD verification/discovery helpers are now exposed through the #727–728 REST slices; inventory-token retrieval is exposed by #731. Other dispositions remain unchanged. Historical release notes below describe the prior baseline.
+All five workspace components now pin immutable rust-gvm v0.12.0 commit
+`ab437cfaab51b636b0ef69bddde09103dbb16b92`. The published release retains the
+reviewed 270-helper feature-stack facade. AD verification/discovery helpers are
+exposed through the #727–728 REST slices; inventory-token retrieval is exposed
+by #731. Other dispositions remain unchanged. Historical release notes below
+describe the prior baseline.
 
 # rust-gvm upstream surface dispositions
 
@@ -25,16 +30,18 @@ change adds a facade method or, by itself, changes the gateway's published REST
 contract; adopting new response fields or clear semantics remains a separate
 contract and implementation decision.
 
-The complete method-level closure record is the machine-readable
+The v0.12.0 release packages the adopted feature stack without changing its
+typed-facade method inventory. The complete method-level closure record is the
+machine-readable
 [`upstream-surface-dispositions.tsv`](upstream-surface-dispositions.tsv). It
 classifies every public async method in the pinned `rust-gvm` typed facade as
 exactly one of `exposed`, `mapped`, `internal`, `blocked`, `deferred`, or
 `omitted`, with a review rationale and repository evidence. The offline drift
 guard reconciles that ledger against the checked-in
-[`rust-gvm-v0.11.0-typed-facade.tsv`](../crates/gvm-gateway-gvmd/tests/fixtures/rust-gvm-v0.11.0-typed-facade.tsv)
+[`rust-gvm-v0.12.0-typed-facade.tsv`](../crates/gvm-gateway-gvmd/tests/fixtures/rust-gvm-v0.12.0-typed-facade.tsv)
 snapshot at the accepted release. A separate architecture assertion pins every
 workspace rust-gvm component to the canonical repository and the same immutable
-v0.11.0 release commit.
+v0.12.0 release commit.
 This table remains the family-level product narrative; the TSV is the
 exhaustive per-method source of truth.
 

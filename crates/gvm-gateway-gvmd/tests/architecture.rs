@@ -14,19 +14,19 @@ const RUST_GVM_COMPONENTS: &[&str] = &[
     "gvm-mock-server",
     "gvm-protocol",
 ];
-// GMP feature adoption advances all five components atomically to a published
-// immutable upstream stack commit; this is not a released tag.
+// Issue #763 advances all five components atomically to the published rust-gvm
+// v0.12.0 release commit.
 const RUST_GVM_DEPENDENCY_URL: &str = "https://github.com/greenbone/rust-gvm";
-const RUST_GVM_DEPENDENCY_VERSION: &str = "0.11.1";
-const RUST_GVM_DEPENDENCY_REVISION: &str = "bcac05492244f55df51b971184cc63ddc7bd7bed";
-// The feature stack adds AD verification/discovery and inventory-token helpers
-// to the previous 267-method baseline. All 270 helpers are deliberately reviewed
-// in the matching snapshot and disposition ledger.
-const RUST_GVM_PIN_REFERENCE: &str = "stack-commit";
-const RUST_GVM_FACADE_TAG: &str = "gmp-feature-stack";
-const RUST_GVM_FACADE_REVISION: &str = "bcac05492244f55df51b971184cc63ddc7bd7bed";
+const RUST_GVM_DEPENDENCY_VERSION: &str = "0.12.0";
+const RUST_GVM_DEPENDENCY_REVISION: &str = "ab437cfaab51b636b0ef69bddde09103dbb16b92";
+// The v0.12.0 release retains the reviewed 270-helper feature-stack facade.
+// Advance the matching snapshot and disposition ledger to the release tag
+// without changing their deliberately reviewed classifications.
+const RUST_GVM_PIN_REFERENCE: &str = "release-tag";
+const RUST_GVM_FACADE_TAG: &str = "v0.12.0";
+const RUST_GVM_FACADE_REVISION: &str = "ab437cfaab51b636b0ef69bddde09103dbb16b92";
 const RUST_GVM_TYPED_FACADE_METHOD_COUNT: usize = 270;
-const RUST_GVM_TYPED_FACADE_SNAPSHOT: &str = "tests/fixtures/rust-gvm-v0.11.0-typed-facade.tsv";
+const RUST_GVM_TYPED_FACADE_SNAPSHOT: &str = "tests/fixtures/rust-gvm-v0.12.0-typed-facade.tsv";
 const RUST_GVM_DISPOSITION_LEDGER: &str = "../../docs/upstream-surface-dispositions.tsv";
 const ALLOWED_DISPOSITIONS: &[&str] = &[
     "exposed", "mapped", "internal", "blocked", "deferred", "omitted",
