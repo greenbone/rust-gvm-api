@@ -839,7 +839,7 @@ pub async fn set_scan_config_preference(
 // OpenAPI transforms
 // ============================================================================
 
-/// OpenAPI transform for `GET /api/v1/scan-configs`.
+/// OpenAPI transform for `GET /gvm/public/v1/scan-configs`.
 pub(crate) fn list_scan_configs_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getScanConfigs")
@@ -855,7 +855,7 @@ pub(crate) fn list_scan_configs_docs(op: TransformOperation<'_>) -> TransformOpe
     problem_response::<401>(op, "Authentication required or session expired")
 }
 
-/// OpenAPI transform for `POST /api/v1/scan-configs`.
+/// OpenAPI transform for `POST /gvm/public/v1/scan-configs`.
 pub(crate) fn create_scan_config_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("createScanConfig")
@@ -872,7 +872,7 @@ pub(crate) fn create_scan_config_docs(op: TransformOperation<'_>) -> TransformOp
     problem_response::<401>(op, "Authentication required or session expired")
 }
 
-/// OpenAPI transform for `GET /api/v1/scan-configs/{id}`.
+/// OpenAPI transform for `GET /gvm/public/v1/scan-configs/{id}`.
 pub(crate) fn get_scan_config_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getScanConfig")
@@ -887,7 +887,7 @@ pub(crate) fn get_scan_config_docs(op: TransformOperation<'_>) -> TransformOpera
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `PUT /api/v1/scan-configs/{id}`.
+/// OpenAPI transform for `PUT /gvm/public/v1/scan-configs/{id}`.
 pub(crate) fn update_scan_config_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("modifyScanConfig")
@@ -903,7 +903,7 @@ pub(crate) fn update_scan_config_docs(op: TransformOperation<'_>) -> TransformOp
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `DELETE /api/v1/scan-configs/{id}`.
+/// OpenAPI transform for `DELETE /gvm/public/v1/scan-configs/{id}`.
 pub(crate) fn delete_scan_config_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("deleteScanConfig")
@@ -1140,7 +1140,7 @@ pub async fn delete_policy(
     .await
 }
 
-/// OpenAPI transform for `GET /api/v1/policies`.
+/// OpenAPI transform for `GET /gvm/public/v1/policies`.
 pub(crate) fn list_policies_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getPolicies")
@@ -1156,7 +1156,7 @@ pub(crate) fn list_policies_docs(op: TransformOperation<'_>) -> TransformOperati
     problem_response::<401>(op, "Authentication required or session expired")
 }
 
-/// OpenAPI transform for `POST /api/v1/policies`.
+/// OpenAPI transform for `POST /gvm/public/v1/policies`.
 pub(crate) fn create_policy_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("createPolicy")
@@ -1171,7 +1171,7 @@ pub(crate) fn create_policy_docs(op: TransformOperation<'_>) -> TransformOperati
     problem_response::<401>(op, "Authentication required or session expired")
 }
 
-/// OpenAPI transform for `GET /api/v1/policies/{id}`.
+/// OpenAPI transform for `GET /gvm/public/v1/policies/{id}`.
 pub(crate) fn get_policy_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getPolicy")
@@ -1186,7 +1186,7 @@ pub(crate) fn get_policy_docs(op: TransformOperation<'_>) -> TransformOperation<
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `PUT /api/v1/policies/{id}`.
+/// OpenAPI transform for `PUT /gvm/public/v1/policies/{id}`.
 pub(crate) fn update_policy_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("modifyPolicy")
@@ -1202,7 +1202,7 @@ pub(crate) fn update_policy_docs(op: TransformOperation<'_>) -> TransformOperati
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `DELETE /api/v1/policies/{id}`.
+/// OpenAPI transform for `DELETE /gvm/public/v1/policies/{id}`.
 pub(crate) fn delete_policy_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("deletePolicy")

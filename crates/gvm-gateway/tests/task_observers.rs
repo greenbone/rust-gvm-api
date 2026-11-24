@@ -29,7 +29,7 @@ async fn assert_observer_update(
         store.create(task);
     })
     .await;
-    let url = harness.url(&format!("/api/v1/{collection}/{id}"));
+    let url = harness.url(&format!("/gvm/public/v1/{collection}/{id}"));
     let response = harness
         .client
         .put(&url)

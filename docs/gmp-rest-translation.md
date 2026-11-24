@@ -356,14 +356,14 @@ and
 
 | REST operation | GMP operation | REST result |
 | --- | --- | --- |
-| `GET /api/v1/targets` | `get_targets` | `200` JSON page with normalized targets and pagination |
-| `POST /api/v1/targets` | `create_target` | `201` JSON containing the new ID plus `Location` |
-| `GET /api/v1/targets/{id}` | filtered/single `get_targets` | `200` JSON target or `404` Problem Details |
-| `PUT /api/v1/targets/{id}` | `modify_target`, then a read-back when needed | `200` JSON representation |
-| `DELETE /api/v1/targets/{id}` | `delete_target` with trash/permanent semantics | `204` on success |
-| `POST /api/v1/tasks/{id}/start` | `start_task` | `200` JSON action result containing `reportId` |
-| `POST /api/v1/reports?taskId={taskId}&inAssets={bool}` | typed `ImportReportRequest` / `import_report` | `201` JSON containing the new report ID plus canonical `Location` |
-| `POST /api/v1/reports/{id}/exports` | report retrieval/export operations | `202` plus a pollable job URI |
+| `GET /gvm/public/v1/targets` | `get_targets` | `200` JSON page with normalized targets and pagination |
+| `POST /gvm/public/v1/targets` | `create_target` | `201` JSON containing the new ID plus `Location` |
+| `GET /gvm/public/v1/targets/{id}` | filtered/single `get_targets` | `200` JSON target or `404` Problem Details |
+| `PUT /gvm/public/v1/targets/{id}` | `modify_target`, then a read-back when needed | `200` JSON representation |
+| `DELETE /gvm/public/v1/targets/{id}` | `delete_target` with trash/permanent semantics | `204` on success |
+| `POST /gvm/public/v1/tasks/{id}/start` | `start_task` | `200` JSON action result containing `reportId` |
+| `POST /gvm/public/v1/reports?taskId={taskId}&inAssets={bool}` | typed `ImportReportRequest` / `import_report` | `201` JSON containing the new report ID plus canonical `Location` |
+| `POST /gvm/public/v1/reports/{id}/exports` | report retrieval/export operations | `202` plus a pollable job URI |
 
 The table describes translation intent; the OpenAPI files remain authoritative
 for exact request fields, responses, and supported operations.
@@ -422,10 +422,10 @@ remain bounded and safe.
 
 The REST gateway exposes a resource lifecycle for sessions:
 
-- `POST /api/v1/session` authenticates with HTTP Basic credentials and returns
+- `POST /gvm/public/v1/session` authenticates with HTTP Basic credentials and returns
   an opaque bearer token;
-- `GET /api/v1/session` inspects the current gateway session; and
-- `DELETE /api/v1/session` tears it down.
+- `GET /gvm/public/v1/session` inspects the current gateway session; and
+- `DELETE /gvm/public/v1/session` tears it down.
 
 Unlike GSAD's default per-request gvmd reconnection, a persistent gateway
 session owns a live authenticated backend client. Requests sharing that session
@@ -542,9 +542,9 @@ prevents a harmless-looking REST omission from clearing backend state.
 
 ### 7.2 Complete the specialized-task lifecycle
 
-`POST /api/v1/tasks` and task responses already recognize classic,
+`POST /gvm/public/v1/tasks` and task responses already recognize classic,
 agent-group, OCI-image, web-application, and import tasks. `PUT
-/api/v1/tasks/{id}`, however, exposes only the classic target, scan-config, and
+/gvm/public/v1/tasks/{id}`, however, exposes only the classic target, scan-config, and
 scanner relationships. GSA and GSAD contain separate save flows for the other
 task variants, all implemented as variant-specific `modify_task` payloads.
 
@@ -567,7 +567,7 @@ reproducing GSAD's sentinel conventions.
 GSA can render a report relative to another report by passing
 `delta_report_id` to `get_reports`. The reviewed GSAD snapshot also exposes the
 newer `export_delta_scan_report` command. The current
-`POST /api/v1/reports/{id}/exports` job request supports report formats,
+`POST /gvm/public/v1/reports/{id}/exports` job request supports report formats,
 report configs, and filters, but it has no comparison-report input. The issue
 #588 release baseline now provides typed, help-discovery-gated report
 export lifecycle and delta-export requests. Typed upstream availability alone
@@ -674,7 +674,7 @@ Factor their guarantees into a common artifact policy:
   predictable in-memory handling.
 
 Report import is modeled as bounded report collection creation:
-`POST /api/v1/reports` accepts an `application/xml` body up to 10 MiB, relates
+`POST /gvm/public/v1/reports` accepts an `application/xml` body up to 10 MiB, relates
 it to an existing import task through `taskId`, and preserves optional
 `inAssets` omission. The gateway rejects invalid media type, UUID, empty body,
 and excessive size while treating the XML bytes as opaque. Exact one-report

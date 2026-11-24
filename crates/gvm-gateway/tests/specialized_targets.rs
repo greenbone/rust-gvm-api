@@ -34,7 +34,7 @@ async fn created_id(response: reqwest::Response, collection: &str) -> String {
         .as_str()
         .unwrap()
         .to_string();
-    assert_eq!(location, format!("/api/v1/{collection}/{id}"));
+    assert_eq!(location, format!("/gvm/public/v1/{collection}/{id}"));
     id
 }
 
@@ -43,12 +43,12 @@ async fn oci_image_target_rest_lifecycle_filter_trash_and_ultimate_delete() {
     // This contract test exercises every published OCI target operation and
     // verifies that list/delete query semantics reach the typed backend.
     let harness = specialized_target_harness(seed_saved_filter).await;
-    let create = harness.client.post(harness.url("/api/v1/oci-image-targets")).bearer_auth(&harness.token).json(&json!({"name":"OCI Demo","imageReferences":["registry.example/app:1"],"comment":"initial"})).send().await.unwrap();
+    let create = harness.client.post(harness.url("/gvm/public/v1/oci-image-targets")).bearer_auth(&harness.token).json(&json!({"name":"OCI Demo","imageReferences":["registry.example/app:1"],"comment":"initial"})).send().await.unwrap();
     let id = created_id(create, "oci-image-targets").await;
 
     let get = harness
         .client
-        .get(harness.url(&format!("/api/v1/oci-image-targets/{id}")))
+        .get(harness.url(&format!("/gvm/public/v1/oci-image-targets/{id}")))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -61,7 +61,7 @@ async fn oci_image_target_rest_lifecycle_filter_trash_and_ultimate_delete() {
 
     let update = harness
         .client
-        .put(harness.url(&format!("/api/v1/oci-image-targets/{id}")))
+        .put(harness.url(&format!("/gvm/public/v1/oci-image-targets/{id}")))
         .bearer_auth(&harness.token)
         .json(&json!({"name":"Updated","imageReferences":["registry.example/app:2"]}))
         .send()
@@ -72,23 +72,22 @@ async fn oci_image_target_rest_lifecycle_filter_trash_and_ultimate_delete() {
 
     let clone = harness
         .client
-        .post(harness.url(&format!("/api/v1/oci-image-targets/{id}/clone")))
+        .post(harness.url(&format!("/gvm/public/v1/oci-image-targets/{id}/clone")))
         .bearer_auth(&harness.token)
         .send()
         .await
         .unwrap();
     let clone_id = created_id(clone, "oci-image-targets").await;
 
-    let list =
-        harness
-            .client
-            .get(harness.url(
-                "/api/v1/oci-image-targets?filter=name%3DUpdated&page=1&perPage=10&trash=false",
-            ))
-            .bearer_auth(&harness.token)
-            .send()
-            .await
-            .unwrap();
+    let list = harness
+        .client
+        .get(harness.url(
+            "/gvm/public/v1/oci-image-targets?filter=name%3DUpdated&page=1&perPage=10&trash=false",
+        ))
+        .bearer_auth(&harness.token)
+        .send()
+        .await
+        .unwrap();
     assert_eq!(list.status(), StatusCode::OK);
     let list = list.json::<Value>().await.unwrap();
     assert_eq!(list["pagination"]["perPage"], 10);
@@ -111,7 +110,7 @@ async fn oci_image_target_rest_lifecycle_filter_trash_and_ultimate_delete() {
     let saved = harness
         .client
         .get(harness.url(&format!(
-            "/api/v1/oci-image-targets?filterId={SAVED_FILTER_ID}"
+            "/gvm/public/v1/oci-image-targets?filterId={SAVED_FILTER_ID}"
         )))
         .bearer_auth(&harness.token)
         .send()
@@ -126,7 +125,7 @@ async fn oci_image_target_rest_lifecycle_filter_trash_and_ultimate_delete() {
 
     let trash = harness
         .client
-        .delete(harness.url(&format!("/api/v1/oci-image-targets/{clone_id}")))
+        .delete(harness.url(&format!("/gvm/public/v1/oci-image-targets/{clone_id}")))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -134,7 +133,7 @@ async fn oci_image_target_rest_lifecycle_filter_trash_and_ultimate_delete() {
     assert_eq!(trash.status(), StatusCode::NO_CONTENT);
     let trash_list = harness
         .client
-        .get(harness.url("/api/v1/oci-image-targets?trash=true"))
+        .get(harness.url("/gvm/public/v1/oci-image-targets?trash=true"))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -148,7 +147,9 @@ async fn oci_image_target_rest_lifecycle_filter_trash_and_ultimate_delete() {
 
     let delete = harness
         .client
-        .delete(harness.url(&format!("/api/v1/oci-image-targets/{id}?ultimate=true")))
+        .delete(harness.url(&format!(
+            "/gvm/public/v1/oci-image-targets/{id}?ultimate=true"
+        )))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -168,12 +169,12 @@ async fn web_application_target_rest_lifecycle_filter_trash_and_ultimate_delete(
     // Web application targets use a distinct DTO and command family; exercise
     // its full lifecycle independently to guard against classic-target reuse.
     let harness = specialized_target_harness(seed_saved_filter).await;
-    let create = harness.client.post(harness.url("/api/v1/web-application-targets")).bearer_auth(&harness.token).json(&json!({"name":"Web Demo","urls":["https://example.com"],"excludeUrls":["https://example.com/logout"]})).send().await.unwrap();
+    let create = harness.client.post(harness.url("/gvm/public/v1/web-application-targets")).bearer_auth(&harness.token).json(&json!({"name":"Web Demo","urls":["https://example.com"],"excludeUrls":["https://example.com/logout"]})).send().await.unwrap();
     let id = created_id(create, "web-application-targets").await;
 
     let update = harness
         .client
-        .put(harness.url(&format!("/api/v1/web-application-targets/{id}")))
+        .put(harness.url(&format!("/gvm/public/v1/web-application-targets/{id}")))
         .bearer_auth(&harness.token)
         .json(&json!({"name":"Updated","urls":["https://example.org"]}))
         .send()
@@ -187,7 +188,7 @@ async fn web_application_target_rest_lifecycle_filter_trash_and_ultimate_delete(
 
     let get = harness
         .client
-        .get(harness.url(&format!("/api/v1/web-application-targets/{id}")))
+        .get(harness.url(&format!("/gvm/public/v1/web-application-targets/{id}")))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -196,7 +197,9 @@ async fn web_application_target_rest_lifecycle_filter_trash_and_ultimate_delete(
 
     let clone = harness
         .client
-        .post(harness.url(&format!("/api/v1/web-application-targets/{id}/clone")))
+        .post(harness.url(&format!(
+            "/gvm/public/v1/web-application-targets/{id}/clone"
+        )))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -205,7 +208,9 @@ async fn web_application_target_rest_lifecycle_filter_trash_and_ultimate_delete(
 
     let list = harness
         .client
-        .get(harness.url("/api/v1/web-application-targets?filter=name%3DUpdated&trash=false"))
+        .get(
+            harness.url("/gvm/public/v1/web-application-targets?filter=name%3DUpdated&trash=false"),
+        )
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -231,7 +236,7 @@ async fn web_application_target_rest_lifecycle_filter_trash_and_ultimate_delete(
     let saved = harness
         .client
         .get(harness.url(&format!(
-            "/api/v1/web-application-targets?filterId={SAVED_FILTER_ID}"
+            "/gvm/public/v1/web-application-targets?filterId={SAVED_FILTER_ID}"
         )))
         .bearer_auth(&harness.token)
         .send()
@@ -247,7 +252,9 @@ async fn web_application_target_rest_lifecycle_filter_trash_and_ultimate_delete(
     assert_eq!(
         harness
             .client
-            .delete(harness.url(&format!("/api/v1/web-application-targets/{clone_id}")))
+            .delete(harness.url(&format!(
+                "/gvm/public/v1/web-application-targets/{clone_id}"
+            )))
             .bearer_auth(&harness.token)
             .send()
             .await
@@ -257,7 +264,7 @@ async fn web_application_target_rest_lifecycle_filter_trash_and_ultimate_delete(
     );
     let trash_list = harness
         .client
-        .get(harness.url("/api/v1/web-application-targets?trash=true"))
+        .get(harness.url("/gvm/public/v1/web-application-targets?trash=true"))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -275,7 +282,7 @@ async fn web_application_target_rest_lifecycle_filter_trash_and_ultimate_delete(
         harness
             .client
             .delete(harness.url(&format!(
-                "/api/v1/web-application-targets/{id}?ultimate=true"
+                "/gvm/public/v1/web-application-targets/{id}?ultimate=true"
             )))
             .bearer_auth(&harness.token)
             .send()
@@ -302,7 +309,7 @@ async fn web_application_target_update_preserves_replaces_and_rejects_clear_excl
     let harness = specialized_target_harness(|_| {}).await;
     let create = harness
         .client
-        .post(harness.url("/api/v1/web-application-targets"))
+        .post(harness.url("/gvm/public/v1/web-application-targets"))
         .bearer_auth(&harness.token)
         .json(&json!({
             "name": "Exclusion semantics",
@@ -316,7 +323,7 @@ async fn web_application_target_update_preserves_replaces_and_rejects_clear_excl
 
     let omitted = harness
         .client
-        .put(harness.url(&format!("/api/v1/web-application-targets/{id}")))
+        .put(harness.url(&format!("/gvm/public/v1/web-application-targets/{id}")))
         .bearer_auth(&harness.token)
         .json(&json!({"name": "Renamed"}))
         .send()
@@ -330,7 +337,7 @@ async fn web_application_target_update_preserves_replaces_and_rejects_clear_excl
 
     let replaced = harness
         .client
-        .put(harness.url(&format!("/api/v1/web-application-targets/{id}")))
+        .put(harness.url(&format!("/gvm/public/v1/web-application-targets/{id}")))
         .bearer_auth(&harness.token)
         .json(&json!({"excludeUrls": ["https://example.com/private"]}))
         .send()
@@ -345,7 +352,7 @@ async fn web_application_target_update_preserves_replaces_and_rejects_clear_excl
     let commands_before_clear = harness.server.command_history().len();
     let clear = harness
         .client
-        .put(harness.url(&format!("/api/v1/web-application-targets/{id}")))
+        .put(harness.url(&format!("/gvm/public/v1/web-application-targets/{id}")))
         .bearer_auth(&harness.token)
         .json(&json!({"excludeUrls": []}))
         .send()

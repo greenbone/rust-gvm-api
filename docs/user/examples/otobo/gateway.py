@@ -23,7 +23,7 @@ class GvmClient:
             self.url("session"),
             basic_auth=(self.config.gvm_username, self.config.gvm_password),
             expected_statuses=(201,),
-            context="GVM create session POST /api/v1/session",
+            context="GVM create session POST /gvm/public/v1/session",
         )
         token = response.get("sessionToken")
         if not isinstance(token, str) or not token:
@@ -38,19 +38,19 @@ class GvmClient:
             self.url("session"),
             headers=self.auth_headers(),
             expected_statuses=(204,),
-            context="GVM close session DELETE /api/v1/session",
+            context="GVM close session DELETE /gvm/public/v1/session",
         )
         self.session_token = None
 
     def get_hosts(self) -> list[dict[str, Any]]:
-        return self.get_paginated("hosts", "GVM GET /api/v1/hosts")
+        return self.get_paginated("hosts", "GVM GET /gvm/public/v1/hosts")
 
     def get_recent_reports(self, now_utc: datetime) -> list[dict[str, Any]]:
         cutoff = now_utc - timedelta(hours=24)
         cutoff_text = format_rfc3339(cutoff)
         reports = self.get_paginated(
             "reports",
-            "GVM GET /api/v1/reports",
+            "GVM GET /gvm/public/v1/reports",
             {"filter": f"scan_start>{cutoff_text}"},
         )
         selected = []
@@ -65,7 +65,7 @@ class GvmClient:
     def get_report_results(self, report_id: str) -> list[dict[str, Any]]:
         results = self.get_paginated(
             f"reports/{parse.quote(report_id, safe='')}/results",
-            f"GVM GET /api/v1/reports/{report_id}/results",
+            f"GVM GET /gvm/public/v1/reports/{report_id}/results",
         )
         return [result for result in results if result_severity(result) > SEVERITY_THRESHOLD]
 
@@ -112,7 +112,7 @@ class GvmClient:
         return {"Authorization": f"Bearer {self.session_token}"}
 
     def url(self, path: str, params: dict[str, str] | None = None) -> str:
-        url = f"{self.config.gvm_gateway_base_url}/api/v1/{path.lstrip('/')}"
+        url = f"{self.config.gvm_gateway_base_url}/gvm/public/v1/{path.lstrip('/')}"
         if params:
             url = f"{url}?{parse.urlencode(params)}"
         return url

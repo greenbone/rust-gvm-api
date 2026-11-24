@@ -367,7 +367,7 @@ pub async fn clone_oci_image_target(
         headers,
         id,
         uri,
-        "/api/v1/oci-image-targets",
+        "/gvm/public/v1/oci-image-targets",
         |s, token, id| async move { s.clone_oci_image_target(&token, &id).await },
     )
     .await
@@ -462,7 +462,7 @@ pub async fn clone_web_application_target(
         headers,
         id,
         uri,
-        "/api/v1/web-application-targets",
+        "/gvm/public/v1/web-application-targets",
         |s, token, id| async move { s.clone_web_application_target(&token, &id).await },
     )
     .await

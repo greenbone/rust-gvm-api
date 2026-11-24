@@ -126,7 +126,7 @@ def check_credentials_inventory() -> list[str]:
         return ["OpenSpec is missing its Credentials route inventory"]
     documented: dict[str, set[str]] = {}
     for method, path in re.findall(
-        r"^\| `(GET|POST|PUT|PATCH|DELETE)` \| `/api/v1(/[^`]+)` \|",
+        r"^\| `(GET|POST|PUT|PATCH|DELETE)` \| `/gvm/public/v1(/[^`]+)` \|",
         section.group(1),
         re.MULTILINE,
     ):

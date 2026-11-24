@@ -40,7 +40,7 @@ release's machine-readable ledger remains unchanged until dependency adoption.
 
 ### Contract notation
 
-All paths below are **proposals** relative to `/api/v1`, not route registration.
+All paths below are **proposals** relative to `/gvm/public/v1`, not route registration.
 JSON names are explicit REST choices, not automatic serialization of upstream
 Rust types. Optional response values are omitted, not replaced with null/empty/
 zero defaults. A typed `None` stays absent; `Some(0)`, `Some(false)` and

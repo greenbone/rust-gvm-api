@@ -66,7 +66,7 @@ def api_request(
 
 
 def admin_id(base_url: str, username: str, password: str) -> str:
-    status, body = api_request(base_url, "/api/v1/users?page=1&perPage=100", username, password)
+    status, body = api_request(base_url, "/gvm/public/v1/users?page=1&perPage=100", username, password)
     if status != 200:
         raise ConfigurationError(f"user discovery returned HTTP {status}: {body[:512]!r}")
     document = json.loads(body)
@@ -114,7 +114,7 @@ def main() -> int:
     user_id = admin_id(args.base_url, args.username, args.password)
     run_compose(args.compose, user_id)
     status, body = api_request(
-        args.base_url, "/api/v1/agents/sync", args.username, args.password, method="POST"
+        args.base_url, "/gvm/public/v1/agents/sync", args.username, args.password, method="POST"
     )
     if status != 204:
         raise ConfigurationError(f"initial Agent Control sync returned HTTP {status}: {body[:512]!r}")
@@ -122,7 +122,7 @@ def main() -> int:
     deadline = time.monotonic() + args.timeout
     while time.monotonic() < deadline:
         status, body = api_request(
-            args.base_url, "/api/v1/agents?page=1&perPage=1", args.username, args.password
+            args.base_url, "/gvm/public/v1/agents?page=1&perPage=1", args.username, args.password
         )
         if status == 200 and json.loads(body).get("data"):
             print(

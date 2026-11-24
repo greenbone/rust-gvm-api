@@ -370,7 +370,7 @@ pub async fn get_result(
 // OpenAPI transforms
 // ============================================================================
 
-/// OpenAPI transform for `GET /api/v1/results`.
+/// OpenAPI transform for `GET /gvm/public/v1/results`.
 pub(crate) fn list_results_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getResults")
@@ -384,7 +384,7 @@ pub(crate) fn list_results_docs(op: TransformOperation<'_>) -> TransformOperatio
     problem_response::<401>(op, "Authentication required or session expired")
 }
 
-/// OpenAPI transform for `GET /api/v1/results/{id}`.
+/// OpenAPI transform for `GET /gvm/public/v1/results/{id}`.
 pub(crate) fn get_result_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getResult")

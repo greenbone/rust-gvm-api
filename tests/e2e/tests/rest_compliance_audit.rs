@@ -43,7 +43,7 @@ async fn rest_compliance_runs_audit_lifecycle_and_keeps_usage_scoped() -> Result
         let fetched_policy = get_policy(&harness, &session.token, &policy.id).await?;
         assert_eq!(
             fetched_policy.id, policy.id,
-            "GET /api/v1/policies/{{id}} should return the requested policy"
+            "GET /gvm/public/v1/policies/{{id}} should return the requested policy"
         );
         assert_eq!(
             fetched_policy.usage_type.as_deref(),
@@ -99,7 +99,7 @@ async fn rest_compliance_runs_audit_lifecycle_and_keeps_usage_scoped() -> Result
         let fetched_audit = get_audit(&harness, &session.token, &audit.id).await?;
         assert_eq!(
             fetched_audit.id, audit.id,
-            "GET /api/v1/audits/{{id}} should return the created audit"
+            "GET /gvm/public/v1/audits/{{id}} should return the created audit"
         );
         let audits_after = list_audits(&harness, &session.token).await?;
         assert!(
@@ -190,12 +190,16 @@ async fn best_effort_cleanup(
 
 async fn list_policies(harness: &E2eHarness, token: &str) -> Result<ListResponse<ScanConfig>> {
     let response = harness
-        .request(Method::GET, "/api/v1/policies")
+        .request(Method::GET, "/gvm/public/v1/policies")
         .bearer_auth(token)
         .send()
         .await
         .context("list policies request failed")?;
-    assert_eq!(response.status(), StatusCode::OK, "GET /api/v1/policies");
+    assert_eq!(
+        response.status(),
+        StatusCode::OK,
+        "GET /gvm/public/v1/policies"
+    );
     response
         .json::<ListResponse<ScanConfig>>()
         .await
@@ -204,7 +208,7 @@ async fn list_policies(harness: &E2eHarness, token: &str) -> Result<ListResponse
 
 async fn get_policy(harness: &E2eHarness, token: &str, id: &str) -> Result<ScanConfig> {
     let response = harness
-        .request(Method::GET, &format!("/api/v1/policies/{id}"))
+        .request(Method::GET, &format!("/gvm/public/v1/policies/{id}"))
         .bearer_auth(token)
         .send()
         .await
@@ -212,19 +216,23 @@ async fn get_policy(harness: &E2eHarness, token: &str, id: &str) -> Result<ScanC
     assert_eq!(
         response.status(),
         StatusCode::OK,
-        "GET /api/v1/policies/{{id}}"
+        "GET /gvm/public/v1/policies/{{id}}"
     );
     response.json::<ScanConfig>().await.context("decode policy")
 }
 
 async fn list_audits(harness: &E2eHarness, token: &str) -> Result<ListResponse<Task>> {
     let response = harness
-        .request(Method::GET, "/api/v1/audits")
+        .request(Method::GET, "/gvm/public/v1/audits")
         .bearer_auth(token)
         .send()
         .await
         .context("list audits request failed")?;
-    assert_eq!(response.status(), StatusCode::OK, "GET /api/v1/audits");
+    assert_eq!(
+        response.status(),
+        StatusCode::OK,
+        "GET /gvm/public/v1/audits"
+    );
     response
         .json::<ListResponse<Task>>()
         .await
@@ -233,7 +241,7 @@ async fn list_audits(harness: &E2eHarness, token: &str) -> Result<ListResponse<T
 
 async fn get_audit(harness: &E2eHarness, token: &str, id: &str) -> Result<Task> {
     let response = harness
-        .request(Method::GET, &format!("/api/v1/audits/{id}"))
+        .request(Method::GET, &format!("/gvm/public/v1/audits/{id}"))
         .bearer_auth(token)
         .send()
         .await
@@ -241,7 +249,7 @@ async fn get_audit(harness: &E2eHarness, token: &str, id: &str) -> Result<Task> 
     assert_eq!(
         response.status(),
         StatusCode::OK,
-        "GET /api/v1/audits/{{id}}"
+        "GET /gvm/public/v1/audits/{{id}}"
     );
     response.json::<Task>().await.context("decode audit")
 }

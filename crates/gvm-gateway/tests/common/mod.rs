@@ -307,7 +307,7 @@ impl TargetHarness {
 
     pub async fn get_targets(&self) -> Response {
         self.client
-            .get(self.url("/api/v1/targets"))
+            .get(self.url("/gvm/public/v1/targets"))
             .bearer_auth(&self.token)
             .send()
             .await
@@ -316,7 +316,7 @@ impl TargetHarness {
 
     pub async fn get_targets_with_query(&self, query: &str) -> Response {
         self.client
-            .get(self.url(&format!("/api/v1/targets?{query}")))
+            .get(self.url(&format!("/gvm/public/v1/targets?{query}")))
             .bearer_auth(&self.token)
             .send()
             .await
@@ -325,7 +325,7 @@ impl TargetHarness {
 
     pub async fn get_targets_with_basic(&self, user: &str, password: &str) -> Response {
         self.client
-            .get(self.url("/api/v1/targets"))
+            .get(self.url("/gvm/public/v1/targets"))
             .basic_auth(user, Some(password))
             .send()
             .await
@@ -334,7 +334,7 @@ impl TargetHarness {
 
     pub async fn create_target(&self, payload: Value) -> Response {
         self.client
-            .post(self.url("/api/v1/targets"))
+            .post(self.url("/gvm/public/v1/targets"))
             .bearer_auth(&self.token)
             .json(&payload)
             .send()
@@ -344,7 +344,7 @@ impl TargetHarness {
 
     pub async fn get_target(&self, id: &str) -> Response {
         self.client
-            .get(self.url(&format!("/api/v1/targets/{id}")))
+            .get(self.url(&format!("/gvm/public/v1/targets/{id}")))
             .bearer_auth(&self.token)
             .send()
             .await
@@ -353,7 +353,7 @@ impl TargetHarness {
 
     pub async fn update_target(&self, id: &str, payload: Value) -> Response {
         self.client
-            .put(self.url(&format!("/api/v1/targets/{id}")))
+            .put(self.url(&format!("/gvm/public/v1/targets/{id}")))
             .bearer_auth(&self.token)
             .json(&payload)
             .send()
@@ -363,7 +363,7 @@ impl TargetHarness {
 
     pub async fn delete_target(&self, id: &str) -> Response {
         self.client
-            .delete(self.url(&format!("/api/v1/targets/{id}")))
+            .delete(self.url(&format!("/gvm/public/v1/targets/{id}")))
             .bearer_auth(&self.token)
             .send()
             .await
@@ -372,7 +372,7 @@ impl TargetHarness {
 
     pub async fn create_session_with_basic(&self, user: &str, password: &str) -> Response {
         self.client
-            .post(self.url("/api/v1/session"))
+            .post(self.url("/gvm/public/v1/session"))
             .basic_auth(user, Some(password))
             .send()
             .await

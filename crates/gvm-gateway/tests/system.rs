@@ -30,7 +30,7 @@ async fn health_returns_200() {
     let adapter = StaticGvmdAdapter::ready("22.7");
     let (addr, handle) = spawn_server(adapter.clone(), adapter).await;
     let response = Client::new()
-        .get(format!("http://{addr}/health"))
+        .get(format!("http://{addr}/gvm/health"))
         .send()
         .await
         .unwrap();
@@ -49,7 +49,7 @@ async fn ready_returns_200_when_ready() {
     let adapter = StaticGvmdAdapter::ready("22.7");
     let (addr, handle) = spawn_server(adapter.clone(), adapter).await;
     let response = Client::new()
-        .get(format!("http://{addr}/ready"))
+        .get(format!("http://{addr}/gvm/ready"))
         .send()
         .await
         .unwrap();
@@ -68,7 +68,7 @@ async fn ready_returns_503_when_not_ready() {
     let adapter = StaticGvmdAdapter::not_ready("gvmd unavailable", "22.7");
     let (addr, handle) = spawn_server(adapter.clone(), adapter).await;
     let response = Client::new()
-        .get(format!("http://{addr}/ready"))
+        .get(format!("http://{addr}/gvm/ready"))
         .send()
         .await
         .unwrap();
@@ -155,7 +155,7 @@ async fn version_returns_api_and_gmp_version() {
     let adapter = StaticGvmdAdapter::ready("22.7");
     let (addr, handle) = spawn_server(adapter.clone(), adapter).await;
     let response = Client::new()
-        .get(format!("http://{addr}/api/v1/version"))
+        .get(format!("http://{addr}/gvm/public/v1/version"))
         .send()
         .await
         .unwrap();
@@ -185,7 +185,7 @@ async fn timezones_return_backend_catalog_when_supported() {
 
     let response = harness
         .client
-        .get(harness.url("/api/v1/timezones"))
+        .get(harness.url("/gvm/public/v1/timezones"))
         .bearer_auth(&token)
         .send()
         .await
@@ -220,7 +220,7 @@ async fn timezones_return_501_when_backend_lacks_get_timezones() {
 
     let response = harness
         .client
-        .get(harness.url("/api/v1/timezones"))
+        .get(harness.url("/gvm/public/v1/timezones"))
         .bearer_auth(&token)
         .send()
         .await
@@ -230,7 +230,10 @@ async fn timezones_return_501_when_backend_lacks_get_timezones() {
     let problem = response.json::<serde_json::Value>().await.unwrap();
     assert_eq!(problem["code"], serde_json::json!("not_implemented"));
     assert_eq!(problem["status"], serde_json::json!(501));
-    assert_eq!(problem["instance"], serde_json::json!("/api/v1/timezones"));
+    assert_eq!(
+        problem["instance"],
+        serde_json::json!("/gvm/public/v1/timezones")
+    );
 
     harness.shutdown().await;
 }
@@ -273,7 +276,7 @@ async fn https_health_returns_200_and_hsts_in_native_tls_mode() {
         .danger_accept_invalid_certs(true)
         .build()
         .unwrap()
-        .get(format!("https://localhost:{port}/health"))
+        .get(format!("https://localhost:{port}/gvm/health"))
         .send()
         .await
         .unwrap();
@@ -330,7 +333,7 @@ async fn native_tls_slow_handshake_does_not_block_later_connections() {
         .danger_accept_invalid_certs(true)
         .build()
         .unwrap()
-        .get(format!("https://localhost:{port}/health"))
+        .get(format!("https://localhost:{port}/gvm/health"))
         .send();
     let response = tokio::time::timeout(Duration::from_secs(1), request)
         .await
@@ -413,7 +416,7 @@ async fn credential_store_capability_absence_keeps_following_credentials_route_u
     // authenticated GMP session for the immediately following credentials list.
     let client = Client::new();
     let store_response = client
-        .get(format!("http://{addr}/api/v1/credential-stores"))
+        .get(format!("http://{addr}/gvm/public/v1/credential-stores"))
         .bearer_auth(&token)
         .send()
         .await
@@ -423,7 +426,9 @@ async fn credential_store_capability_absence_keeps_following_credentials_route_u
     assert_eq!(store_problem["code"], serde_json::json!("not_implemented"));
 
     let credential_response = client
-        .get(format!("http://{addr}/api/v1/credentials?perPage=1000"))
+        .get(format!(
+            "http://{addr}/gvm/public/v1/credentials?perPage=1000"
+        ))
         .bearer_auth(&token)
         .send()
         .await
@@ -448,7 +453,7 @@ fn spawn_target_request(
     let addr = harness.addr;
     tokio::spawn(async move {
         client
-            .get(format!("http://{addr}/api/v1/targets"))
+            .get(format!("http://{addr}/gvm/public/v1/targets"))
             .bearer_auth(token)
             .send()
             .await

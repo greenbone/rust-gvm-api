@@ -16,7 +16,7 @@ schedules, and tasks, as well as access to scan results and reports.
   - `package-config.example.toml`
   - `container-config.example.toml`
 - Curated OpenAPI specification for this release (contract-tested against the
-  runtime-generated `/api/v1/openapi.json` document):
+  runtime-generated `/gvm/public/v1/openapi.json` document):
   - `api/rest/openapi.yaml`
 
 ## Version alignment
@@ -26,5 +26,5 @@ gateway you are running. Its OpenAPI `info.version` matches the gateway's
 `apiVersion`.
 
 For interactive documentation from the running service, open
-`/api/v1/docs`. For machine-readable schemas, use
-`/api/v1/openapi.json` or the release package's `api/rest/openapi.yaml`.
+`/gvm/public/v1/docs`. For machine-readable schemas, use
+`/gvm/public/v1/openapi.json` or the release package's `api/rest/openapi.yaml`.

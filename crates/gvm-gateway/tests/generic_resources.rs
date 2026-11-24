@@ -39,7 +39,7 @@ async fn generic_asset_rest_contract_scopes_reads_and_limits_mutation() {
 
     let list = harness
         .client
-        .get(harness.url("/api/v1/assets?type=host&page=1&perPage=10"))
+        .get(harness.url("/gvm/public/v1/assets?type=host&page=1&perPage=10"))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -55,7 +55,7 @@ async fn generic_asset_rest_contract_scopes_reads_and_limits_mutation() {
 
     let get = harness
         .client
-        .get(harness.url(&format!("/api/v1/assets/{HOST_ID}?type=host")))
+        .get(harness.url(&format!("/gvm/public/v1/assets/{HOST_ID}?type=host")))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -65,7 +65,7 @@ async fn generic_asset_rest_contract_scopes_reads_and_limits_mutation() {
 
     let update = harness
         .client
-        .put(harness.url(&format!("/api/v1/assets/{HOST_ID}?type=host")))
+        .put(harness.url(&format!("/gvm/public/v1/assets/{HOST_ID}?type=host")))
         .bearer_auth(&harness.token)
         .json(&json!({"comment":"updated through generic REST"}))
         .send()
@@ -79,7 +79,7 @@ async fn generic_asset_rest_contract_scopes_reads_and_limits_mutation() {
 
     let unsupported = harness
         .client
-        .delete(harness.url(&format!("/api/v1/assets/{HOST_ID}?ultimate=false")))
+        .delete(harness.url(&format!("/gvm/public/v1/assets/{HOST_ID}?ultimate=false")))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -88,7 +88,7 @@ async fn generic_asset_rest_contract_scopes_reads_and_limits_mutation() {
 
     let delete = harness
         .client
-        .delete(harness.url(&format!("/api/v1/assets/{HOST_ID}")))
+        .delete(harness.url(&format!("/gvm/public/v1/assets/{HOST_ID}")))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -125,7 +125,7 @@ async fn generic_config_rest_contract_preserves_open_usage_clone_and_ultimate() 
 
     let list = harness
         .client
-        .get(harness.url("/api/v1/configs?usageType=future_usage&page=1&perPage=10"))
+        .get(harness.url("/gvm/public/v1/configs?usageType=future_usage&page=1&perPage=10"))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -139,7 +139,7 @@ async fn generic_config_rest_contract_preserves_open_usage_clone_and_ultimate() 
 
     let get = harness
         .client
-        .get(harness.url(&format!("/api/v1/configs/{FUTURE_CONFIG_ID}")))
+        .get(harness.url(&format!("/gvm/public/v1/configs/{FUTURE_CONFIG_ID}")))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -152,7 +152,7 @@ async fn generic_config_rest_contract_preserves_open_usage_clone_and_ultimate() 
 
     let clone = harness
         .client
-        .post(harness.url(&format!("/api/v1/configs/{FUTURE_CONFIG_ID}/clone")))
+        .post(harness.url(&format!("/gvm/public/v1/configs/{FUTURE_CONFIG_ID}/clone")))
         .bearer_auth(&harness.token)
         .send()
         .await
@@ -169,11 +169,11 @@ async fn generic_config_rest_contract_preserves_open_usage_clone_and_ultimate() 
         .as_str()
         .unwrap()
         .to_string();
-    assert_eq!(location, format!("/api/v1/configs/{cloned_id}"));
+    assert_eq!(location, format!("/gvm/public/v1/configs/{cloned_id}"));
 
     let delete = harness
         .client
-        .delete(harness.url(&format!("/api/v1/configs/{cloned_id}?ultimate=true")))
+        .delete(harness.url(&format!("/gvm/public/v1/configs/{cloned_id}?ultimate=true")))
         .bearer_auth(&harness.token)
         .send()
         .await

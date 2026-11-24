@@ -13,7 +13,7 @@ impl E2eHarness {
             "comment": "created by compose-backed report import E2E coverage",
         });
         self.send_created_json(
-            self.authed(Method::POST, "/api/v1/tasks", token)
+            self.authed(Method::POST, "/gvm/public/v1/tasks", token)
                 .json(&body),
             "create report import task",
         )
@@ -23,7 +23,11 @@ impl E2eHarness {
     pub async fn list_scan_configs(&self, token: &str) -> Result<Vec<ScanConfig>> {
         let response: ListResponse<ScanConfig> = self
             .send_json(
-                self.authed(Method::GET, "/api/v1/scan-configs?perPage=1000", token),
+                self.authed(
+                    Method::GET,
+                    "/gvm/public/v1/scan-configs?perPage=1000",
+                    token,
+                ),
                 StatusCode::OK,
                 "list scan configs",
             )
@@ -35,7 +39,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/scan-configs/{scan_config_id}"),
+                &format!("/gvm/public/v1/scan-configs/{scan_config_id}"),
                 token,
             ),
             StatusCode::OK,
@@ -57,7 +61,7 @@ impl E2eHarness {
             "baseScanConfigId": base_scan_config_id,
         });
         self.send_created_json(
-            self.authed(Method::POST, "/api/v1/scan-configs", token)
+            self.authed(Method::POST, "/gvm/public/v1/scan-configs", token)
                 .json(&body),
             "create scan config",
         )
@@ -76,7 +80,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::PUT,
-                &format!("/api/v1/scan-configs/{scan_config_id}"),
+                &format!("/gvm/public/v1/scan-configs/{scan_config_id}"),
                 token,
             )
             .json(&body),
@@ -90,7 +94,7 @@ impl E2eHarness {
         self.send_empty(
             self.authed(
                 Method::DELETE,
-                &format!("/api/v1/scan-configs/{scan_config_id}"),
+                &format!("/gvm/public/v1/scan-configs/{scan_config_id}"),
                 token,
             ),
             StatusCode::NO_CONTENT,
@@ -102,7 +106,7 @@ impl E2eHarness {
     pub async fn list_scanners(&self, token: &str) -> Result<Vec<Scanner>> {
         let response: ListResponse<Scanner> = self
             .send_json(
-                self.authed(Method::GET, "/api/v1/scanners", token),
+                self.authed(Method::GET, "/gvm/public/v1/scanners", token),
                 StatusCode::OK,
                 "list scanners",
             )
@@ -114,7 +118,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/scanners/{scanner_id}"),
+                &format!("/gvm/public/v1/scanners/{scanner_id}"),
                 token,
             ),
             StatusCode::OK,
@@ -137,7 +141,7 @@ impl E2eHarness {
         });
         let created: ResourceCreated = self
             .send_json(
-                self.authed(Method::POST, "/api/v1/targets", token)
+                self.authed(Method::POST, "/gvm/public/v1/targets", token)
                     .json(&body),
                 StatusCode::CREATED,
                 "create target",
@@ -148,7 +152,7 @@ impl E2eHarness {
 
     pub async fn list_targets(&self, token: &str) -> Result<ListResponse<Target>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/targets?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/targets?perPage=1000", token),
             StatusCode::OK,
             "list targets",
         )
@@ -157,7 +161,11 @@ impl E2eHarness {
 
     pub async fn get_target(&self, token: &str, target_id: &str) -> Result<Target> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/targets/{target_id}"), token),
+            self.authed(
+                Method::GET,
+                &format!("/gvm/public/v1/targets/{target_id}"),
+                token,
+            ),
             StatusCode::OK,
             "get target",
         )
@@ -174,8 +182,12 @@ impl E2eHarness {
             "name": name,
         });
         self.send_json(
-            self.authed(Method::PUT, &format!("/api/v1/targets/{target_id}"), token)
-                .json(&body),
+            self.authed(
+                Method::PUT,
+                &format!("/gvm/public/v1/targets/{target_id}"),
+                token,
+            )
+            .json(&body),
             StatusCode::OK,
             "update target",
         )
@@ -186,7 +198,7 @@ impl E2eHarness {
         self.send_empty(
             self.authed(
                 Method::DELETE,
-                &format!("/api/v1/targets/{target_id}"),
+                &format!("/gvm/public/v1/targets/{target_id}"),
                 token,
             ),
             StatusCode::NO_CONTENT,
@@ -211,7 +223,7 @@ impl E2eHarness {
         });
         let created: ResourceCreated = self
             .send_json(
-                self.authed(Method::POST, "/api/v1/tasks", token)
+                self.authed(Method::POST, "/gvm/public/v1/tasks", token)
                     .json(&body),
                 StatusCode::CREATED,
                 "create task",
@@ -222,7 +234,7 @@ impl E2eHarness {
 
     pub async fn list_tasks(&self, token: &str) -> Result<ListResponse<Task>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/tasks?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/tasks?perPage=1000", token),
             StatusCode::OK,
             "list tasks",
         )
@@ -234,7 +246,7 @@ impl E2eHarness {
             .send_json(
                 self.authed(
                     Method::POST,
-                    &format!("/api/v1/tasks/{task_id}/start"),
+                    &format!("/gvm/public/v1/tasks/{task_id}/start"),
                     token,
                 ),
                 StatusCode::OK,
@@ -253,7 +265,7 @@ impl E2eHarness {
     ) -> Result<reqwest::Response> {
         self.authed(
             Method::POST,
-            &format!("/api/v1/tasks/{task_id}/start"),
+            &format!("/gvm/public/v1/tasks/{task_id}/start"),
             token,
         )
         .send()
@@ -266,8 +278,12 @@ impl E2eHarness {
             "name": name,
         });
         self.send_json(
-            self.authed(Method::PUT, &format!("/api/v1/tasks/{task_id}"), token)
-                .json(&body),
+            self.authed(
+                Method::PUT,
+                &format!("/gvm/public/v1/tasks/{task_id}"),
+                token,
+            )
+            .json(&body),
             StatusCode::OK,
             "update task",
         )
@@ -281,7 +297,7 @@ impl E2eHarness {
     ) -> Result<reqwest::Response> {
         self.authed(
             Method::POST,
-            &format!("/api/v1/tasks/{task_id}/stop"),
+            &format!("/gvm/public/v1/tasks/{task_id}/stop"),
             token,
         )
         .send()
@@ -293,7 +309,7 @@ impl E2eHarness {
         self.send_empty(
             self.authed(
                 Method::POST,
-                &format!("/api/v1/tasks/{task_id}/stop"),
+                &format!("/gvm/public/v1/tasks/{task_id}/stop"),
                 token,
             ),
             StatusCode::OK,
@@ -309,7 +325,7 @@ impl E2eHarness {
     ) -> Result<reqwest::Response> {
         self.authed(
             Method::POST,
-            &format!("/api/v1/tasks/{task_id}/resume"),
+            &format!("/gvm/public/v1/tasks/{task_id}/resume"),
             token,
         )
         .send()
@@ -319,7 +335,11 @@ impl E2eHarness {
 
     pub async fn delete_task(&self, token: &str, task_id: &str) -> Result<()> {
         self.send_empty(
-            self.authed(Method::DELETE, &format!("/api/v1/tasks/{task_id}"), token),
+            self.authed(
+                Method::DELETE,
+                &format!("/gvm/public/v1/tasks/{task_id}"),
+                token,
+            ),
             StatusCode::NO_CONTENT,
             "delete task",
         )
@@ -345,7 +365,7 @@ impl E2eHarness {
         });
         let created: ResourceCreated = self
             .send_json(
-                self.authed(Method::POST, "/api/v1/audits", token)
+                self.authed(Method::POST, "/gvm/public/v1/audits", token)
                     .json(&body),
                 StatusCode::CREATED,
                 "create audit",
@@ -356,7 +376,11 @@ impl E2eHarness {
 
     pub async fn get_audit(&self, token: &str, audit_id: &str) -> Result<Task> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/audits/{audit_id}"), token),
+            self.authed(
+                Method::GET,
+                &format!("/gvm/public/v1/audits/{audit_id}"),
+                token,
+            ),
             StatusCode::OK,
             "get audit",
         )
@@ -368,7 +392,7 @@ impl E2eHarness {
             .send_json(
                 self.authed(
                     Method::POST,
-                    &format!("/api/v1/audits/{audit_id}/start"),
+                    &format!("/gvm/public/v1/audits/{audit_id}/start"),
                     token,
                 ),
                 StatusCode::OK,
@@ -475,7 +499,11 @@ impl E2eHarness {
 
     pub async fn delete_audit(&self, token: &str, audit_id: &str) -> Result<()> {
         self.send_empty(
-            self.authed(Method::DELETE, &format!("/api/v1/audits/{audit_id}"), token),
+            self.authed(
+                Method::DELETE,
+                &format!("/gvm/public/v1/audits/{audit_id}"),
+                token,
+            ),
             StatusCode::NO_CONTENT,
             "delete audit",
         )
@@ -484,7 +512,11 @@ impl E2eHarness {
 
     pub async fn get_task(&self, token: &str, task_id: &str) -> Result<Task> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/tasks/{task_id}"), token),
+            self.authed(
+                Method::GET,
+                &format!("/gvm/public/v1/tasks/{task_id}"),
+                token,
+            ),
             StatusCode::OK,
             "get task",
         )
@@ -500,7 +532,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/results?page={page}&perPage={per_page}"),
+                &format!("/gvm/public/v1/results?page={page}&perPage={per_page}"),
                 token,
             ),
             StatusCode::OK,
@@ -511,7 +543,11 @@ impl E2eHarness {
 
     pub async fn get_result(&self, token: &str, result_id: &str) -> Result<ScanResult> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/results/{result_id}"), token),
+            self.authed(
+                Method::GET,
+                &format!("/gvm/public/v1/results/{result_id}"),
+                token,
+            ),
             StatusCode::OK,
             "get result",
         )
@@ -522,7 +558,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/reports/{report_id}/results"),
+                &format!("/gvm/public/v1/reports/{report_id}/results"),
                 token,
             ),
             StatusCode::OK,
@@ -541,7 +577,9 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/reports/{report_id}/results?page={page}&perPage={per_page}"),
+                &format!(
+                    "/gvm/public/v1/reports/{report_id}/results?page={page}&perPage={per_page}"
+                ),
                 token,
             ),
             StatusCode::OK,

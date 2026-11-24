@@ -37,7 +37,7 @@ async fn user_delete_rejects_all_ultimate_forms_before_backend_dispatch() {
     ] {
         let response = harness
             .client
-            .delete(harness.url(&format!("/api/v1/users/{USER_ID}?{query}")))
+            .delete(harness.url(&format!("/gvm/public/v1/users/{USER_ID}?{query}")))
             .bearer_auth(&harness.token)
             .send()
             .await
@@ -68,7 +68,7 @@ async fn plain_user_delete_dispatches_one_canonical_typed_command() {
 
     let response = harness
         .client
-        .delete(harness.url(&format!("/api/v1/users/{USER_ID}")))
+        .delete(harness.url(&format!("/gvm/public/v1/users/{USER_ID}")))
         .bearer_auth(&harness.token)
         .send()
         .await

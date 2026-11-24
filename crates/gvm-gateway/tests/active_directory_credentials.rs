@@ -145,12 +145,12 @@ async fn ad_saved_and_inline_verification_are_status_only_and_do_not_expose_secr
     let (addr, token, handle) =
         spawn_credential_server(Arc::new(AdFixturePort(calls.clone(), None))).await;
     let client = Client::new();
-    let saved = client.post(format!("http://{addr}/api/v1/credentials/123e4567-e89b-12d3-a456-426614174000/actions/verify-active-directory")).bearer_auth(&token).send().await.unwrap();
+    let saved = client.post(format!("http://{addr}/gvm/public/v1/credentials/123e4567-e89b-12d3-a456-426614174000/actions/verify-active-directory")).bearer_auth(&token).send().await.unwrap();
     assert_eq!(saved.status(), StatusCode::NO_CONTENT);
     assert_eq!(saved.headers()["cache-control"], "no-store");
     assert!(!saved.headers().contains_key("location"));
     assert!(saved.bytes().await.unwrap().is_empty());
-    let inline = client.post(format!("http://{addr}/api/v1/active-directory/credential-verifications")).bearer_auth(&token).json(&serde_json::json!({"activeDirectory":{"host":"fixture.invalid","bindDn":"CN=bind<&>","baseDn":"DC=fixture","bindPassword":"http-unique-secret","tlsMode":"starttls"}})).send().await.unwrap();
+    let inline = client.post(format!("http://{addr}/gvm/public/v1/active-directory/credential-verifications")).bearer_auth(&token).json(&serde_json::json!({"activeDirectory":{"host":"fixture.invalid","bindDn":"CN=bind<&>","baseDn":"DC=fixture","bindPassword":"http-unique-secret","tlsMode":"starttls"}})).send().await.unwrap();
     assert_eq!(inline.status(), StatusCode::NO_CONTENT);
     assert_eq!(inline.headers()["cache-control"], "no-store");
     assert!(inline.bytes().await.unwrap().is_empty());
@@ -185,7 +185,7 @@ async fn ad_invalid_combinations_fail_before_dispatch_without_payload_echo() {
         ),
     ] {
         let response = Client::new()
-            .post(format!("http://{addr}/api/v1{path}"))
+            .post(format!("http://{addr}/gvm/public/v1{path}"))
             .bearer_auth(&token)
             .json(&body)
             .send()
@@ -212,7 +212,7 @@ async fn ad_verification_generated_and_curated_errors_cover_runtime_categories()
     )))
     .await;
     let generated: serde_json::Value = Client::new()
-        .get(format!("http://{addr}/api/v1/openapi.json"))
+        .get(format!("http://{addr}/gvm/public/v1/openapi.json"))
         .send()
         .await
         .unwrap()
@@ -263,7 +263,7 @@ async fn ad_saved_and_inline_errors_preserve_status_without_sensitive_payloads()
             "/active-directory/credential-verifications",
         ] {
             let request = Client::new()
-                .post(format!("http://{addr}/api/v1{path}"))
+                .post(format!("http://{addr}/gvm/public/v1{path}"))
                 .bearer_auth(&token);
             let request = if path.starts_with("/active-directory/") {
                 request.json(&serde_json::json!({"activeDirectory":{"host":"private-host.invalid","bindDn":"CN=private-bind","baseDn":"DC=private-base","bindPassword":"http-unique-secret","tlsMode":"starttls"}}))
@@ -291,7 +291,7 @@ async fn ad_saved_and_inline_errors_preserve_status_without_sensitive_payloads()
             let problem: serde_json::Value = serde_json::from_str(&text).unwrap();
             assert_eq!(problem["status"], status);
             assert_eq!(problem["code"], code);
-            assert_eq!(problem["instance"], format!("/api/v1{path}"));
+            assert_eq!(problem["instance"], format!("/gvm/public/v1{path}"));
         }
         assert_eq!(calls.lock().unwrap().len(), 2);
         handle.abort();

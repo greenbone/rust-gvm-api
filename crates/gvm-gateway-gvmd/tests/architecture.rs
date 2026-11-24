@@ -816,8 +816,12 @@ fn administration_and_cleanup_dispositions_stay_explicit_and_non_public() {
 
     let router = fs::read_to_string(manifest_dir.join("../gvm-gateway-rest/src/router.rs"))
         .expect("read REST router");
-    let scanner_routes = section_between(&router, "// Scanners", "\"/api/v1/operating-systems\"");
-    assert_eq!(scanner_routes.matches("/api/v1/scanners").count(), 2);
+    let scanner_routes = section_between(
+        &router,
+        "// Scanners",
+        "\"/gvm/public/v1/operating-systems\"",
+    );
+    assert_eq!(scanner_routes.matches("/gvm/public/v1/scanners").count(), 2);
     assert_eq!(scanner_routes.matches("get_with(").count(), 2);
     for mutating_route in ["post_with(", "put_with(", "delete_with("] {
         assert!(

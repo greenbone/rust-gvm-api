@@ -668,7 +668,7 @@ async fn assert_json_report_export_job(
     let completed_job = harness
         .wait_for_job_succeeded(token, &created_job.id)
         .await?;
-    let expected_location = format!("/api/v1/jobs/{}/result", created_job.id);
+    let expected_location = format!("/gvm/public/v1/jobs/{}/result", created_job.id);
     assert_eq!(
         completed_job.result_location.as_deref(),
         Some(expected_location.as_str()),

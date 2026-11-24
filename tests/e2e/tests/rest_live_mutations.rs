@@ -33,7 +33,7 @@ async fn rest_scan_config_live_mutations_replace_read_back_restore_and_delete() 
             )
             .await?;
         scan_config_id = Some(created.id.clone());
-        require_created_location(&created, "/api/v1/scan-configs")?;
+        require_created_location(&created, "/gvm/public/v1/scan-configs")?;
 
         let copied = harness.get_scan_config(&session.token, &created.id).await?;
         ensure!(copied.name == name, "copied scan-config name drifted");
@@ -227,7 +227,7 @@ async fn rest_credential_store_live_mutations_follow_capability_matrix() -> Resu
                     .create_store_backed_credential(&session.token, &request)
                     .await?;
                 credential_id = Some(created.id.clone());
-                require_created_location(&created, "/api/v1/credentials")?;
+                require_created_location(&created, "/gvm/public/v1/credentials")?;
                 let credential = harness
                     .get_credential(&session.token, &created.id)
                     .await?;

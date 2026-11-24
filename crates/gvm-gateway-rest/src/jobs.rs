@@ -401,7 +401,7 @@ pub(crate) async fn create_report_export_job(
         .await
     {
         Ok(job) => {
-            let location = format!("/api/v1/jobs/{}", job.id);
+            let location = format!("/gvm/public/v1/jobs/{}", job.id);
             (
                 StatusCode::ACCEPTED,
                 [
@@ -496,7 +496,7 @@ pub(crate) async fn download_job_result(
     }
 }
 
-/// OpenAPI transform for `POST /api/v1/reports/{id}/exports`.
+/// OpenAPI transform for `POST /gvm/public/v1/reports/{id}/exports`.
 pub(crate) fn create_report_export_job_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("createReportExportJob")
@@ -518,7 +518,7 @@ pub(crate) fn create_report_export_job_docs(op: TransformOperation<'_>) -> Trans
     problem_response::<502>(op, "Backend service unreachable or connection failed")
 }
 
-/// OpenAPI transform for `GET /api/v1/jobs/{id}`.
+/// OpenAPI transform for `GET /gvm/public/v1/jobs/{id}`.
 pub(crate) fn get_job_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getJob")
@@ -533,7 +533,7 @@ pub(crate) fn get_job_docs(op: TransformOperation<'_>) -> TransformOperation<'_>
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `DELETE /api/v1/jobs/{id}`.
+/// OpenAPI transform for `DELETE /gvm/public/v1/jobs/{id}`.
 pub(crate) fn cancel_job_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("cancelJob")
@@ -552,7 +552,7 @@ pub(crate) fn cancel_job_docs(op: TransformOperation<'_>) -> TransformOperation<
     problem_response::<409>(op, "Resource state conflict")
 }
 
-/// OpenAPI transform for `GET /api/v1/jobs/{id}/result`.
+/// OpenAPI transform for `GET /gvm/public/v1/jobs/{id}/result`.
 pub(crate) fn download_job_result_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("downloadJobResult")

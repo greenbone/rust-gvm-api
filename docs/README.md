@@ -12,7 +12,7 @@ as an equally authoritative description of the running service.
   reference, migration notes, and executable examples shipped with releases.
 - [Human-readable REST API reference](user/api-reference.md) — authentication,
   common semantics, and a complete route-family map for the current REST API.
-- [Runtime API documentation](http://127.0.0.1:8080/api/v1/docs) — Redoc served
+- [Runtime API documentation](http://127.0.0.1:8080/gvm/public/v1/docs) — Redoc served
   by a locally running gateway.
 - [Curated OpenAPI root](../spec/rest-api/openapi.yaml) — the normative,
   release-aligned REST contract.
@@ -57,7 +57,7 @@ current design, but they are not implementation instructions or API contracts.
 When documents disagree, use this order:
 
 1. executable runtime behavior and contract tests;
-2. `spec/rest-api/` and the runtime-generated `/api/v1/openapi.json` document;
+2. `spec/rest-api/` and the runtime-generated `/gvm/public/v1/openapi.json` document;
 3. `gateway-architecture.md` and accepted decision records;
 4. developer and user guides;
 5. archived material.

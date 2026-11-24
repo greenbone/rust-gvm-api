@@ -23,7 +23,7 @@ its existing ticket command and response support for direct GMP consumers.
 
 `rust-gvm-api` exposes no GMP ticket support:
 
-- `GET /api/v1/tickets` and `GET /api/v1/tickets/{id}` are not published routes.
+- `GET /gvm/public/v1/tickets` and `GET /gvm/public/v1/tickets/{id}` are not published routes.
 - Ticket-specific contracts, domain types, application ports, outgoing-adapter
   behavior, and positive gateway tests are not maintained.
 - `rust-gvm-api` will not add ticket discovery, create, clone, update, or delete

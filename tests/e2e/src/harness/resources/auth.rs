@@ -7,7 +7,7 @@ impl E2eHarness {
     pub async fn create_session(&self) -> Result<SessionResponse> {
         let request = self
             .client
-            .post(self.endpoint("/api/v1/session"))
+            .post(self.endpoint("/gvm/public/v1/session"))
             .basic_auth(&self.config.username, Some(&self.config.password));
         self.send_json(request, StatusCode::CREATED, "create REST session")
             .await
@@ -16,7 +16,7 @@ impl E2eHarness {
     pub async fn create_session_with_location(&self) -> Result<CreatedSession> {
         let response = self
             .client
-            .post(self.endpoint("/api/v1/session"))
+            .post(self.endpoint("/gvm/public/v1/session"))
             .basic_auth(&self.config.username, Some(&self.config.password))
             .send()
             .await
@@ -55,7 +55,7 @@ impl E2eHarness {
         username: &str,
         password: &str,
     ) -> Result<reqwest::Response> {
-        self.request(Method::POST, "/api/v1/session")
+        self.request(Method::POST, "/gvm/public/v1/session")
             .basic_auth(username, Some(password))
             .send()
             .await
@@ -63,7 +63,7 @@ impl E2eHarness {
     }
 
     pub async fn create_session_with_malformed_basic(&self) -> Result<reqwest::Response> {
-        self.request(Method::POST, "/api/v1/session")
+        self.request(Method::POST, "/gvm/public/v1/session")
             .header(header::AUTHORIZATION, "Basic bm9fY29sb24=")
             .send()
             .await
@@ -72,7 +72,7 @@ impl E2eHarness {
 
     pub async fn get_session(&self, token: &str) -> Result<SessionInfo> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/session", token),
+            self.authed(Method::GET, "/gvm/public/v1/session", token),
             StatusCode::OK,
             "get REST session",
         )
@@ -80,21 +80,21 @@ impl E2eHarness {
     }
 
     pub async fn get_session_response(&self, token: &str) -> Result<reqwest::Response> {
-        self.authed(Method::GET, "/api/v1/session", token)
+        self.authed(Method::GET, "/gvm/public/v1/session", token)
             .send()
             .await
             .context("get REST session response")
     }
 
     pub async fn get_targets_without_auth(&self) -> Result<reqwest::Response> {
-        self.request(Method::GET, "/api/v1/targets")
+        self.request(Method::GET, "/gvm/public/v1/targets")
             .send()
             .await
             .context("list targets without auth")
     }
 
     pub async fn get_targets_with_bearer(&self, token: &str) -> Result<reqwest::Response> {
-        self.request(Method::GET, "/api/v1/targets")
+        self.request(Method::GET, "/gvm/public/v1/targets")
             .bearer_auth(token)
             .send()
             .await
@@ -106,7 +106,7 @@ impl E2eHarness {
         username: &str,
         password: &str,
     ) -> Result<reqwest::Response> {
-        self.request(Method::GET, "/api/v1/targets")
+        self.request(Method::GET, "/gvm/public/v1/targets")
             .basic_auth(username, Some(password))
             .send()
             .await
@@ -114,14 +114,14 @@ impl E2eHarness {
     }
 
     pub async fn get_users_without_auth(&self) -> Result<reqwest::Response> {
-        self.request(Method::GET, "/api/v1/users")
+        self.request(Method::GET, "/gvm/public/v1/users")
             .send()
             .await
             .context("list users without auth")
     }
 
     pub async fn get_users_with_bearer(&self, token: &str) -> Result<reqwest::Response> {
-        self.request(Method::GET, "/api/v1/users")
+        self.request(Method::GET, "/gvm/public/v1/users")
             .bearer_auth(token)
             .send()
             .await
@@ -130,7 +130,7 @@ impl E2eHarness {
 
     pub async fn delete_session(&self, token: &str) -> Result<()> {
         self.send_empty(
-            self.authed(Method::DELETE, "/api/v1/session", token),
+            self.authed(Method::DELETE, "/gvm/public/v1/session", token),
             StatusCode::NO_CONTENT,
             "delete session",
         )

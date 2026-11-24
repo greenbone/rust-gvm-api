@@ -690,7 +690,7 @@ pub async fn clone_task(
         headers,
         id,
         uri,
-        "/api/v1/tasks",
+        "/gvm/public/v1/tasks",
         |service, session, id| async move { service.clone_task(&session, &id).await },
     )
     .await
@@ -834,7 +834,7 @@ fn validate_optional_uuid(field: &str, value: Option<&str>) -> Result<(), Gatewa
 // OpenAPI transforms
 // ============================================================================
 
-/// OpenAPI transform for `GET /api/v1/tasks`.
+/// OpenAPI transform for `GET /gvm/public/v1/tasks`.
 pub(crate) fn list_tasks_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getTasks")
@@ -848,7 +848,7 @@ pub(crate) fn list_tasks_docs(op: TransformOperation<'_>) -> TransformOperation<
     problem_response::<401>(op, "Authentication required or session expired")
 }
 
-/// OpenAPI transform for `POST /api/v1/tasks`.
+/// OpenAPI transform for `POST /gvm/public/v1/tasks`.
 pub(crate) fn create_task_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("createTask")
@@ -863,7 +863,7 @@ pub(crate) fn create_task_docs(op: TransformOperation<'_>) -> TransformOperation
     problem_response::<401>(op, "Authentication required or session expired")
 }
 
-/// OpenAPI transform for `POST /api/v1/tasks/{id}/clone`.
+/// OpenAPI transform for `POST /gvm/public/v1/tasks/{id}/clone`.
 pub(crate) fn clone_task_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("cloneTask")
@@ -879,7 +879,7 @@ pub(crate) fn clone_task_docs(op: TransformOperation<'_>) -> TransformOperation<
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `GET /api/v1/tasks/{id}`.
+/// OpenAPI transform for `GET /gvm/public/v1/tasks/{id}`.
 pub(crate) fn get_task_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getTask")
@@ -894,7 +894,7 @@ pub(crate) fn get_task_docs(op: TransformOperation<'_>) -> TransformOperation<'_
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `PUT /api/v1/tasks/{id}`.
+/// OpenAPI transform for `PUT /gvm/public/v1/tasks/{id}`.
 pub(crate) fn update_task_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("modifyTask")
@@ -910,7 +910,7 @@ pub(crate) fn update_task_docs(op: TransformOperation<'_>) -> TransformOperation
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `DELETE /api/v1/tasks/{id}`.
+/// OpenAPI transform for `DELETE /gvm/public/v1/tasks/{id}`.
 pub(crate) fn delete_task_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("deleteTask")
@@ -925,7 +925,7 @@ pub(crate) fn delete_task_docs(op: TransformOperation<'_>) -> TransformOperation
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `POST /api/v1/tasks/{id}/start`.
+/// OpenAPI transform for `POST /gvm/public/v1/tasks/{id}/start`.
 pub(crate) fn start_task_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("startTask")
@@ -942,7 +942,7 @@ pub(crate) fn start_task_docs(op: TransformOperation<'_>) -> TransformOperation<
     problem_response::<504>(op, "Backend service did not respond in time")
 }
 
-/// OpenAPI transform for `POST /api/v1/tasks/{id}/stop`.
+/// OpenAPI transform for `POST /gvm/public/v1/tasks/{id}/stop`.
 pub(crate) fn stop_task_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("stopTask")
@@ -958,7 +958,7 @@ pub(crate) fn stop_task_docs(op: TransformOperation<'_>) -> TransformOperation<'
     problem_response::<409>(op, "Resource state conflict")
 }
 
-/// OpenAPI transform for `POST /api/v1/tasks/{id}/resume`.
+/// OpenAPI transform for `POST /gvm/public/v1/tasks/{id}/resume`.
 pub(crate) fn resume_task_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("resumeTask")
@@ -1148,7 +1148,7 @@ pub async fn resume_audit(
     }
 }
 
-/// OpenAPI transform for `GET /api/v1/audits`.
+/// OpenAPI transform for `GET /gvm/public/v1/audits`.
 pub(crate) fn list_audits_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getAudits")
@@ -1162,7 +1162,7 @@ pub(crate) fn list_audits_docs(op: TransformOperation<'_>) -> TransformOperation
     problem_response::<401>(op, "Authentication required or session expired")
 }
 
-/// OpenAPI transform for `POST /api/v1/audits`.
+/// OpenAPI transform for `POST /gvm/public/v1/audits`.
 pub(crate) fn create_audit_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("createAudit")
@@ -1177,7 +1177,7 @@ pub(crate) fn create_audit_docs(op: TransformOperation<'_>) -> TransformOperatio
     problem_response::<401>(op, "Authentication required or session expired")
 }
 
-/// OpenAPI transform for `GET /api/v1/audits/{id}`.
+/// OpenAPI transform for `GET /gvm/public/v1/audits/{id}`.
 pub(crate) fn get_audit_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getAudit")
@@ -1192,7 +1192,7 @@ pub(crate) fn get_audit_docs(op: TransformOperation<'_>) -> TransformOperation<'
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `PUT /api/v1/audits/{id}`.
+/// OpenAPI transform for `PUT /gvm/public/v1/audits/{id}`.
 pub(crate) fn update_audit_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("modifyAudit")
@@ -1208,7 +1208,7 @@ pub(crate) fn update_audit_docs(op: TransformOperation<'_>) -> TransformOperatio
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `DELETE /api/v1/audits/{id}`.
+/// OpenAPI transform for `DELETE /gvm/public/v1/audits/{id}`.
 pub(crate) fn delete_audit_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("deleteAudit")
@@ -1223,7 +1223,7 @@ pub(crate) fn delete_audit_docs(op: TransformOperation<'_>) -> TransformOperatio
     problem_response::<404>(op, "Resource not found")
 }
 
-/// OpenAPI transform for `POST /api/v1/audits/{id}/start`.
+/// OpenAPI transform for `POST /gvm/public/v1/audits/{id}/start`.
 pub(crate) fn start_audit_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("startAudit")
@@ -1242,7 +1242,7 @@ pub(crate) fn start_audit_docs(op: TransformOperation<'_>) -> TransformOperation
     problem_response::<504>(op, "Backend service did not respond in time")
 }
 
-/// OpenAPI transform for `POST /api/v1/audits/{id}/stop`.
+/// OpenAPI transform for `POST /gvm/public/v1/audits/{id}/stop`.
 pub(crate) fn stop_audit_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("stopAudit")
@@ -1258,7 +1258,7 @@ pub(crate) fn stop_audit_docs(op: TransformOperation<'_>) -> TransformOperation<
     problem_response::<409>(op, "Resource state conflict")
 }
 
-/// OpenAPI transform for `POST /api/v1/audits/{id}/resume`.
+/// OpenAPI transform for `POST /gvm/public/v1/audits/{id}/resume`.
 pub(crate) fn resume_audit_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("resumeAudit")

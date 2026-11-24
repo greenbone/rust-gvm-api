@@ -20,7 +20,14 @@ impl E2eHarness {
             }
             let request = self.authed_path_segments_with_query(
                 Method::GET,
-                &["api", "v1", "scan-configs", scan_config_id, "nvts"],
+                &[
+                    "gvm",
+                    "public",
+                    "v1",
+                    "scan-configs",
+                    scan_config_id,
+                    "nvts",
+                ],
                 &query,
                 token,
             )?;
@@ -50,7 +57,7 @@ impl E2eHarness {
                 .finish();
             let response: ListResponse<NvtCatalogEntry> = self
                 .send_json(
-                    self.authed(Method::GET, &format!("/api/v1/nvts?{query}"), token),
+                    self.authed(Method::GET, &format!("/gvm/public/v1/nvts?{query}"), token),
                     StatusCode::OK,
                     "list feed NVTs for selected family",
                 )
@@ -71,7 +78,7 @@ impl E2eHarness {
         self.send_empty(
             self.authed_path_segments_with_query(
                 Method::DELETE,
-                &["api", "v1", "scan-configs", scan_config_id],
+                &["gvm", "public", "v1", "scan-configs", scan_config_id],
                 &[("ultimate", "true")],
                 token,
             )?,
@@ -87,7 +94,14 @@ impl E2eHarness {
         scan_config_id: &str,
         nvt_oid: Option<&str>,
     ) -> Result<Vec<ScanConfigPreference>> {
-        let segments = &["api", "v1", "scan-configs", scan_config_id, "preferences"];
+        let segments = &[
+            "gvm",
+            "public",
+            "v1",
+            "scan-configs",
+            scan_config_id,
+            "preferences",
+        ];
         let request = match nvt_oid {
             Some(nvt_oid) => self.authed_path_segments_with_query(
                 Method::GET,
@@ -113,7 +127,8 @@ impl E2eHarness {
             self.authed_path_segments(
                 Method::PUT,
                 &[
-                    "api",
+                    "gvm",
+                    "public",
                     "v1",
                     "scan-configs",
                     scan_config_id,
@@ -139,7 +154,8 @@ impl E2eHarness {
             self.authed_path_segments(
                 Method::PUT,
                 &[
-                    "api",
+                    "gvm",
+                    "public",
                     "v1",
                     "scan-configs",
                     scan_config_id,
@@ -168,7 +184,8 @@ impl E2eHarness {
             self.authed_path_segments(
                 Method::PUT,
                 &[
-                    "api",
+                    "gvm",
+                    "public",
                     "v1",
                     "scan-configs",
                     scan_config_id,
@@ -205,7 +222,13 @@ impl E2eHarness {
         self.send_json(
             self.authed_path_segments(
                 Method::GET,
-                &["api", "v1", "credential-stores", credential_store_id],
+                &[
+                    "gvm",
+                    "public",
+                    "v1",
+                    "credential-stores",
+                    credential_store_id,
+                ],
                 token,
             )?,
             StatusCode::OK,
@@ -223,7 +246,13 @@ impl E2eHarness {
         self.send_json(
             self.authed_path_segments(
                 Method::PUT,
-                &["api", "v1", "credential-stores", credential_store_id],
+                &[
+                    "gvm",
+                    "public",
+                    "v1",
+                    "credential-stores",
+                    credential_store_id,
+                ],
                 token,
             )?
             .json(&json!({ "comment": comment })),
@@ -242,7 +271,8 @@ impl E2eHarness {
             self.authed_path_segments(
                 Method::POST,
                 &[
-                    "api",
+                    "gvm",
+                    "public",
                     "v1",
                     "credential-stores",
                     credential_store_id,
@@ -263,7 +293,7 @@ impl E2eHarness {
         request: &StoreBackedCredentialRequest,
     ) -> Result<CreatedResource> {
         let response = self
-            .authed(Method::POST, "/api/v1/credentials", token)
+            .authed(Method::POST, "/gvm/public/v1/credentials", token)
             .json(request)
             .send()
             .await
@@ -303,7 +333,7 @@ impl E2eHarness {
         self.send_empty(
             self.authed_path_segments_with_query(
                 Method::DELETE,
-                &["api", "v1", "credentials", credential_id],
+                &["gvm", "public", "v1", "credentials", credential_id],
                 &[("ultimate", "true")],
                 token,
             )?,
@@ -324,7 +354,7 @@ impl E2eHarness {
                 "get credential store",
                 self.authed_path_segments(
                     Method::GET,
-                    &["api", "v1", "credential-stores", valid_uuid],
+                    &["gvm", "public", "v1", "credential-stores", valid_uuid],
                     token,
                 )?,
             ),
@@ -332,7 +362,7 @@ impl E2eHarness {
                 "update credential store",
                 self.authed_path_segments(
                     Method::PUT,
-                    &["api", "v1", "credential-stores", valid_uuid],
+                    &["gvm", "public", "v1", "credential-stores", valid_uuid],
                     token,
                 )?
                 .json(&json!({})),
@@ -342,7 +372,8 @@ impl E2eHarness {
                 self.authed_path_segments(
                     Method::POST,
                     &[
-                        "api",
+                        "gvm",
+                        "public",
                         "v1",
                         "credential-stores",
                         valid_uuid,
@@ -354,7 +385,7 @@ impl E2eHarness {
             ),
             (
                 "create store-backed credential",
-                self.authed(Method::POST, "/api/v1/credentials", token)
+                self.authed(Method::POST, "/gvm/public/v1/credentials", token)
                     .json(request),
             ),
         ];

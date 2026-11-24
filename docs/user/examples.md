@@ -99,7 +99,7 @@ SESSION_JSON="$(
     -u "${GVM_GATEWAY_USERNAME}:${GVM_GATEWAY_PASSWORD}" \
     -H 'Accept: application/json' \
     -X POST \
-    "${GVM_GATEWAY_BASE_URL}/api/v1/session"
+    "${GVM_GATEWAY_BASE_URL}/gvm/public/v1/session"
 )"
 
 SESSION_TOKEN="$(printf '%s' "${SESSION_JSON}" | jq -r '.sessionToken')"
@@ -117,10 +117,10 @@ Expected fields include:
 Check that the service is healthy and learn the exposed gateway version:
 
 ```bash
-curl -fsS "${GVM_GATEWAY_BASE_URL}/ready" | jq
+curl -fsS "${GVM_GATEWAY_BASE_URL}/gvm/ready" | jq
 curl -fsS \
   -H "Authorization: Bearer ${SESSION_TOKEN}" \
-  "${GVM_GATEWAY_BASE_URL}/api/v1/version" | jq
+  "${GVM_GATEWAY_BASE_URL}/gvm/public/v1/version" | jq
 ```
 
 ## 3. Discover supporting resources
@@ -131,15 +131,15 @@ targets and tasks:
 ```bash
 curl -fsS \
   -H "Authorization: Bearer ${SESSION_TOKEN}" \
-  "${GVM_GATEWAY_BASE_URL}/api/v1/scanners?perPage=100" | jq '.data[] | {id, name}'
+  "${GVM_GATEWAY_BASE_URL}/gvm/public/v1/scanners?perPage=100" | jq '.data[] | {id, name}'
 
 curl -fsS \
   -H "Authorization: Bearer ${SESSION_TOKEN}" \
-  "${GVM_GATEWAY_BASE_URL}/api/v1/scan-configs?perPage=100" | jq '.data[] | {id, name}'
+  "${GVM_GATEWAY_BASE_URL}/gvm/public/v1/scan-configs?perPage=100" | jq '.data[] | {id, name}'
 
 curl -fsS \
   -H "Authorization: Bearer ${SESSION_TOKEN}" \
-  "${GVM_GATEWAY_BASE_URL}/api/v1/port-lists?perPage=100" | jq '.data[] | {id, name}'
+  "${GVM_GATEWAY_BASE_URL}/gvm/public/v1/port-lists?perPage=100" | jq '.data[] | {id, name}'
 ```
 
 Use the returned IDs in the later create calls.
@@ -162,7 +162,7 @@ TARGET_JSON="$(
       "aliveTest": "Consider Alive",
       "portListId": "'"${PORT_LIST_ID}"'"
     }' \
-    "${GVM_GATEWAY_BASE_URL}/api/v1/targets"
+    "${GVM_GATEWAY_BASE_URL}/gvm/public/v1/targets"
 )"
 
 TARGET_ID="$(printf '%s' "${TARGET_JSON}" | jq -r '.id')"
@@ -188,7 +188,7 @@ TASK_JSON="$(
       "scanConfigId": "'"${SCAN_CONFIG_ID}"'",
       "scannerId": "'"${SCANNER_ID}"'"
     }' \
-    "${GVM_GATEWAY_BASE_URL}/api/v1/tasks"
+    "${GVM_GATEWAY_BASE_URL}/gvm/public/v1/tasks"
 )"
 
 TASK_ID="$(printf '%s' "${TASK_JSON}" | jq -r '.id')"
@@ -201,14 +201,14 @@ printf '%s\n' "${TASK_JSON}" | jq
 curl -fsS \
   -H "Authorization: Bearer ${SESSION_TOKEN}" \
   -X POST \
-  "${GVM_GATEWAY_BASE_URL}/api/v1/tasks/${TASK_ID}/start" | jq
+  "${GVM_GATEWAY_BASE_URL}/gvm/public/v1/tasks/${TASK_ID}/start" | jq
 
 curl -fsS \
   -H "Authorization: Bearer ${SESSION_TOKEN}" \
-  "${GVM_GATEWAY_BASE_URL}/api/v1/tasks/${TASK_ID}" | jq
+  "${GVM_GATEWAY_BASE_URL}/gvm/public/v1/tasks/${TASK_ID}" | jq
 ```
 
-For longer-running automation, poll `GET /api/v1/tasks/{id}` until the task
+For longer-running automation, poll `GET /gvm/public/v1/tasks/{id}` until the task
 reaches a terminal backend status such as `Done`, `Stopped`, or `Error`.
 
 ## 7. Find reports for the task
@@ -216,7 +216,7 @@ reaches a terminal backend status such as `Done`, `Stopped`, or `Error`.
 ```bash
 curl -fsS \
   -H "Authorization: Bearer ${SESSION_TOKEN}" \
-  "${GVM_GATEWAY_BASE_URL}/api/v1/reports?filter=task_id=${TASK_ID}&perPage=25" | jq '.data[] | {id, reportFormat, task}'
+  "${GVM_GATEWAY_BASE_URL}/gvm/public/v1/reports?filter=task_id=${TASK_ID}&perPage=25" | jq '.data[] | {id, reportFormat, task}'
 ```
 
 Pick the report ID you want to inspect or export.
@@ -243,7 +243,7 @@ EXPORT_JSON="$(
     -d '{
       "reportFormatId": "'"${PDF_REPORT_FORMAT_ID}"'"
     }' \
-    "${GVM_GATEWAY_BASE_URL}/api/v1/reports/${REPORT_ID}/exports"
+    "${GVM_GATEWAY_BASE_URL}/gvm/public/v1/reports/${REPORT_ID}/exports"
 )"
 
 JOB_ID="$(printf '%s' "${EXPORT_JSON}" | jq -r '.jobId')"
@@ -256,11 +256,11 @@ Poll the job, then download the finished artifact:
 ```bash
 curl -fsS \
   -H "Authorization: Bearer ${SESSION_TOKEN}" \
-  "${GVM_GATEWAY_BASE_URL}/api/v1/jobs/${JOB_ID}" | jq
+  "${GVM_GATEWAY_BASE_URL}/gvm/public/v1/jobs/${JOB_ID}" | jq
 
 curl -fSLo "report-${REPORT_ID}.pdf" \
   -H "Authorization: Bearer ${SESSION_TOKEN}" \
-  "${GVM_GATEWAY_BASE_URL}/api/v1/jobs/${JOB_ID}/result"
+  "${GVM_GATEWAY_BASE_URL}/gvm/public/v1/jobs/${JOB_ID}/result"
 ```
 
 ## 9. Close the session
@@ -269,7 +269,7 @@ curl -fSLo "report-${REPORT_ID}.pdf" \
 curl -fsS \
   -H "Authorization: Bearer ${SESSION_TOKEN}" \
   -X DELETE \
-  "${GVM_GATEWAY_BASE_URL}/api/v1/session"
+  "${GVM_GATEWAY_BASE_URL}/gvm/public/v1/session"
 ```
 
 ## Finding the formal contract

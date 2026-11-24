@@ -147,7 +147,7 @@ Every file setting has an environment equivalent:
 The gateway supports two practical authentication patterns:
 
 - session-based access:
-  - create a session with `POST /api/v1/session` using HTTP Basic auth
+  - create a session with `POST /gvm/public/v1/session` using HTTP Basic auth
   - reuse the returned bearer token on later requests
 - request-scoped HTTP Basic auth:
   - for endpoints that allow it, the gateway can authenticate the request
@@ -156,43 +156,43 @@ The gateway supports two practical authentication patterns:
 
 For scripts, automation, and multi-step workflows, session-based access is the
 normal choice because it avoids sending the username and password on every
-request. `GET` and `DELETE /api/v1/session` require the bearer token for the
+request. `GET` and `DELETE /gvm/public/v1/session` require the bearer token for the
 session being inspected or removed.
 
 ## Connection points
 
 Operational probes:
 
-- `/health`
-- `/ready`
+- `/gvm/health`
+- `/gvm/ready`
 
 Versioned REST API:
 
-- `/api/v1/...`
+- `/gvm/public/v1/...`
 
 OpenAPI document exposed by the running service:
 
-- `GET /api/v1/openapi.json`
+- `GET /gvm/public/v1/openapi.json`
 
 Browser documentation:
 
-- `GET /api/v1/docs`
+- `GET /gvm/public/v1/docs`
 
 This operational UI is outside the REST API contract. It uses the generated
-`/api/v1/openapi.json` document as its source of truth and loads the
+`/gvm/public/v1/openapi.json` document as its source of truth and loads the
 repository-bundled Redoc 2.5.3 asset from the gateway. The route's Content
 Security Policy permits scripts and contract requests only from the gateway
 itself, so browsers do not need outbound network access to render it.
 
 ## API contract and version
 
-The running gateway derives `/api/v1/openapi.json` from its instrumented Axum
+The running gateway derives `/gvm/public/v1/openapi.json` from its instrumented Axum
 router. Release documentation packages contain the matching curated OpenAPI
 files under `api/rest/`. Contract tests compare the generated and curated
 documents so their paths, operations, parameters, request bodies, responses,
 headers, media types, and schemas stay aligned.
 
-`GET /api/v1/version` reports two distinct values:
+`GET /gvm/public/v1/version` reports two distinct values:
 
 - `apiVersion` is the REST contract and package version. It matches the
   top-level OpenAPI `info.version` for that release.

@@ -58,7 +58,7 @@ async fn create_report_export_job_rejects_basic_without_side_effects() {
     // when request-scoped Basic cleanup deletes its creating session.
     let response = harness
         .client
-        .post(harness.url(&format!("/api/v1/reports/{report_id}/exports")))
+        .post(harness.url(&format!("/gvm/public/v1/reports/{report_id}/exports")))
         .basic_auth("admin", Some("admin"))
         .json(&serde_json::json!({ "format": "json" }))
         .send()
@@ -86,7 +86,7 @@ async fn malformed_basic_auth_on_protected_route_returns_401() {
 
     let response = harness
         .client
-        .get(harness.url("/api/v1/targets"))
+        .get(harness.url("/gvm/public/v1/targets"))
         .header("Authorization", "Basic not-base64")
         .send()
         .await
@@ -105,7 +105,7 @@ async fn protected_endpoint_missing_bearer_rejected() {
 
     let response = harness
         .client
-        .get(harness.url("/api/v1/targets"))
+        .get(harness.url("/gvm/public/v1/targets"))
         .send()
         .await
         .unwrap();
@@ -120,7 +120,7 @@ async fn protected_endpoint_malformed_bearer_rejected() {
 
     let response = harness
         .client
-        .get(harness.url("/api/v1/targets"))
+        .get(harness.url("/gvm/public/v1/targets"))
         .header("Authorization", "Bearer")
         .send()
         .await
@@ -136,7 +136,7 @@ async fn protected_endpoint_unknown_session_rejected() {
 
     let response = harness
         .client
-        .get(harness.url("/api/v1/targets"))
+        .get(harness.url("/gvm/public/v1/targets"))
         .bearer_auth("gvm_sess_unknown")
         .send()
         .await
@@ -193,7 +193,10 @@ async fn cors_preflight_allowed_origin() {
 
     let response = harness
         .client
-        .request(reqwest::Method::OPTIONS, harness.url("/api/v1/targets"))
+        .request(
+            reqwest::Method::OPTIONS,
+            harness.url("/gvm/public/v1/targets"),
+        )
         .header("Origin", "https://ui.example")
         .header("Access-Control-Request-Method", "GET")
         .send()
@@ -226,7 +229,10 @@ async fn cors_preflight_denied_origin() {
 
     let response = harness
         .client
-        .request(reqwest::Method::OPTIONS, harness.url("/api/v1/targets"))
+        .request(
+            reqwest::Method::OPTIONS,
+            harness.url("/gvm/public/v1/targets"),
+        )
         .header("Origin", "https://evil.example")
         .header("Access-Control-Request-Method", "GET")
         .send()
@@ -356,7 +362,7 @@ async fn different_sessions_have_independent_subject_limits() {
 
     let second = harness
         .client
-        .get(harness.url("/api/v1/targets"))
+        .get(harness.url("/gvm/public/v1/targets"))
         .bearer_auth(&second_token)
         .send()
         .await
@@ -392,7 +398,7 @@ async fn global_limit_applies_across_sessions() {
 
     let second = harness
         .client
-        .get(harness.url("/api/v1/targets"))
+        .get(harness.url("/gvm/public/v1/targets"))
         .bearer_auth(&second_token)
         .send()
         .await
@@ -473,7 +479,7 @@ async fn session_creation_rate_limit_is_source_aware_before_authentication() {
 
     let second = harness
         .client
-        .post(harness.url("/api/v1/session"))
+        .post(harness.url("/gvm/public/v1/session"))
         .basic_auth("admin", Some("different-password"))
         .send()
         .await
@@ -515,7 +521,7 @@ async fn trusted_forwarded_clients_have_independent_session_creation_limits() {
 
     let first = harness
         .client
-        .post(harness.url("/api/v1/session"))
+        .post(harness.url("/gvm/public/v1/session"))
         .header("X-Forwarded-For", "198.51.100.10")
         .basic_auth("admin", Some("admin"))
         .send()
@@ -525,7 +531,7 @@ async fn trusted_forwarded_clients_have_independent_session_creation_limits() {
 
     let second = harness
         .client
-        .post(harness.url("/api/v1/session"))
+        .post(harness.url("/gvm/public/v1/session"))
         .header("X-Forwarded-For", "198.51.100.11")
         .basic_auth("admin", Some("admin"))
         .send()
@@ -535,7 +541,7 @@ async fn trusted_forwarded_clients_have_independent_session_creation_limits() {
 
     let first_again = harness
         .client
-        .post(harness.url("/api/v1/session"))
+        .post(harness.url("/gvm/public/v1/session"))
         .header("X-Forwarded-For", "198.51.100.10")
         .basic_auth("admin", Some("admin"))
         .send()

@@ -34,7 +34,7 @@ async fn rest_automation_schedule_lifecycle_creates_reads_lists_and_deletes() ->
                 SCHEDULE_TIMEZONE,
             )
             .await?;
-        assert_created_location(&created, "/api/v1/schedules");
+        assert_created_location(&created, "/gvm/public/v1/schedules");
         schedule_id = Some(created.id.clone());
 
         let schedule = harness.get_schedule(&session.token, &created.id).await?;
@@ -81,7 +81,7 @@ async fn rest_automation_alert_lifecycle_creates_reads_lists_and_deletes() -> Re
             .create_alert(&session.token, &alert_name)
             .await
             .context("create alert for lifecycle coverage")?;
-        assert_created_location(&created, "/api/v1/alerts");
+        assert_created_location(&created, "/gvm/public/v1/alerts");
         alert_id = Some(created.id.clone());
 
         let alert = harness.get_alert(&session.token, &created.id).await?;

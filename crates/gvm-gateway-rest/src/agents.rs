@@ -1090,7 +1090,7 @@ pub async fn clone_agent_group(
         headers,
         id,
         uri,
-        "/api/v1/agent-groups",
+        "/gvm/public/v1/agent-groups",
         |service, token, id| async move { service.clone_agent_group(&token, &id).await },
     )
     .await
@@ -1264,7 +1264,7 @@ fn support_bundle_response<T>(mut response: TransformResponse<T>) -> TransformRe
     response
 }
 
-/// OpenAPI transform for `GET /api/v1/agents`.
+/// OpenAPI transform for `GET /gvm/public/v1/agents`.
 pub(crate) fn list_agents_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     list_docs::<AgentListResponse>(
         op.input::<Query<AgentListQueryParams>>(),
@@ -1274,27 +1274,27 @@ pub(crate) fn list_agents_docs(op: TransformOperation<'_>) -> TransformOperation
     )
 }
 
-/// OpenAPI transform for `GET /api/v1/agents/{id}`.
+/// OpenAPI transform for `GET /gvm/public/v1/agents/{id}`.
 pub(crate) fn get_agent_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     item_docs::<AgentResponse>(op, "getAgent", "Agents", "Agent details")
 }
 
-/// OpenAPI transform for `PUT /api/v1/agents/{id}`.
+/// OpenAPI transform for `PUT /gvm/public/v1/agents/{id}`.
 pub(crate) fn modify_agent_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     update_docs::<ModifyAgentRequest, AgentResponse>(op, "modifyAgent", "Agents", "Updated agent")
 }
 
-/// OpenAPI transform for `DELETE /api/v1/agents/{id}`.
+/// OpenAPI transform for `DELETE /gvm/public/v1/agents/{id}`.
 pub(crate) fn delete_agent_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     delete_docs(op, "deleteAgent", "Agents", "Agent deleted", false)
 }
 
-/// OpenAPI transform for `POST /api/v1/agents/sync`.
+/// OpenAPI transform for `POST /gvm/public/v1/agents/sync`.
 pub(crate) fn sync_agents_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     action_no_content_docs(op, "syncAgents", "Agents", "Agent synchronization started")
 }
 
-/// OpenAPI transform for `GET /api/v1/agents/{id}/support-bundle`.
+/// OpenAPI transform for `GET /gvm/public/v1/agents/{id}/support-bundle`.
 pub(crate) fn get_agent_support_bundle_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getAgentSupportBundle")
@@ -1318,7 +1318,7 @@ pub(crate) fn get_agent_support_bundle_docs(op: TransformOperation<'_>) -> Trans
     problem_response::<504>(op, "Backend request timed out")
 }
 
-/// OpenAPI transform for `PUT /api/v1/agent-control-scan-configs/{id}`.
+/// OpenAPI transform for `PUT /gvm/public/v1/agent-control-scan-configs/{id}`.
 pub(crate) fn modify_agent_control_scan_config_docs(
     op: TransformOperation<'_>,
 ) -> TransformOperation<'_> {
@@ -1346,7 +1346,7 @@ pub(crate) fn modify_agent_control_scan_config_docs(
     problem_response::<504>(op, "Backend request timed out")
 }
 
-/// OpenAPI transform for `GET /api/v1/scanners/{id}/agent-installer-instruction`.
+/// OpenAPI transform for `GET /gvm/public/v1/scanners/{id}/agent-installer-instruction`.
 pub(crate) fn get_agent_installer_instruction_docs(
     op: TransformOperation<'_>,
 ) -> TransformOperation<'_> {
@@ -1374,7 +1374,7 @@ pub(crate) fn get_agent_installer_instruction_docs(
     problem_response::<504>(op, "Backend request timed out")
 }
 
-/// OpenAPI transform for `GET /api/v1/agent-groups`.
+/// OpenAPI transform for `GET /gvm/public/v1/agent-groups`.
 pub(crate) fn list_agent_groups_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     list_docs::<AgentGroupListResponse>(
         op.input::<Query<AgentGroupListQueryParams>>(),
@@ -1384,7 +1384,7 @@ pub(crate) fn list_agent_groups_docs(op: TransformOperation<'_>) -> TransformOpe
     )
 }
 
-/// OpenAPI transform for `POST /api/v1/agent-groups`.
+/// OpenAPI transform for `POST /gvm/public/v1/agent-groups`.
 pub(crate) fn create_agent_group_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     create_docs::<CreateAgentGroupRequest>(
         op,
@@ -1394,12 +1394,12 @@ pub(crate) fn create_agent_group_docs(op: TransformOperation<'_>) -> TransformOp
     )
 }
 
-/// OpenAPI transform for `GET /api/v1/agent-groups/{id}`.
+/// OpenAPI transform for `GET /gvm/public/v1/agent-groups/{id}`.
 pub(crate) fn get_agent_group_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     item_docs::<AgentGroupResponse>(op, "getAgentGroup", "Agent Groups", "Agent group details")
 }
 
-/// OpenAPI transform for `PUT /api/v1/agent-groups/{id}`.
+/// OpenAPI transform for `PUT /gvm/public/v1/agent-groups/{id}`.
 pub(crate) fn modify_agent_group_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     update_docs::<ModifyAgentGroupRequest, AgentGroupResponse>(
         op,
@@ -1409,7 +1409,7 @@ pub(crate) fn modify_agent_group_docs(op: TransformOperation<'_>) -> TransformOp
     )
 }
 
-/// OpenAPI transform for `DELETE /api/v1/agent-groups/{id}`.
+/// OpenAPI transform for `DELETE /gvm/public/v1/agent-groups/{id}`.
 pub(crate) fn delete_agent_group_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     delete_docs(
         op,
@@ -1420,7 +1420,7 @@ pub(crate) fn delete_agent_group_docs(op: TransformOperation<'_>) -> TransformOp
     )
 }
 
-/// OpenAPI transform for `POST /api/v1/agent-groups/{id}/clone`.
+/// OpenAPI transform for `POST /gvm/public/v1/agent-groups/{id}/clone`.
 pub(crate) fn clone_agent_group_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("cloneAgentGroup")

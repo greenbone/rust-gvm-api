@@ -112,129 +112,129 @@ in-process or through a loopback listener.
 
 | Test | Request | Expected |
 |------|---------|----------|
-| `health_returns_200` | `GET /health` | 200, `{"status": "ok"}` |
-| `ready_healthy` | `GET /ready` (GMP connected) | 200 |
-| `ready_unhealthy` | `GET /ready` (GMP disconnected) | 503 |
-| `version_returns_info` | `GET /api/v1/version` | 200, includes proxied gvmd GMP version and REST API contract version |
-| `timezones_return_backend_catalog` | `GET /api/v1/timezones` (authenticated, GMP 22.8 backend) | 200, backend-sourced timezone list |
-| `timezones_return_not_implemented_on_older_backend` | `GET /api/v1/timezones` (authenticated, GMP 22.7 backend) | 501 problem response |
+| `health_returns_200` | `GET /gvm/health` | 200, `{"status": "ok"}` |
+| `ready_healthy` | `GET /gvm/ready` (GMP connected) | 200 |
+| `ready_unhealthy` | `GET /gvm/ready` (GMP disconnected) | 503 |
+| `version_returns_info` | `GET /gvm/public/v1/version` | 200, includes proxied gvmd GMP version and REST API contract version |
+| `timezones_return_backend_catalog` | `GET /gvm/public/v1/timezones` (authenticated, GMP 22.8 backend) | 200, backend-sourced timezone list |
+| `timezones_return_not_implemented_on_older_backend` | `GET /gvm/public/v1/timezones` (authenticated, GMP 22.7 backend) | 501 problem response |
 
 ### 3.3 Targets CRUD
 
 | Test | Request | Setup | Expected |
 |------|---------|-------|----------|
-| `list_targets_empty` | `GET /api/v1/targets` | No targets | 200, empty `data[]`, pagination |
-| `list_targets_paginated` | `GET /api/v1/targets?page=2&perPage=10` | 25 targets | 200, 10 items, correct pagination |
-| `create_target` | `POST /api/v1/targets` + body | — | 201, target with ID |
-| `create_target_location_header` | `POST /api/v1/targets` + body | — | 201 + `Location: /api/v1/targets/{id}` |
-| `create_target_missing_name` | `POST /api/v1/targets` (no name) | — | 400, RFC 9457 |
-| `get_target` | `GET /api/v1/targets/{id}` | Target exists | 200, full target |
-| `get_target_not_found` | `GET /api/v1/targets/{bad-id}` | — | 404 |
-| `update_target` | `PUT /api/v1/targets/{id}` + body | Target exists | 200, updated fields |
-| `delete_target` | `DELETE /api/v1/targets/{id}` | Target exists | 204 |
-| `delete_target_not_found` | `DELETE /api/v1/targets/{bad-id}` | — | 404 |
+| `list_targets_empty` | `GET /gvm/public/v1/targets` | No targets | 200, empty `data[]`, pagination |
+| `list_targets_paginated` | `GET /gvm/public/v1/targets?page=2&perPage=10` | 25 targets | 200, 10 items, correct pagination |
+| `create_target` | `POST /gvm/public/v1/targets` + body | — | 201, target with ID |
+| `create_target_location_header` | `POST /gvm/public/v1/targets` + body | — | 201 + `Location: /gvm/public/v1/targets/{id}` |
+| `create_target_missing_name` | `POST /gvm/public/v1/targets` (no name) | — | 400, RFC 9457 |
+| `get_target` | `GET /gvm/public/v1/targets/{id}` | Target exists | 200, full target |
+| `get_target_not_found` | `GET /gvm/public/v1/targets/{bad-id}` | — | 404 |
+| `update_target` | `PUT /gvm/public/v1/targets/{id}` + body | Target exists | 200, updated fields |
+| `delete_target` | `DELETE /gvm/public/v1/targets/{id}` | Target exists | 204 |
+| `delete_target_not_found` | `DELETE /gvm/public/v1/targets/{bad-id}` | — | 404 |
 
 ### 3.4 Tasks Lifecycle
 
 | Test | Request | Setup | Expected |
 |------|---------|-------|----------|
-| `create_task` | `POST /api/v1/tasks` | Target + config exist | 201 |
-| `create_task_location_header` | `POST /api/v1/tasks` | Target + config exist | 201 + `Location: /api/v1/tasks/{id}` |
-| `start_task` | `POST /api/v1/tasks/{id}/start` | Task exists | 200, report_id |
-| `stop_running_task` | `POST /api/v1/tasks/{id}/stop` | Task running | 200 |
-| `stop_idle_task` | `POST /api/v1/tasks/{id}/stop` | Task not running | 409 |
-| `resume_stopped_task` | `POST /api/v1/tasks/{id}/resume` | Task stopped | 200 |
+| `create_task` | `POST /gvm/public/v1/tasks` | Target + config exist | 201 |
+| `create_task_location_header` | `POST /gvm/public/v1/tasks` | Target + config exist | 201 + `Location: /gvm/public/v1/tasks/{id}` |
+| `start_task` | `POST /gvm/public/v1/tasks/{id}/start` | Task exists | 200, report_id |
+| `stop_running_task` | `POST /gvm/public/v1/tasks/{id}/stop` | Task running | 200 |
+| `stop_idle_task` | `POST /gvm/public/v1/tasks/{id}/stop` | Task not running | 409 |
+| `resume_stopped_task` | `POST /gvm/public/v1/tasks/{id}/resume` | Task stopped | 200 |
 
 ### 3.5 Reports
 
 | Test | Request | Setup | Expected |
 |------|---------|-------|----------|
-| `list_reports` | `GET /api/v1/reports` | Reports exist | 200, summaries |
-| `import_report` | `POST /api/v1/reports?taskId={id}` + `application/xml` body | Import task exists | 201 + stable report ID + `Location`; report is readable |
+| `list_reports` | `GET /gvm/public/v1/reports` | Reports exist | 200, summaries |
+| `import_report` | `POST /gvm/public/v1/reports?taskId={id}` + `application/xml` body | Import task exists | 201 + stable report ID + `Location`; report is readable |
 | `import_report_in_assets_omitted_and_false` | Two imports with omitted and `false` `inAssets` | Import task exists | Typed request preserves omission versus explicit false |
 | `import_report_rejects_invalid_metadata` | Missing/invalid `taskId` or invalid `inAssets` | — | 400 RFC 9457 without payload contents |
 | `import_report_rejects_media_type` | Non-`application/xml` body | — | 415 RFC 9457 |
 | `import_report_rejects_empty_or_invalid_envelope` | Empty, malformed, or multiple-report body | — | 400 RFC 9457 without payload contents |
 | `import_report_rejects_oversized_body` | Body greater than 10485760 bytes | — | 413 before an unbounded body buffer |
-| `get_report_with_results` | `GET /api/v1/reports/{id}` | Report exists | 200, includes requested result page |
-| `get_report_results_paginated` | `GET /api/v1/reports/{id}/results?page=1&perPage=50` | Large report | 200, 50 results |
-| `get_report_vulnerabilities_paginated` | `GET /api/v1/reports/{id}/vulnerabilities?page=1&perPage=50` | Report exists | 200, paginated vulnerability findings |
-| `get_report_tls_certificates_paginated` | `GET /api/v1/reports/{id}/tls-certificates?page=1&perPage=50` | Report exists | 200, paginated TLS certificate observations |
-| `get_report_errors_paginated` | `GET /api/v1/reports/{id}/errors?page=1&perPage=50` | Report exists | 200, paginated report errors |
-| `get_report_closed_cves_paginated` | `GET /api/v1/reports/{id}/closed-cves?page=1&perPage=50` | Report exists | 200, paginated closed CVE findings |
-| `delete_report_is_permanent` | `DELETE /api/v1/reports/{id}` | Report exists | 204, report permanently removed |
-| `delete_report_rejects_obsolete_ultimate` | `DELETE /api/v1/reports/{id}?ultimate=false` | Report exists | 400 `bad_request`, report remains |
-| `create_report_export_job_pdf` | `POST /api/v1/reports/{id}/exports` + PDF `reportFormatId` | Report exists + PDF report format exists | 202 + `Location: /api/v1/jobs/{jobId}` |
-| `create_report_export_job_csv` | `POST /api/v1/reports/{id}/exports` + CSV `reportFormatId` | Report exists + CSV report format exists | 202 + `Location: /api/v1/jobs/{jobId}` |
-| `create_report_export_job_json` | `POST /api/v1/reports/{id}/exports` + `format=json` | Report exists | 202 + `Location: /api/v1/jobs/{jobId}` |
-| `create_report_export_job_unknown_format` | `POST /api/v1/reports/{id}/exports` + bad `reportFormatId` | Report exists | 404 |
-| `create_report_export_job_rejects_basic_without_side_effects` | `POST /api/v1/reports/{id}/exports` + valid Basic auth | Report exists | 401; no temporary session, accepted job, worker, or cancellation |
-| `create_report_export_job_bearer_survives_delayed_execution` | `POST /api/v1/reports/{id}/exports` + valid Bearer auth | Report exists; execution continues asynchronously | 202 + pollable job that completes on the persistent session |
-| `get_report_export_job` | `GET /api/v1/jobs/{jobId}` | Export job exists | 200, job status |
-| `download_report_export_job_result` | `GET /api/v1/jobs/{jobId}/result` | Export job succeeded | 200, rendered artifact content type |
+| `get_report_with_results` | `GET /gvm/public/v1/reports/{id}` | Report exists | 200, includes requested result page |
+| `get_report_results_paginated` | `GET /gvm/public/v1/reports/{id}/results?page=1&perPage=50` | Large report | 200, 50 results |
+| `get_report_vulnerabilities_paginated` | `GET /gvm/public/v1/reports/{id}/vulnerabilities?page=1&perPage=50` | Report exists | 200, paginated vulnerability findings |
+| `get_report_tls_certificates_paginated` | `GET /gvm/public/v1/reports/{id}/tls-certificates?page=1&perPage=50` | Report exists | 200, paginated TLS certificate observations |
+| `get_report_errors_paginated` | `GET /gvm/public/v1/reports/{id}/errors?page=1&perPage=50` | Report exists | 200, paginated report errors |
+| `get_report_closed_cves_paginated` | `GET /gvm/public/v1/reports/{id}/closed-cves?page=1&perPage=50` | Report exists | 200, paginated closed CVE findings |
+| `delete_report_is_permanent` | `DELETE /gvm/public/v1/reports/{id}` | Report exists | 204, report permanently removed |
+| `delete_report_rejects_obsolete_ultimate` | `DELETE /gvm/public/v1/reports/{id}?ultimate=false` | Report exists | 400 `bad_request`, report remains |
+| `create_report_export_job_pdf` | `POST /gvm/public/v1/reports/{id}/exports` + PDF `reportFormatId` | Report exists + PDF report format exists | 202 + `Location: /gvm/public/v1/jobs/{jobId}` |
+| `create_report_export_job_csv` | `POST /gvm/public/v1/reports/{id}/exports` + CSV `reportFormatId` | Report exists + CSV report format exists | 202 + `Location: /gvm/public/v1/jobs/{jobId}` |
+| `create_report_export_job_json` | `POST /gvm/public/v1/reports/{id}/exports` + `format=json` | Report exists | 202 + `Location: /gvm/public/v1/jobs/{jobId}` |
+| `create_report_export_job_unknown_format` | `POST /gvm/public/v1/reports/{id}/exports` + bad `reportFormatId` | Report exists | 404 |
+| `create_report_export_job_rejects_basic_without_side_effects` | `POST /gvm/public/v1/reports/{id}/exports` + valid Basic auth | Report exists | 401; no temporary session, accepted job, worker, or cancellation |
+| `create_report_export_job_bearer_survives_delayed_execution` | `POST /gvm/public/v1/reports/{id}/exports` + valid Bearer auth | Report exists; execution continues asynchronously | 202 + pollable job that completes on the persistent session |
+| `get_report_export_job` | `GET /gvm/public/v1/jobs/{jobId}` | Export job exists | 200, job status |
+| `download_report_export_job_result` | `GET /gvm/public/v1/jobs/{jobId}/result` | Export job succeeded | 200, rendered artifact content type |
 
 ### 3.5a Discovery Helpers
 
 | Test | Request | Setup | Expected |
 |------|---------|-------|----------|
-| `list_credential_stores` | `GET /api/v1/credential-stores` | Backend exposes credential store catalog | 200, credential store list |
-| `get_credential_store` | `GET /api/v1/credential-stores/{id}` | Existing store id | 200, store metadata with no preference values |
-| `modify_credential_store` | `PUT /api/v1/credential-stores/{id}` | Bounded connection/preference update | 200, updated metadata; write-only values omitted |
-| `verify_credential_store` | `POST /api/v1/credential-stores/{id}/actions/verify` | Existing configured store | 204 |
-| `create_store_backed_credential` | `POST /api/v1/credentials` | `cs_*` type with vault and host references | 201; no local secret values mixed into command |
-| `modify_store_backed_credential` | `PUT /api/v1/credentials/{id}` | Store reference update | 200; semantic store-backed command used |
-| `agent_support_bundle_encryption_tristate` | `GET /api/v1/agents/{id}/support-bundle` with omitted, false, and true `encryption` | Agent exists | Typed request preserves all three states |
-| `nvt_discovery_marker_is_optional` | `GET /api/v1/nvts` and `GET /api/v1/nvts/{id}` | Backend returns true, false, or no marker | Response preserves booleans and omits an absent marker |
+| `list_credential_stores` | `GET /gvm/public/v1/credential-stores` | Backend exposes credential store catalog | 200, credential store list |
+| `get_credential_store` | `GET /gvm/public/v1/credential-stores/{id}` | Existing store id | 200, store metadata with no preference values |
+| `modify_credential_store` | `PUT /gvm/public/v1/credential-stores/{id}` | Bounded connection/preference update | 200, updated metadata; write-only values omitted |
+| `verify_credential_store` | `POST /gvm/public/v1/credential-stores/{id}/actions/verify` | Existing configured store | 204 |
+| `create_store_backed_credential` | `POST /gvm/public/v1/credentials` | `cs_*` type with vault and host references | 201; no local secret values mixed into command |
+| `modify_store_backed_credential` | `PUT /gvm/public/v1/credentials/{id}` | Store reference update | 200; semantic store-backed command used |
+| `agent_support_bundle_encryption_tristate` | `GET /gvm/public/v1/agents/{id}/support-bundle` with omitted, false, and true `encryption` | Agent exists | Typed request preserves all three states |
+| `nvt_discovery_marker_is_optional` | `GET /gvm/public/v1/nvts` and `GET /gvm/public/v1/nvts/{id}` | Backend returns true, false, or no marker | Response preserves booleans and omits an absent marker |
 
 ### 3.5b Identity & Access Control
 
 | Test | Request | Setup | Expected |
 |------|---------|-------|----------|
-| `list_users_as_admin` | `GET /api/v1/users` | Admin-capable principal | 200, paginated users |
-| `list_users_without_admin_scope` | `GET /api/v1/users` | Authenticated non-admin principal | 403 |
-| `create_user_as_admin` | `POST /api/v1/users` | Admin-capable principal | 201 + `Location` |
-| `get_user_not_found` | `GET /api/v1/users/{bad-id}` | Admin-capable principal | 404 |
-| `modify_user_as_admin` | `PUT /api/v1/users/{id}` | Existing user + admin principal | 200 |
-| `delete_user_as_admin` | `DELETE /api/v1/users/{id}` | Existing user + admin principal | 204 |
-| `delete_user_rejects_unsupported_ultimate_without_dispatch` | `DELETE /api/v1/users/{id}` with `ultimate=true`, `false`, empty, duplicate, encoded-key, or malformed values | Existing user + admin principal | 400 `bad_request`; no user-delete backend command |
-| `list_groups_as_admin` | `GET /api/v1/groups` | Admin-capable principal | 200, paginated groups |
-| `create_group_as_admin` | `POST /api/v1/groups` | Admin-capable principal | 201 + `Location` |
-| `modify_group_as_admin` | `PUT /api/v1/groups/{id}` | Existing group + admin principal | 200 |
-| `delete_group_as_admin` | `DELETE /api/v1/groups/{id}` | Existing group + admin principal | 204 |
-| `list_roles_as_admin` | `GET /api/v1/roles` | Admin-capable principal | 200, paginated roles |
-| `create_role_as_admin` | `POST /api/v1/roles` | Admin-capable principal | 201 + `Location` |
-| `modify_role_as_admin` | `PUT /api/v1/roles/{id}` | Existing role + admin principal | 200 |
-| `delete_role_as_admin` | `DELETE /api/v1/roles/{id}` | Existing role + admin principal | 204 |
-| `list_permissions_as_admin` | `GET /api/v1/permissions` | Admin-capable principal | 200, paginated permissions |
-| `create_permission_as_admin` | `POST /api/v1/permissions` | Admin-capable principal | 201 + `Location` |
-| `modify_permission_as_admin` | `PUT /api/v1/permissions/{id}` | Existing permission + admin principal | 200 |
-| `delete_permission_as_admin` | `DELETE /api/v1/permissions/{id}` | Existing permission + admin principal | 204 |
-| `list_user_settings_for_current_user` | `GET /api/v1/user-settings` | Authenticated principal | 200, unpaginated setting list |
-| `get_user_setting_for_current_user` | `GET /api/v1/user-settings/{id}` | Setting belongs to caller | 200 |
-| `modify_user_setting_for_current_user` | `PUT /api/v1/user-settings/{id}` | Setting belongs to caller | 200 |
-| `create_user_setting_not_allowed` | `POST /api/v1/user-settings` | Authenticated principal | 405 |
-| `delete_user_setting_not_allowed` | `DELETE /api/v1/user-settings/{id}` | Authenticated principal | 405 |
+| `list_users_as_admin` | `GET /gvm/public/v1/users` | Admin-capable principal | 200, paginated users |
+| `list_users_without_admin_scope` | `GET /gvm/public/v1/users` | Authenticated non-admin principal | 403 |
+| `create_user_as_admin` | `POST /gvm/public/v1/users` | Admin-capable principal | 201 + `Location` |
+| `get_user_not_found` | `GET /gvm/public/v1/users/{bad-id}` | Admin-capable principal | 404 |
+| `modify_user_as_admin` | `PUT /gvm/public/v1/users/{id}` | Existing user + admin principal | 200 |
+| `delete_user_as_admin` | `DELETE /gvm/public/v1/users/{id}` | Existing user + admin principal | 204 |
+| `delete_user_rejects_unsupported_ultimate_without_dispatch` | `DELETE /gvm/public/v1/users/{id}` with `ultimate=true`, `false`, empty, duplicate, encoded-key, or malformed values | Existing user + admin principal | 400 `bad_request`; no user-delete backend command |
+| `list_groups_as_admin` | `GET /gvm/public/v1/groups` | Admin-capable principal | 200, paginated groups |
+| `create_group_as_admin` | `POST /gvm/public/v1/groups` | Admin-capable principal | 201 + `Location` |
+| `modify_group_as_admin` | `PUT /gvm/public/v1/groups/{id}` | Existing group + admin principal | 200 |
+| `delete_group_as_admin` | `DELETE /gvm/public/v1/groups/{id}` | Existing group + admin principal | 204 |
+| `list_roles_as_admin` | `GET /gvm/public/v1/roles` | Admin-capable principal | 200, paginated roles |
+| `create_role_as_admin` | `POST /gvm/public/v1/roles` | Admin-capable principal | 201 + `Location` |
+| `modify_role_as_admin` | `PUT /gvm/public/v1/roles/{id}` | Existing role + admin principal | 200 |
+| `delete_role_as_admin` | `DELETE /gvm/public/v1/roles/{id}` | Existing role + admin principal | 204 |
+| `list_permissions_as_admin` | `GET /gvm/public/v1/permissions` | Admin-capable principal | 200, paginated permissions |
+| `create_permission_as_admin` | `POST /gvm/public/v1/permissions` | Admin-capable principal | 201 + `Location` |
+| `modify_permission_as_admin` | `PUT /gvm/public/v1/permissions/{id}` | Existing permission + admin principal | 200 |
+| `delete_permission_as_admin` | `DELETE /gvm/public/v1/permissions/{id}` | Existing permission + admin principal | 204 |
+| `list_user_settings_for_current_user` | `GET /gvm/public/v1/user-settings` | Authenticated principal | 200, unpaginated setting list |
+| `get_user_setting_for_current_user` | `GET /gvm/public/v1/user-settings/{id}` | Setting belongs to caller | 200 |
+| `modify_user_setting_for_current_user` | `PUT /gvm/public/v1/user-settings/{id}` | Setting belongs to caller | 200 |
+| `create_user_setting_not_allowed` | `POST /gvm/public/v1/user-settings` | Authenticated principal | 405 |
+| `delete_user_setting_not_allowed` | `DELETE /gvm/public/v1/user-settings/{id}` | Authenticated principal | 405 |
 
 ### 3.6 Authentication Flow
 
 | Test | Request | Expected |
 |------|---------|----------|
-| `create_session_valid_credentials` | `POST /api/v1/session` + valid Basic auth | 201, session token + metadata |
-| `create_session_location_header` | `POST /api/v1/session` + valid Basic auth | 201 + `Location: /api/v1/session` |
-| `create_session_invalid_credentials` | `POST /api/v1/session` + bad Basic auth | 401 |
-| `get_session_valid_token` | `GET /api/v1/session` + `Authorization: Bearer <sessionToken>` | 200, session details |
-| `delete_session_valid_token` | `DELETE /api/v1/session` + `Authorization: Bearer <sessionToken>` | 204 |
-| `protected_endpoint_no_auth` | `GET /api/v1/targets` (no token) | 401 |
-| `protected_endpoint_unknown_token` | `GET /api/v1/targets` + unknown token | 401 |
-| `protected_endpoint_valid_auth` | `GET /api/v1/targets` + valid session token | 200 |
-| `protected_endpoint_request_scoped_basic_auth` | `GET /api/v1/targets` + valid Basic credentials | 200, backend context cleaned up after response |
-| `protected_endpoint_malformed_basic_auth` | `GET /api/v1/targets` + malformed Basic credentials | 401 |
+| `create_session_valid_credentials` | `POST /gvm/public/v1/session` + valid Basic auth | 201, session token + metadata |
+| `create_session_location_header` | `POST /gvm/public/v1/session` + valid Basic auth | 201 + `Location: /gvm/public/v1/session` |
+| `create_session_invalid_credentials` | `POST /gvm/public/v1/session` + bad Basic auth | 401 |
+| `get_session_valid_token` | `GET /gvm/public/v1/session` + `Authorization: Bearer <sessionToken>` | 200, session details |
+| `delete_session_valid_token` | `DELETE /gvm/public/v1/session` + `Authorization: Bearer <sessionToken>` | 204 |
+| `protected_endpoint_no_auth` | `GET /gvm/public/v1/targets` (no token) | 401 |
+| `protected_endpoint_unknown_token` | `GET /gvm/public/v1/targets` + unknown token | 401 |
+| `protected_endpoint_valid_auth` | `GET /gvm/public/v1/targets` + valid session token | 200 |
+| `protected_endpoint_request_scoped_basic_auth` | `GET /gvm/public/v1/targets` + valid Basic credentials | 200, backend context cleaned up after response |
+| `protected_endpoint_malformed_basic_auth` | `GET /gvm/public/v1/targets` + malformed Basic credentials | 401 |
 
 ### 3.7 OpenAPI Compliance
 
 | Test | Scope |
 |------|-------|
-| `openapi_spec_valid` | `GET /api/v1/openapi.json` validates against OpenAPI 3.1 schema |
+| `openapi_spec_valid` | `GET /gvm/public/v1/openapi.json` validates against OpenAPI 3.1 schema |
 | `all_routes_documented` | Every registered route appears in the spec |
 | `response_matches_schema` | Actual responses validate against declared schemas |
 | `report_export_job_creation_security_is_bearer_only` | Curated and generated `POST /reports/{id}/exports` operations advertise only `bearerAuth` |
@@ -250,8 +250,8 @@ in-process or through a loopback listener.
 | `create_session_location_header` | Session creation returns `201 Created` + canonical `Location` |
 | `method_not_allowed` | Unsupported method on a published resource returns `405` |
 | `not_found_route` | Unknown route returns `404` |
-| `removed_ticket_collection_not_found` | Authenticated `GET /api/v1/tickets` returns the standard unknown-route `404` problem response |
-| `removed_ticket_item_not_found` | Authenticated `GET /api/v1/tickets/{validUuid}` returns the standard unknown-route `404` problem response |
+| `removed_ticket_collection_not_found` | Authenticated `GET /gvm/public/v1/tickets` returns the standard unknown-route `404` problem response |
+| `removed_ticket_item_not_found` | Authenticated `GET /gvm/public/v1/tickets/{validUuid}` returns the standard unknown-route `404` problem response |
 | `stop_idle_task` | Illegal action transition returns `409` |
 | `content_type_problem_json` | Problem responses use `application/problem+json` |
 | `generated_openapi_endpoint_exposes_implemented_contract` | Generated OpenAPI stays aligned with curated path/method/response/header contract |
@@ -269,8 +269,8 @@ in-process or through a loopback listener.
 | `security_headers_present` | API success and problem responses include baseline security headers |
 | `browser_docs_use_bundled_redoc_with_same_origin_csp` | Documentation UI outside the API contract serves the repository-bundled Redoc asset with same-origin-only script and contract loading |
 | `audit_log_redacts_session_token` | Audit/log capture contains safe session IDs but no raw tokens or passwords |
-| `method_not_allowed` | `PATCH /api/v1/targets` → 405 |
-| `not_found_route` | `GET /api/v1/nonexistent` → 404 |
+| `method_not_allowed` | `PATCH /gvm/public/v1/targets` → 405 |
+| `not_found_route` | `GET /gvm/public/v1/nonexistent` → 404 |
 
 ## 4. E2E Tests (Compose stack via Podman or Docker)
 

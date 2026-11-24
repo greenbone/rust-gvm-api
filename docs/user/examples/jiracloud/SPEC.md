@@ -57,37 +57,37 @@ The `.env` file contains:
 
 ## GVM Data Flow
 
-Use the versioned GVM REST API base path `/api/v1`.
+Use the versioned GVM REST API base path `/gvm/public/v1`.
 
-1. Create a GVM session with `POST /api/v1/session` using HTTP Basic
+1. Create a GVM session with `POST /gvm/public/v1/session` using HTTP Basic
    credentials.
 2. Use the returned `sessionToken` as `Authorization: Bearer <sessionToken>` for
    all subsequent GVM requests.
-3. Fetch reports with `GET /api/v1/reports`.
+3. Fetch reports with `GET /gvm/public/v1/reports`.
    - Select reports whose public `scanStart` is within the configured lookback
      window. The default is the last 24 hours.
    - Compute a UTC cutoff timestamp at runtime: `now_utc - lookback`.
    - Use the report filter `scan_start>{cutoff_utc}`, where `{cutoff_utc}` is
      an RFC 3339 timestamp, for example `scan_start>2026-07-01T10:00:00Z`.
    - Request shape:
-     `GET /api/v1/reports?filter=scan_start>{cutoff_utc}&perPage=1000`.
+     `GET /gvm/public/v1/reports?filter=scan_start>{cutoff_utc}&perPage=1000`.
    - Read all pages.
    - After fetching reports, still check each returned report's `scanStart`
      client-side and ignore reports outside the configured window.
 4. For each selected report, fetch results with
-   `GET /api/v1/reports/{id}/results`.
+   `GET /gvm/public/v1/reports/{id}/results`.
    - Read all pages.
    - Keep only results with `severity > JIRA_MIN_SEVERITY`.
    - Default `JIRA_MIN_SEVERITY` to `4.0`, matching the OTOBO example.
    - Ignore findings with severity less than or equal to `4.0`.
-5. Close the GVM session with `DELETE /api/v1/session` when the run finishes.
+5. Close the GVM session with `DELETE /gvm/public/v1/session` when the run finishes.
 
-Use `GET /api/v1/reports/{id}/results` as the finding source. Do not use the
-global `GET /api/v1/results` endpoint for this example. Do not use
-`GET /api/v1/reports/{id}/vulnerabilities`, because the OpenAPI spec allows it
+Use `GET /gvm/public/v1/reports/{id}/results` as the finding source. Do not use the
+global `GET /gvm/public/v1/results` endpoint for this example. Do not use
+`GET /gvm/public/v1/reports/{id}/vulnerabilities`, because the OpenAPI spec allows it
 to return `501 Not Implemented`.
 
-Do not fetch `GET /api/v1/hosts` in this example. Jira Cloud issue creation does
+Do not fetch `GET /gvm/public/v1/hosts` in this example. Jira Cloud issue creation does
 not need host inventory synchronization when there is no CMDB or Jira Assets
 integration.
 

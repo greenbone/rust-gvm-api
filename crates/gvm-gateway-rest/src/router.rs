@@ -233,9 +233,9 @@ pub fn build_router_with_runtime_and_security(
     let router: Router<GatewayService> = documented_router()
         // Browser documentation is operational UI, not part of the REST API
         // contract generated from `ApiRouter`.
-        .route("/api/v1/docs", get(api_docs))
-        .route("/api/v1/docs/redoc.standalone.js", get(redoc_js))
-        .route("/api/v1/openapi.json", get(serve_openapi))
+        .route("/gvm/public/v1/docs", get(api_docs))
+        .route("/gvm/public/v1/docs/redoc.standalone.js", get(redoc_js))
+        .route("/gvm/public/v1/openapi.json", get(serve_openapi))
         .fallback(not_found)
         .into();
 
@@ -272,681 +272,792 @@ pub(crate) fn build_openapi() -> Value {
 
 fn documented_router() -> ApiRouter<GatewayService> {
     ApiRouter::new()
-        .api_route("/health", get_with(health, health_docs))
-        .api_route("/ready", get_with(ready, ready_docs))
-        .api_route("/api/v1/version", get_with(version, version_docs))
+        .api_route("/gvm/health", get_with(health, health_docs))
+        .api_route("/gvm/ready", get_with(ready, ready_docs))
+        .api_route("/gvm/public/v1/version", get_with(version, version_docs))
         .api_route(
-            "/api/v1/timezones",
+            "/gvm/public/v1/timezones",
             get_with(list_timezones, list_timezones_docs),
         )
         // Session lifecycle
         .api_route(
-            "/api/v1/session",
+            "/gvm/public/v1/session",
             post_with(create_session, create_session_docs),
         )
-        .api_route("/api/v1/session", get_with(get_session, get_session_docs))
         .api_route(
-            "/api/v1/session",
+            "/gvm/public/v1/session",
+            get_with(get_session, get_session_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/session",
             delete_with(delete_session, delete_session_docs),
         )
         // Targets
-        .api_route("/api/v1/targets", get_with(list_targets, list_targets_docs))
         .api_route(
-            "/api/v1/targets",
+            "/gvm/public/v1/targets",
+            get_with(list_targets, list_targets_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/targets",
             post_with(create_target, create_target_docs),
         )
         .api_route(
-            "/api/v1/targets/{id}",
+            "/gvm/public/v1/targets/{id}",
             get_with(get_target, get_target_docs),
         )
         .api_route(
-            "/api/v1/targets/{id}",
+            "/gvm/public/v1/targets/{id}",
             put_with(update_target, update_target_docs),
         )
         .api_route(
-            "/api/v1/targets/{id}",
+            "/gvm/public/v1/targets/{id}",
             delete_with(delete_target, delete_target_docs),
         )
         .api_route(
-            "/api/v1/targets/{id}/clone",
+            "/gvm/public/v1/targets/{id}/clone",
             post_with(clone_target, clone_target_docs),
         )
         // Agents and agent groups
         .api_route(
-            "/api/v1/agents/inventory-token",
+            "/gvm/public/v1/agents/inventory-token",
             post_with(get_agent_inventory_token, get_agent_inventory_token_docs),
         )
-        .api_route("/api/v1/agents", get_with(list_agents, list_agents_docs))
-        .api_route("/api/v1/agents/{id}", get_with(get_agent, get_agent_docs))
         .api_route(
-            "/api/v1/agents/{id}",
+            "/gvm/public/v1/agents",
+            get_with(list_agents, list_agents_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/agents/{id}",
+            get_with(get_agent, get_agent_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/agents/{id}",
             put_with(update_agent, modify_agent_docs),
         )
         .api_route(
-            "/api/v1/agents/{id}",
+            "/gvm/public/v1/agents/{id}",
             delete_with(delete_agent, delete_agent_docs),
         )
         .api_route(
-            "/api/v1/agents/sync",
+            "/gvm/public/v1/agents/sync",
             post_with(sync_agents, sync_agents_docs),
         )
         .api_route(
-            "/api/v1/agents/{id}/support-bundle",
+            "/gvm/public/v1/agents/{id}/support-bundle",
             get_with(get_agent_support_bundle, get_agent_support_bundle_docs),
         )
         .api_route(
-            "/api/v1/agent-control-scan-configs/{id}",
+            "/gvm/public/v1/agent-control-scan-configs/{id}",
             put_with(
                 update_agent_control_scan_config,
                 modify_agent_control_scan_config_docs,
             ),
         )
         .api_route(
-            "/api/v1/scanners/{id}/agent-installer-instruction",
+            "/gvm/public/v1/scanners/{id}/agent-installer-instruction",
             get_with(
                 get_agent_installer_instruction,
                 get_agent_installer_instruction_docs,
             ),
         )
         .api_route(
-            "/api/v1/agent-groups",
+            "/gvm/public/v1/agent-groups",
             get_with(list_agent_groups, list_agent_groups_docs),
         )
         .api_route(
-            "/api/v1/agent-groups",
+            "/gvm/public/v1/agent-groups",
             post_with(create_agent_group, create_agent_group_docs),
         )
         .api_route(
-            "/api/v1/agent-groups/{id}",
+            "/gvm/public/v1/agent-groups/{id}",
             get_with(get_agent_group, get_agent_group_docs),
         )
         .api_route(
-            "/api/v1/agent-groups/{id}",
+            "/gvm/public/v1/agent-groups/{id}",
             put_with(update_agent_group, modify_agent_group_docs),
         )
         .api_route(
-            "/api/v1/agent-groups/{id}",
+            "/gvm/public/v1/agent-groups/{id}",
             delete_with(delete_agent_group, delete_agent_group_docs),
         )
         .api_route(
-            "/api/v1/agent-groups/{id}/clone",
+            "/gvm/public/v1/agent-groups/{id}/clone",
             post_with(clone_agent_group, clone_agent_group_docs),
         )
         // Generic assets/configs remain distinct from specialized hosts/scan-configs contracts.
-        .api_route("/api/v1/assets", get_with(list_assets, list_assets_docs))
-        .api_route("/api/v1/assets/{id}", get_with(get_asset, get_asset_docs))
         .api_route(
-            "/api/v1/assets/{id}",
+            "/gvm/public/v1/assets",
+            get_with(list_assets, list_assets_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/assets/{id}",
+            get_with(get_asset, get_asset_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/assets/{id}",
             put_with(update_asset, update_asset_docs),
         )
         .api_route(
-            "/api/v1/assets/{id}",
+            "/gvm/public/v1/assets/{id}",
             delete_with(delete_asset, delete_asset_docs),
         )
-        .api_route("/api/v1/configs", get_with(list_configs, list_configs_docs))
         .api_route(
-            "/api/v1/configs/{id}",
+            "/gvm/public/v1/configs",
+            get_with(list_configs, list_configs_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/configs/{id}",
             get_with(get_config, get_config_docs),
         )
         .api_route(
-            "/api/v1/configs/{id}",
+            "/gvm/public/v1/configs/{id}",
             delete_with(delete_config, delete_config_docs),
         )
         .api_route(
-            "/api/v1/configs/{id}/clone",
+            "/gvm/public/v1/configs/{id}/clone",
             post_with(clone_config, clone_config_docs),
         )
         // New target families from current GVMD
         .api_route(
-            "/api/v1/oci-image-targets",
+            "/gvm/public/v1/oci-image-targets",
             get_with(list_oci_image_targets, list_oci_image_targets_docs),
         )
         .api_route(
-            "/api/v1/oci-image-targets",
+            "/gvm/public/v1/oci-image-targets",
             post_with(create_oci_image_target, create_oci_image_target_docs),
         )
         .api_route(
-            "/api/v1/oci-image-targets/{id}",
+            "/gvm/public/v1/oci-image-targets/{id}",
             get_with(get_oci_image_target, get_oci_image_target_docs),
         )
         .api_route(
-            "/api/v1/oci-image-targets/{id}",
+            "/gvm/public/v1/oci-image-targets/{id}",
             put_with(update_oci_image_target, update_oci_image_target_docs),
         )
         .api_route(
-            "/api/v1/oci-image-targets/{id}",
+            "/gvm/public/v1/oci-image-targets/{id}",
             delete_with(delete_oci_image_target, delete_oci_image_target_docs),
         )
         .api_route(
-            "/api/v1/oci-image-targets/{id}/clone",
+            "/gvm/public/v1/oci-image-targets/{id}/clone",
             post_with(clone_oci_image_target, clone_oci_image_target_docs),
         )
         .api_route(
-            "/api/v1/web-application-targets",
+            "/gvm/public/v1/web-application-targets",
             get_with(
                 list_web_application_targets,
                 list_web_application_targets_docs,
             ),
         )
         .api_route(
-            "/api/v1/web-application-targets",
+            "/gvm/public/v1/web-application-targets",
             post_with(
                 create_web_application_target,
                 create_web_application_target_docs,
             ),
         )
         .api_route(
-            "/api/v1/web-application-targets/{id}",
+            "/gvm/public/v1/web-application-targets/{id}",
             get_with(get_web_application_target, get_web_application_target_docs),
         )
         .api_route(
-            "/api/v1/web-application-targets/{id}",
+            "/gvm/public/v1/web-application-targets/{id}",
             put_with(
                 update_web_application_target,
                 update_web_application_target_docs,
             ),
         )
         .api_route(
-            "/api/v1/web-application-targets/{id}",
+            "/gvm/public/v1/web-application-targets/{id}",
             delete_with(
                 delete_web_application_target,
                 delete_web_application_target_docs,
             ),
         )
         .api_route(
-            "/api/v1/web-application-targets/{id}/clone",
+            "/gvm/public/v1/web-application-targets/{id}/clone",
             post_with(
                 clone_web_application_target,
                 clone_web_application_target_docs,
             ),
         )
         // Alerts
-        .api_route("/api/v1/alerts", get_with(list_alerts, list_alerts_docs))
-        .api_route("/api/v1/alerts", post_with(create_alert, create_alert_docs))
-        .api_route("/api/v1/alerts/{id}", get_with(get_alert, get_alert_docs))
         .api_route(
-            "/api/v1/alerts/{id}",
+            "/gvm/public/v1/alerts",
+            get_with(list_alerts, list_alerts_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/alerts",
+            post_with(create_alert, create_alert_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/alerts/{id}",
+            get_with(get_alert, get_alert_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/alerts/{id}",
             put_with(update_alert, update_alert_docs),
         )
         .api_route(
-            "/api/v1/alerts/{id}",
+            "/gvm/public/v1/alerts/{id}",
             delete_with(delete_alert, delete_alert_docs),
         )
         // Schedules
         .api_route(
-            "/api/v1/schedules",
+            "/gvm/public/v1/schedules",
             get_with(list_schedules, list_schedules_docs),
         )
         .api_route(
-            "/api/v1/schedules",
+            "/gvm/public/v1/schedules",
             post_with(create_schedule, create_schedule_docs),
         )
         .api_route(
-            "/api/v1/schedules/{id}",
+            "/gvm/public/v1/schedules/{id}",
             get_with(get_schedule, get_schedule_docs),
         )
         .api_route(
-            "/api/v1/schedules/{id}",
+            "/gvm/public/v1/schedules/{id}",
             put_with(update_schedule, update_schedule_docs),
         )
         .api_route(
-            "/api/v1/schedules/{id}",
+            "/gvm/public/v1/schedules/{id}",
             delete_with(delete_schedule, delete_schedule_docs),
         )
         // Credentials
         .api_route(
-            "/api/v1/active-directory/object-searches",
+            "/gvm/public/v1/active-directory/object-searches",
             post_with(
                 crate::active_directory::search_active_directory_objects,
                 crate::active_directory::search_active_directory_objects_docs,
             ),
         )
         .api_route(
-            "/api/v1/credentials/{id}/actions/verify-active-directory",
+            "/gvm/public/v1/credentials/{id}/actions/verify-active-directory",
             post_with(
                 verify_active_directory_saved,
                 verify_active_directory_saved_docs,
             ),
         )
         .api_route(
-            "/api/v1/active-directory/credential-verifications",
+            "/gvm/public/v1/active-directory/credential-verifications",
             post_with(
                 verify_active_directory_inline,
                 verify_active_directory_inline_docs,
             ),
         )
         .api_route(
-            "/api/v1/credential-stores",
+            "/gvm/public/v1/credential-stores",
             get_with(list_credential_stores, list_credential_stores_docs),
         )
         .api_route(
-            "/api/v1/credential-stores/{id}",
+            "/gvm/public/v1/credential-stores/{id}",
             get_with(get_credential_store, get_credential_store_docs),
         )
         .api_route(
-            "/api/v1/credential-stores/{id}",
+            "/gvm/public/v1/credential-stores/{id}",
             put_with(update_credential_store, update_credential_store_docs),
         )
         .api_route(
-            "/api/v1/credential-stores/{id}/actions/verify",
+            "/gvm/public/v1/credential-stores/{id}/actions/verify",
             post_with(verify_credential_store, verify_credential_store_docs),
         )
         .api_route(
-            "/api/v1/credentials",
+            "/gvm/public/v1/credentials",
             get_with(list_credentials, list_credentials_docs),
         )
         .api_route(
-            "/api/v1/credentials",
+            "/gvm/public/v1/credentials",
             post_with(create_credential, create_credential_docs),
         )
         .api_route(
-            "/api/v1/credentials/{id}",
+            "/gvm/public/v1/credentials/{id}",
             get_with(get_credential, get_credential_docs),
         )
         .api_route(
-            "/api/v1/credentials/{id}",
+            "/gvm/public/v1/credentials/{id}",
             put_with(update_credential, update_credential_docs),
         )
         .api_route(
-            "/api/v1/credentials/{id}",
+            "/gvm/public/v1/credentials/{id}",
             delete_with(delete_credential, delete_credential_docs),
         )
         // Port Lists
         .api_route(
-            "/api/v1/port-lists",
+            "/gvm/public/v1/port-lists",
             get_with(list_port_lists, list_port_lists_docs),
         )
         .api_route(
-            "/api/v1/port-lists",
+            "/gvm/public/v1/port-lists",
             post_with(create_port_list, create_port_list_docs),
         )
         .api_route(
-            "/api/v1/port-lists/{id}",
+            "/gvm/public/v1/port-lists/{id}",
             get_with(get_port_list, get_port_list_docs),
         )
         .api_route(
-            "/api/v1/port-lists/{id}",
+            "/gvm/public/v1/port-lists/{id}",
             put_with(update_port_list, update_port_list_docs),
         )
         .api_route(
-            "/api/v1/port-lists/{id}",
+            "/gvm/public/v1/port-lists/{id}",
             delete_with(delete_port_list, delete_port_list_docs),
         )
         // Feeds
-        .api_route("/api/v1/feeds", get_with(list_feeds, list_feeds_docs))
-        // Supporting resources
-        .api_route("/api/v1/hosts", get_with(list_hosts, list_hosts_docs))
-        .api_route("/api/v1/hosts", post_with(create_host, create_host_docs))
-        .api_route("/api/v1/hosts/{id}", get_with(get_host, get_host_docs))
         .api_route(
-            "/api/v1/hosts/{id}",
+            "/gvm/public/v1/feeds",
+            get_with(list_feeds, list_feeds_docs),
+        )
+        // Supporting resources
+        .api_route(
+            "/gvm/public/v1/hosts",
+            get_with(list_hosts, list_hosts_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/hosts",
+            post_with(create_host, create_host_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/hosts/{id}",
+            get_with(get_host, get_host_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/hosts/{id}",
             put_with(update_host, update_host_docs),
         )
         .api_route(
-            "/api/v1/hosts/{id}",
+            "/gvm/public/v1/hosts/{id}",
             delete_with(delete_host, delete_host_docs),
         )
         .api_route(
-            "/api/v1/tls-certificates",
+            "/gvm/public/v1/tls-certificates",
             get_with(list_tls_certificates, list_tls_certificates_docs),
         )
         .api_route(
-            "/api/v1/tls-certificates/{id}",
+            "/gvm/public/v1/tls-certificates/{id}",
             get_with(get_tls_certificate, get_tls_certificate_docs),
         )
         .api_route(
-            "/api/v1/report-formats",
+            "/gvm/public/v1/report-formats",
             get_with(list_report_formats, list_report_formats_docs),
         )
         .api_route(
-            "/api/v1/report-formats/{id}",
+            "/gvm/public/v1/report-formats/{id}",
             get_with(get_report_format, get_report_format_docs),
         )
-        .api_route("/api/v1/filters", get_with(list_filters, list_filters_docs))
         .api_route(
-            "/api/v1/filters",
+            "/gvm/public/v1/filters",
+            get_with(list_filters, list_filters_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/filters",
             post_with(create_filter, create_filter_docs),
         )
         .api_route(
-            "/api/v1/filters/{id}",
+            "/gvm/public/v1/filters/{id}",
             get_with(get_filter, get_filter_docs),
         )
         .api_route(
-            "/api/v1/filters/{id}",
+            "/gvm/public/v1/filters/{id}",
             put_with(update_filter, update_filter_docs),
         )
         .api_route(
-            "/api/v1/filters/{id}",
+            "/gvm/public/v1/filters/{id}",
             delete_with(delete_filter, delete_filter_docs),
         )
         .api_route(
-            "/api/v1/filters/{id}/clone",
+            "/gvm/public/v1/filters/{id}/clone",
             post_with(clone_filter, clone_filter_docs),
         )
-        .api_route("/api/v1/tags", get_with(list_tags, list_tags_docs))
-        .api_route("/api/v1/tags", post_with(create_tag, create_tag_docs))
-        .api_route("/api/v1/tags/{id}", get_with(get_tag, get_tag_docs))
-        .api_route("/api/v1/tags/{id}", put_with(update_tag, update_tag_docs))
+        .api_route("/gvm/public/v1/tags", get_with(list_tags, list_tags_docs))
         .api_route(
-            "/api/v1/tags/{id}",
+            "/gvm/public/v1/tags",
+            post_with(create_tag, create_tag_docs),
+        )
+        .api_route("/gvm/public/v1/tags/{id}", get_with(get_tag, get_tag_docs))
+        .api_route(
+            "/gvm/public/v1/tags/{id}",
+            put_with(update_tag, update_tag_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/tags/{id}",
             delete_with(delete_tag, delete_tag_docs),
         )
         .api_route(
-            "/api/v1/tags/{id}/clone",
+            "/gvm/public/v1/tags/{id}/clone",
             post_with(clone_tag, clone_tag_docs),
         )
-        .api_route("/api/v1/notes", get_with(list_notes, list_notes_docs))
-        .api_route("/api/v1/notes", post_with(create_note, create_note_docs))
-        .api_route("/api/v1/notes/{id}", get_with(get_note, get_note_docs))
         .api_route(
-            "/api/v1/notes/{id}",
+            "/gvm/public/v1/notes",
+            get_with(list_notes, list_notes_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/notes",
+            post_with(create_note, create_note_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/notes/{id}",
+            get_with(get_note, get_note_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/notes/{id}",
             put_with(update_note, update_note_docs),
         )
         .api_route(
-            "/api/v1/notes/{id}",
+            "/gvm/public/v1/notes/{id}",
             delete_with(delete_note, delete_note_docs),
         )
         .api_route(
-            "/api/v1/overrides",
+            "/gvm/public/v1/overrides",
             get_with(list_overrides, list_overrides_docs),
         )
         .api_route(
-            "/api/v1/overrides",
+            "/gvm/public/v1/overrides",
             post_with(create_override, create_override_docs),
         )
         .api_route(
-            "/api/v1/overrides/{id}",
+            "/gvm/public/v1/overrides/{id}",
             get_with(get_override, get_override_docs),
         )
         .api_route(
-            "/api/v1/overrides/{id}",
+            "/gvm/public/v1/overrides/{id}",
             put_with(update_override, update_override_docs),
         )
         .api_route(
-            "/api/v1/overrides/{id}",
+            "/gvm/public/v1/overrides/{id}",
             delete_with(delete_override, delete_override_docs),
         )
-        .api_route("/api/v1/nvts", get_with(list_nvts, list_nvts_docs))
-        .api_route("/api/v1/nvts/{id}", get_with(get_nvt, get_nvt_docs))
+        .api_route("/gvm/public/v1/nvts", get_with(list_nvts, list_nvts_docs))
+        .api_route("/gvm/public/v1/nvts/{id}", get_with(get_nvt, get_nvt_docs))
         .api_route(
-            "/api/v1/vulnerabilities",
+            "/gvm/public/v1/vulnerabilities",
             get_with(list_vulnerabilities, list_vulnerabilities_docs),
         )
-        .api_route("/api/v1/cves", get_with(list_cves, list_cves_docs))
-        .api_route("/api/v1/cves/{id}", get_with(get_cve, get_cve_docs))
-        .api_route("/api/v1/cpes", get_with(list_cpes, list_cpes_docs))
-        .api_route("/api/v1/cpes/{id}", get_with(get_cpe, get_cpe_docs))
+        .api_route("/gvm/public/v1/cves", get_with(list_cves, list_cves_docs))
+        .api_route("/gvm/public/v1/cves/{id}", get_with(get_cve, get_cve_docs))
+        .api_route("/gvm/public/v1/cpes", get_with(list_cpes, list_cpes_docs))
+        .api_route("/gvm/public/v1/cpes/{id}", get_with(get_cpe, get_cpe_docs))
         .api_route(
-            "/api/v1/cert-bund-advisories",
+            "/gvm/public/v1/cert-bund-advisories",
             get_with(list_cert_bund_advisories, list_cert_bund_advisories_docs),
         )
         .api_route(
-            "/api/v1/cert-bund-advisories/{id}",
+            "/gvm/public/v1/cert-bund-advisories/{id}",
             get_with(get_cert_bund_advisory, get_cert_bund_advisory_docs),
         )
         .api_route(
-            "/api/v1/dfn-cert-advisories",
+            "/gvm/public/v1/dfn-cert-advisories",
             get_with(list_dfn_cert_advisories, list_dfn_cert_advisories_docs),
         )
         .api_route(
-            "/api/v1/dfn-cert-advisories/{id}",
+            "/gvm/public/v1/dfn-cert-advisories/{id}",
             get_with(get_dfn_cert_advisory, get_dfn_cert_advisory_docs),
         )
         .api_route(
-            "/api/v1/nvt-families",
+            "/gvm/public/v1/nvt-families",
             get_with(list_nvt_families, list_nvt_families_docs),
         )
         // Identity and access control
-        .api_route("/api/v1/users", get_with(list_users, list_users_docs))
-        .api_route("/api/v1/users", post_with(create_user, create_user_docs))
-        .api_route("/api/v1/users/{id}", get_with(get_user, get_user_docs))
         .api_route(
-            "/api/v1/users/{id}",
+            "/gvm/public/v1/users",
+            get_with(list_users, list_users_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/users",
+            post_with(create_user, create_user_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/users/{id}",
+            get_with(get_user, get_user_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/users/{id}",
             put_with(update_user, update_user_docs),
         )
         .api_route(
-            "/api/v1/users/{id}",
+            "/gvm/public/v1/users/{id}",
             delete_with(delete_user, delete_user_docs),
         )
-        .api_route("/api/v1/groups", get_with(list_groups, list_groups_docs))
-        .api_route("/api/v1/groups", post_with(create_group, create_group_docs))
-        .api_route("/api/v1/groups/{id}", get_with(get_group, get_group_docs))
         .api_route(
-            "/api/v1/groups/{id}",
+            "/gvm/public/v1/groups",
+            get_with(list_groups, list_groups_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/groups",
+            post_with(create_group, create_group_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/groups/{id}",
+            get_with(get_group, get_group_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/groups/{id}",
             put_with(update_group, update_group_docs),
         )
         .api_route(
-            "/api/v1/groups/{id}",
+            "/gvm/public/v1/groups/{id}",
             delete_with(delete_group, delete_group_docs),
         )
-        .api_route("/api/v1/roles", get_with(list_roles, list_roles_docs))
-        .api_route("/api/v1/roles", post_with(create_role, create_role_docs))
-        .api_route("/api/v1/roles/{id}", get_with(get_role, get_role_docs))
         .api_route(
-            "/api/v1/roles/{id}",
+            "/gvm/public/v1/roles",
+            get_with(list_roles, list_roles_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/roles",
+            post_with(create_role, create_role_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/roles/{id}",
+            get_with(get_role, get_role_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/roles/{id}",
             put_with(update_role, update_role_docs),
         )
         .api_route(
-            "/api/v1/roles/{id}",
+            "/gvm/public/v1/roles/{id}",
             delete_with(delete_role, delete_role_docs),
         )
         .api_route(
-            "/api/v1/permissions",
+            "/gvm/public/v1/permissions",
             get_with(list_permissions, list_permissions_docs),
         )
         .api_route(
-            "/api/v1/permissions",
+            "/gvm/public/v1/permissions",
             post_with(create_permission, create_permission_docs),
         )
         .api_route(
-            "/api/v1/permissions/{id}",
+            "/gvm/public/v1/permissions/{id}",
             get_with(get_permission, get_permission_docs),
         )
         .api_route(
-            "/api/v1/permissions/{id}",
+            "/gvm/public/v1/permissions/{id}",
             put_with(update_permission, update_permission_docs),
         )
         .api_route(
-            "/api/v1/permissions/{id}",
+            "/gvm/public/v1/permissions/{id}",
             delete_with(delete_permission, delete_permission_docs),
         )
         .api_route(
-            "/api/v1/user-settings",
+            "/gvm/public/v1/user-settings",
             get_with(list_user_settings, list_user_settings_docs),
         )
         .api_route(
-            "/api/v1/user-settings/{id}",
+            "/gvm/public/v1/user-settings/{id}",
             get_with(get_user_setting, get_user_setting_docs),
         )
         .api_route(
-            "/api/v1/user-settings/{id}",
+            "/gvm/public/v1/user-settings/{id}",
             put_with(update_user_setting, update_user_setting_docs),
         )
         // Tasks
-        .api_route("/api/v1/tasks", get_with(list_tasks, list_tasks_docs))
-        .api_route("/api/v1/tasks", post_with(create_task, create_task_docs))
-        .api_route("/api/v1/tasks/{id}", get_with(get_task, get_task_docs))
         .api_route(
-            "/api/v1/tasks/{id}",
+            "/gvm/public/v1/tasks",
+            get_with(list_tasks, list_tasks_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/tasks",
+            post_with(create_task, create_task_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/tasks/{id}",
+            get_with(get_task, get_task_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/tasks/{id}",
             put_with(update_task, update_task_docs),
         )
         .api_route(
-            "/api/v1/tasks/{id}",
+            "/gvm/public/v1/tasks/{id}",
             delete_with(delete_task, delete_task_docs),
         )
         .api_route(
-            "/api/v1/tasks/{id}/clone",
+            "/gvm/public/v1/tasks/{id}/clone",
             post_with(clone_task, clone_task_docs),
         )
         .api_route(
-            "/api/v1/tasks/{id}/start",
+            "/gvm/public/v1/tasks/{id}/start",
             post_with(start_task, start_task_docs),
         )
         .api_route(
-            "/api/v1/tasks/{id}/stop",
+            "/gvm/public/v1/tasks/{id}/stop",
             post_with(stop_task, stop_task_docs),
         )
         .api_route(
-            "/api/v1/tasks/{id}/resume",
+            "/gvm/public/v1/tasks/{id}/resume",
             post_with(resume_task, resume_task_docs),
         )
         // Audits (compliance tasks; get/start/stop/resume reuse task handlers)
-        .api_route("/api/v1/audits", get_with(list_audits, list_audits_docs))
-        .api_route("/api/v1/audits", post_with(create_audit, create_audit_docs))
-        .api_route("/api/v1/audits/{id}", get_with(get_audit, get_audit_docs))
         .api_route(
-            "/api/v1/audits/{id}",
+            "/gvm/public/v1/audits",
+            get_with(list_audits, list_audits_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/audits",
+            post_with(create_audit, create_audit_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/audits/{id}",
+            get_with(get_audit, get_audit_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/audits/{id}",
             put_with(update_audit, update_audit_docs),
         )
         .api_route(
-            "/api/v1/audits/{id}",
+            "/gvm/public/v1/audits/{id}",
             delete_with(delete_audit, delete_audit_docs),
         )
         .api_route(
-            "/api/v1/audits/{id}/start",
+            "/gvm/public/v1/audits/{id}/start",
             post_with(start_audit, start_audit_docs),
         )
         .api_route(
-            "/api/v1/audits/{id}/stop",
+            "/gvm/public/v1/audits/{id}/stop",
             post_with(stop_audit, stop_audit_docs),
         )
         .api_route(
-            "/api/v1/audits/{id}/resume",
+            "/gvm/public/v1/audits/{id}/resume",
             post_with(resume_audit, resume_audit_docs),
         )
         // Reports
-        .api_route("/api/v1/reports", get_with(list_reports, list_reports_docs))
         .api_route(
-            "/api/v1/reports",
+            "/gvm/public/v1/reports",
+            get_with(list_reports, list_reports_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/reports",
             post_with(import_report, import_report_docs),
         )
         .api_route(
-            "/api/v1/reports/{id}",
+            "/gvm/public/v1/reports/{id}",
             get_with(get_report, get_report_docs),
         )
         .api_route(
-            "/api/v1/reports/{id}/exports",
+            "/gvm/public/v1/reports/{id}/exports",
             post_with(create_report_export_job, create_report_export_job_docs),
         )
         .api_route(
-            "/api/v1/reports/{id}",
+            "/gvm/public/v1/reports/{id}",
             delete_with(delete_report, delete_report_docs),
         )
         .api_route(
-            "/api/v1/reports/{id}/results",
+            "/gvm/public/v1/reports/{id}/results",
             get_with(get_report_results, get_report_results_docs),
         )
         .api_route(
-            "/api/v1/reports/{id}/vulnerabilities",
+            "/gvm/public/v1/reports/{id}/vulnerabilities",
             get_with(get_report_vulnerabilities, get_report_vulnerabilities_docs),
         )
         .api_route(
-            "/api/v1/reports/{id}/tls-certificates",
+            "/gvm/public/v1/reports/{id}/tls-certificates",
             get_with(
                 get_report_tls_certificates,
                 get_report_tls_certificates_docs,
             ),
         )
         .api_route(
-            "/api/v1/reports/{id}/errors",
+            "/gvm/public/v1/reports/{id}/errors",
             get_with(get_report_errors, get_report_errors_docs),
         )
         .api_route(
-            "/api/v1/reports/{id}/closed-cves",
+            "/gvm/public/v1/reports/{id}/closed-cves",
             get_with(get_report_closed_cves, get_report_closed_cves_docs),
         )
         .api_route(
-            "/api/v1/reports/{id}/hosts",
+            "/gvm/public/v1/reports/{id}/hosts",
             get_with(get_report_hosts, get_report_hosts_docs),
         )
         .api_route(
-            "/api/v1/reports/{id}/ports",
+            "/gvm/public/v1/reports/{id}/ports",
             get_with(get_report_ports, get_report_ports_docs),
         )
         .api_route(
-            "/api/v1/reports/{id}/applications",
+            "/gvm/public/v1/reports/{id}/applications",
             get_with(get_report_applications, get_report_applications_docs),
         )
         .api_route(
-            "/api/v1/reports/{id}/operating-systems",
+            "/gvm/public/v1/reports/{id}/operating-systems",
             get_with(
                 get_report_operating_systems,
                 get_report_operating_systems_docs,
             ),
         )
         .api_route(
-            "/api/v1/reports/{id}/cves",
+            "/gvm/public/v1/reports/{id}/cves",
             get_with(get_report_cves, get_report_cves_docs),
         )
         // Jobs
-        .api_route("/api/v1/jobs/{id}", get_with(get_job, get_job_docs))
+        .api_route("/gvm/public/v1/jobs/{id}", get_with(get_job, get_job_docs))
         .api_route(
-            "/api/v1/jobs/{id}",
+            "/gvm/public/v1/jobs/{id}",
             delete_with(cancel_job, cancel_job_docs),
         )
         .api_route(
-            "/api/v1/jobs/{id}/result",
+            "/gvm/public/v1/jobs/{id}/result",
             get_with(download_job_result, download_job_result_docs),
         )
         // Results
-        .api_route("/api/v1/results", get_with(list_results, list_results_docs))
         .api_route(
-            "/api/v1/results/{id}",
+            "/gvm/public/v1/results",
+            get_with(list_results, list_results_docs),
+        )
+        .api_route(
+            "/gvm/public/v1/results/{id}",
             get_with(get_result, get_result_docs),
         )
         // Scan Configs
         .api_route(
-            "/api/v1/scan-configs",
+            "/gvm/public/v1/scan-configs",
             get_with(list_scan_configs, list_scan_configs_docs),
         )
         .api_route(
-            "/api/v1/scan-configs",
+            "/gvm/public/v1/scan-configs",
             post_with(create_scan_config, create_scan_config_docs),
         )
         .api_route(
-            "/api/v1/scan-configs/{id}",
+            "/gvm/public/v1/scan-configs/{id}",
             get_with(get_scan_config, get_scan_config_docs),
         )
         .api_route(
-            "/api/v1/scan-configs/{id}",
+            "/gvm/public/v1/scan-configs/{id}",
             put_with(update_scan_config, update_scan_config_docs),
         )
         .api_route(
-            "/api/v1/scan-configs/{id}",
+            "/gvm/public/v1/scan-configs/{id}",
             delete_with(delete_scan_config, delete_scan_config_docs),
         )
         .api_route(
-            "/api/v1/scan-configs/{id}/nvts",
+            "/gvm/public/v1/scan-configs/{id}/nvts",
             get_with(list_scan_config_nvts, list_scan_config_nvts_docs),
         )
         .api_route(
-            "/api/v1/scan-configs/{id}/nvts/{oid}",
+            "/gvm/public/v1/scan-configs/{id}/nvts/{oid}",
             get_with(get_scan_config_nvt, get_scan_config_nvt_docs),
         )
         .api_route(
-            "/api/v1/scan-configs/{id}/preferences",
+            "/gvm/public/v1/scan-configs/{id}/preferences",
             get_with(
                 list_scan_config_preferences,
                 list_scan_config_preferences_docs,
             ),
         )
         .api_route(
-            "/api/v1/scan-configs/{id}/preferences/{name}",
+            "/gvm/public/v1/scan-configs/{id}/preferences/{name}",
             get_with(get_scan_config_preference, get_scan_config_preference_docs),
         )
         .api_route(
-            "/api/v1/scan-configs/{id}/preferences/{name}",
+            "/gvm/public/v1/scan-configs/{id}/preferences/{name}",
             put_with(set_scan_config_preference, set_scan_config_preference_docs),
         )
         .api_route(
-            "/api/v1/scan-configs/{id}/families/{family}/nvts",
+            "/gvm/public/v1/scan-configs/{id}/families/{family}/nvts",
             put_with(
                 set_scan_config_nvt_selection,
                 set_scan_config_nvt_selection_docs,
             ),
         )
         .api_route(
-            "/api/v1/scan-configs/{id}/family-selection",
+            "/gvm/public/v1/scan-configs/{id}/family-selection",
             put_with(
                 set_scan_config_family_selection,
                 set_scan_config_family_selection_docs,
@@ -954,48 +1065,48 @@ fn documented_router() -> ApiRouter<GatewayService> {
         )
         // Policies (compliance scan configs; get reuses the scan-config handler)
         .api_route(
-            "/api/v1/policies",
+            "/gvm/public/v1/policies",
             get_with(list_policies, list_policies_docs),
         )
         .api_route(
-            "/api/v1/policies",
+            "/gvm/public/v1/policies",
             post_with(create_policy, create_policy_docs),
         )
         .api_route(
-            "/api/v1/policies/{id}",
+            "/gvm/public/v1/policies/{id}",
             get_with(get_policy, get_policy_docs),
         )
         .api_route(
-            "/api/v1/policies/{id}",
+            "/gvm/public/v1/policies/{id}",
             put_with(update_policy, update_policy_docs),
         )
         .api_route(
-            "/api/v1/policies/{id}",
+            "/gvm/public/v1/policies/{id}",
             delete_with(delete_policy, delete_policy_docs),
         )
         // Scanners
         .api_route(
-            "/api/v1/scanners",
+            "/gvm/public/v1/scanners",
             get_with(list_scanners, list_scanners_docs),
         )
         .api_route(
-            "/api/v1/scanners/{id}",
+            "/gvm/public/v1/scanners/{id}",
             get_with(get_scanner, get_scanner_docs),
         )
         .api_route(
-            "/api/v1/operating-systems",
+            "/gvm/public/v1/operating-systems",
             get_with(list_operating_systems, list_operating_systems_docs),
         )
         .api_route(
-            "/api/v1/operating-systems/{id}",
+            "/gvm/public/v1/operating-systems/{id}",
             get_with(get_operating_system, get_operating_system_docs),
         )
         .api_route(
-            "/api/v1/operating-systems/{id}",
+            "/gvm/public/v1/operating-systems/{id}",
             put_with(update_operating_system, modify_operating_system_docs),
         )
         .api_route(
-            "/api/v1/operating-systems/{id}",
+            "/gvm/public/v1/operating-systems/{id}",
             delete_with(delete_operating_system, delete_operating_system_docs),
         )
 }
@@ -1074,7 +1185,7 @@ async fn shutdown_gate_middleware(
 }
 
 fn should_bypass_shutdown_gate(path: &str) -> bool {
-    matches!(path, "/health" | "/ready")
+    matches!(path, "/gvm/health" | "/gvm/ready")
 }
 
 #[derive(Clone, Default)]

@@ -25,7 +25,9 @@ class CredentialsInventoryTests(unittest.TestCase):
             root = Path(temporary)
             directory = root / "spec/rest-api"
             directory.mkdir(parents=True)
-            rows = "\n".join(f"| `POST` | `/api/v1{path}` | Operation |" for path in documented)
+            rows = "\n".join(
+                f"| `POST` | `/gvm/public/v1{path}` | Operation |" for path in documented
+            )
             (directory / "openspec.md").write_text(f"#### Credentials\n{rows}\n#### Next\n")
             with patch.object(CHECK_DOCS, "REPOSITORY_ROOT", root), patch.object(
                 CHECK_DOCS, "curated_routes", return_value={path: {"POST"} for path in implemented}

@@ -6,7 +6,7 @@ use super::super::*;
 impl E2eHarness {
     pub async fn list_schedules(&self, token: &str) -> Result<ListResponse<Schedule>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/schedules?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/schedules?perPage=1000", token),
             StatusCode::OK,
             "list schedules",
         )
@@ -27,7 +27,7 @@ impl E2eHarness {
             "timezone": timezone,
         });
         self.send_created_json(
-            self.authed(Method::POST, "/api/v1/schedules", token)
+            self.authed(Method::POST, "/gvm/public/v1/schedules", token)
                 .json(&body),
             "create schedule",
         )
@@ -38,7 +38,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::GET,
-                &format!("/api/v1/schedules/{schedule_id}"),
+                &format!("/gvm/public/v1/schedules/{schedule_id}"),
                 token,
             ),
             StatusCode::OK,
@@ -65,7 +65,7 @@ impl E2eHarness {
         self.send_json(
             self.authed(
                 Method::PUT,
-                &format!("/api/v1/schedules/{schedule_id}"),
+                &format!("/gvm/public/v1/schedules/{schedule_id}"),
                 token,
             )
             .json(&body),
@@ -79,7 +79,7 @@ impl E2eHarness {
         self.send_empty(
             self.authed(
                 Method::DELETE,
-                &format!("/api/v1/schedules/{schedule_id}"),
+                &format!("/gvm/public/v1/schedules/{schedule_id}"),
                 token,
             ),
             StatusCode::NO_CONTENT,
@@ -90,7 +90,7 @@ impl E2eHarness {
 
     pub async fn list_alerts(&self, token: &str) -> Result<ListResponse<Alert>> {
         self.send_json(
-            self.authed(Method::GET, "/api/v1/alerts?perPage=1000", token),
+            self.authed(Method::GET, "/gvm/public/v1/alerts?perPage=1000", token),
             StatusCode::OK,
             "list alerts",
         )
@@ -106,7 +106,7 @@ impl E2eHarness {
             "method": "syslog",
         });
         self.send_created_json(
-            self.authed(Method::POST, "/api/v1/alerts", token)
+            self.authed(Method::POST, "/gvm/public/v1/alerts", token)
                 .json(&body),
             "create alert",
         )
@@ -115,7 +115,11 @@ impl E2eHarness {
 
     pub async fn get_alert(&self, token: &str, alert_id: &str) -> Result<Alert> {
         self.send_json(
-            self.authed(Method::GET, &format!("/api/v1/alerts/{alert_id}"), token),
+            self.authed(
+                Method::GET,
+                &format!("/gvm/public/v1/alerts/{alert_id}"),
+                token,
+            ),
             StatusCode::OK,
             "get alert",
         )
@@ -124,7 +128,11 @@ impl E2eHarness {
 
     pub async fn delete_alert(&self, token: &str, alert_id: &str) -> Result<()> {
         self.send_empty(
-            self.authed(Method::DELETE, &format!("/api/v1/alerts/{alert_id}"), token),
+            self.authed(
+                Method::DELETE,
+                &format!("/gvm/public/v1/alerts/{alert_id}"),
+                token,
+            ),
             StatusCode::NO_CONTENT,
             "delete alert",
         )

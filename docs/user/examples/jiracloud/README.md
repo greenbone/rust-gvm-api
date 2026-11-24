@@ -29,7 +29,7 @@ Set these groups of values:
   `JIRA_CLOSED_STATUS_CATEGORIES`, and `JIRA_REOPEN_TRANSITION_NAME`.
 - GVM report selection: `JIRA_LOOKBACK_HOURS` and `JIRA_MIN_SEVERITY`.
 
-`GVM_GATEWAY_BASE_URL` is the gateway root URL without `/api/v1`, for example:
+`GVM_GATEWAY_BASE_URL` is the gateway root URL without `/gvm/public/v1`, for example:
 
 ```text
 GVM_GATEWAY_BASE_URL=http://127.0.0.1:8080
@@ -46,10 +46,10 @@ JIRA_SITE_URL=https://example.atlassian.net
 The GVM user configured in `.env` must be able to create sessions and read the
 data being synchronized:
 
-- `POST /api/v1/session`
-- `DELETE /api/v1/session`
-- `GET /api/v1/reports`
-- `GET /api/v1/reports/{id}/results`
+- `POST /gvm/public/v1/session`
+- `DELETE /gvm/public/v1/session`
+- `GET /gvm/public/v1/reports`
+- `GET /gvm/public/v1/reports/{id}/results`
 
 The script fetches reports visible to that GVM user. It does not bypass GVM
 permissions.
@@ -113,7 +113,7 @@ uv run python -m unittest
 The script reads reports started in the configured lookback window:
 
 ```text
-GET /api/v1/reports?filter=scan_start>{cutoff_utc}&perPage=1000
+GET /gvm/public/v1/reports?filter=scan_start>{cutoff_utc}&perPage=1000
 ```
 
 It reads all pages, fetches results for each selected report, and keeps only

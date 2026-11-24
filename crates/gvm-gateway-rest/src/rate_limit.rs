@@ -178,7 +178,7 @@ fn prune_expired_buckets(state: &mut RateLimitState, now: u64, window_secs: u64)
 }
 
 pub(crate) fn is_rate_limited_path(path: &str) -> bool {
-    path.starts_with("/api/v1/") && path != "/api/v1/openapi.json"
+    path.starts_with("/gvm/public/v1/") && path != "/gvm/public/v1/openapi.json"
 }
 
 pub(crate) fn too_many_requests_response(instance: &str, retry_after_secs: u64) -> Response {
@@ -197,7 +197,7 @@ pub(crate) fn too_many_requests_response(instance: &str, retry_after_secs: u64) 
 
 fn rate_limit_subject(request: &Request, trusted_proxy_cidrs: &[TrustedProxyCidr]) -> String {
     let path = request.uri().path();
-    if path == "/api/v1/session" {
+    if path == "/gvm/public/v1/session" {
         return format!(
             "session-create:{}",
             source_subject(request, trusted_proxy_cidrs)

@@ -86,7 +86,7 @@ async fn gvmd_adapter_probe_version_reports_mock_version() {
 
 #[tokio::test]
 async fn gvmd_adapter_readiness_reports_ready_when_probe_succeeds() {
-    // Covers the production `/ready` contract: a reachable GMP backend must
+    // Covers the production `/gvm/ready` contract: a reachable GMP backend must
     // be reported as ready instead of relying on startup-only state.
     let server = MockGmpServer::builder()
         .mode(ServerMode::Stateful)
@@ -106,7 +106,7 @@ async fn gvmd_adapter_readiness_reports_ready_when_probe_succeeds() {
 
 #[tokio::test]
 async fn gvmd_adapter_readiness_reports_not_ready_when_socket_is_missing() {
-    // Regression coverage for compose startup races: `/ready` must degrade
+    // Regression coverage for compose startup races: `/gvm/ready` must degrade
     // while gvmd has not created its Unix socket yet.
     let adapter = GvmdAdapter::unix_socket("/tmp/nonexistent-gvmd-readiness.sock");
     let status = adapter.readiness().await.unwrap();

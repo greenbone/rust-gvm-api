@@ -161,7 +161,9 @@ async fn malformed_and_unsupported_search_responses_are_no_store_and_sanitized()
     let response = search_active_directory_objects(
         State(service),
         HeaderMap::new(),
-        OriginalUri(Uri::from_static("/api/v1/active-directory/object-searches")),
+        OriginalUri(Uri::from_static(
+            "/gvm/public/v1/active-directory/object-searches",
+        )),
         Bytes::from_static(br#"{"credentialId":"secret DN"}"#),
     )
     .await;
@@ -176,7 +178,9 @@ async fn malformed_and_unsupported_search_responses_are_no_store_and_sanitized()
     let response = search_active_directory_objects(
         State(service),
         HeaderMap::new(),
-        OriginalUri(Uri::from_static("/api/v1/active-directory/object-searches")),
+        OriginalUri(Uri::from_static(
+            "/gvm/public/v1/active-directory/object-searches",
+        )),
         Bytes::from(format!("{{\"credentialId\":\"{ID}\"}}")),
     )
     .await;
@@ -198,7 +202,9 @@ async fn static_backend_does_not_emulate_directory_success() {
     let response = search_active_directory_objects(
         State(service),
         headers,
-        OriginalUri(Uri::from_static("/api/v1/active-directory/object-searches")),
+        OriginalUri(Uri::from_static(
+            "/gvm/public/v1/active-directory/object-searches",
+        )),
         Bytes::from(format!("{{\"credentialId\":\"{ID}\"}}")),
     )
     .await;

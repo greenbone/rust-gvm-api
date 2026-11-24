@@ -3,7 +3,7 @@
 This is the human-readable map of the REST API shipped by `rust-gvm-api`
 0.7.0. It explains common behavior and shows every current route family. For
 exact request and response schemas, use the OpenAPI document shipped with the
-same release or the running gateway's `GET /api/v1/openapi.json` endpoint.
+same release or the running gateway's `GET /gvm/public/v1/openapi.json` endpoint.
 
 The normative contract is
 [`spec/rest-api`](https://github.com/greenbone-hive/rust-gvm-api/tree/main/spec/rest-api)
@@ -13,13 +13,20 @@ alignment. The current contract contains 125 paths and 203 operations.
 
 ## Base paths and documentation
 
-- Versioned API: `/api/v1`
-- Liveness: `GET /health`
-- Readiness: `GET /ready`
-- Runtime OpenAPI: `GET /api/v1/openapi.json`
-- Browser documentation: `GET /api/v1/docs`
+- Versioned API: `/gvm/public/v1`
+- Liveness: `GET /gvm/health`
+- Readiness: `GET /gvm/ready`
+- Runtime OpenAPI: `GET /gvm/public/v1/openapi.json`
+- Browser documentation: `GET /gvm/public/v1/docs`
 
-`/health` and `/ready` are intentionally unversioned. The browser documentation
+The default API base path is `/gvm/public/`. Liveness and readiness are
+unversioned HTTP endpoints implemented by the gateway application, also when
+running outside a container. `/gvm/health` reports process liveness; `/gvm/ready` checks
+backend readiness and returns `503` during shutdown or when not ready. Container
+or orchestration probes can call these endpoints; their service-level paths stay outside
+the versioned public API prefix. The former `/api/v1` prefix is no longer served.
+
+`/gvm/health` and `/gvm/ready` are intentionally unversioned. The browser documentation
 route is an operational UI and is not itself part of the OpenAPI contract.
 
 ## Authentication
@@ -29,7 +36,7 @@ The gateway supports two authentication modes:
 1. Create a persistent session with Basic credentials:
 
    ```http
-   POST /api/v1/session
+   POST /gvm/public/v1/session
    Authorization: Basic <base64(username:password)>
    ```
 
@@ -43,7 +50,7 @@ The gateway supports two authentication modes:
    gateway creates a backend context for that request and removes it before
    returning.
 
-`GET /api/v1/session` and `DELETE /api/v1/session` operate on an existing
+`GET /gvm/public/v1/session` and `DELETE /gvm/public/v1/session` operate on an existing
 bearer session. Health, readiness, version, OpenAPI, and browser documentation
 are public. Unless a route is explicitly public, assume that it requires
 Bearer or request-scoped Basic authentication.
@@ -62,7 +69,7 @@ preference name, or family name. Request objects reject unknown fields.
 Report import is the main non-JSON exception:
 
 ```http
-POST /api/v1/reports?taskId=<uuid>&inAssets=true
+POST /gvm/public/v1/reports?taskId=<uuid>&inAssets=true
 Content-Type: application/xml
 ```
 
@@ -123,7 +130,7 @@ Errors use RFC 9457 `application/problem+json`:
   "title": "Resource Not Found",
   "status": 404,
   "detail": "The requested resource was not found.",
-  "instance": "/api/v1/targets/550e8400-e29b-41d4-a716-446655440000"
+  "instance": "/gvm/public/v1/targets/550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
@@ -154,14 +161,14 @@ return `traceparent` and, when present, `tracestate`; `baggage` is not echoed.
 ## Route map
 
 Methods below are the methods currently published for each path. All paths in
-the tables are relative to `/api/v1` except `/health` and `/ready`.
+the tables are relative to `/gvm/public/v1` except `/gvm/health` and `/gvm/ready`.
 
 ### System and sessions
 
 | Methods | Path | Purpose |
 | --- | --- | --- |
-| `GET` | `/health` | Unversioned process liveness |
-| `GET` | `/ready` | Unversioned backend readiness |
+| `GET` | `/gvm/health` | Unversioned process liveness |
+| `GET` | `/gvm/ready` | Unversioned backend readiness |
 | `GET` | `/version` | REST package/API version and backend GMP version |
 | `GET` | `/timezones` | Backend timezone catalog |
 | `GET` | `/openapi.json` | Runtime-generated OpenAPI contract |

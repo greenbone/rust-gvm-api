@@ -263,7 +263,7 @@ pub async fn clone_tag(
         Err(error) => return gateway_error(error, instance),
     };
     match service.clone_tag(&session, &id).await {
-        Ok(new_id) => created_resource("/api/v1/tags", &new_id),
+        Ok(new_id) => created_resource("/gvm/public/v1/tags", &new_id),
         Err(error) => gateway_error(error, instance),
     }
 }

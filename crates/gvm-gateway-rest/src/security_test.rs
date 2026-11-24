@@ -24,10 +24,10 @@ fn basic_request(method: &str, path: &str) -> Request<Body> {
 #[test]
 fn request_scoped_basic_auth_skips_public_routes() {
     for path in [
-        "/health",
-        "/ready",
-        "/api/v1/version",
-        "/api/v1/openapi.json",
+        "/gvm/health",
+        "/gvm/ready",
+        "/gvm/public/v1/version",
+        "/gvm/public/v1/openapi.json",
     ] {
         assert!(
             !uses_request_scoped_basic_auth(&basic_request("GET", path)),
@@ -40,24 +40,24 @@ fn request_scoped_basic_auth_skips_public_routes() {
 fn request_scoped_basic_auth_keeps_session_lifecycle_special_cases() {
     assert!(!uses_request_scoped_basic_auth(&basic_request(
         "POST",
-        "/api/v1/session"
+        "/gvm/public/v1/session"
     )));
     assert!(!uses_request_scoped_basic_auth(&basic_request(
         "GET",
-        "/api/v1/session"
+        "/gvm/public/v1/session"
     )));
 }
 
 #[test]
 fn request_scoped_basic_auth_applies_to_protected_routes_by_default() {
     for path in [
-        "/api/v1/alerts",
-        "/api/v1/credentials/stores",
-        "/api/v1/feeds",
-        "/api/v1/report-formats",
-        "/api/v1/timezones",
-        "/api/v1/users",
-        "/api/v1/future-resource",
+        "/gvm/public/v1/alerts",
+        "/gvm/public/v1/credentials/stores",
+        "/gvm/public/v1/feeds",
+        "/gvm/public/v1/report-formats",
+        "/gvm/public/v1/timezones",
+        "/gvm/public/v1/users",
+        "/gvm/public/v1/future-resource",
     ] {
         assert!(
             uses_request_scoped_basic_auth(&basic_request("GET", path)),
@@ -70,7 +70,7 @@ fn request_scoped_basic_auth_applies_to_protected_routes_by_default() {
 fn request_scoped_basic_auth_is_rejected_for_report_export_job_creation() {
     let request = basic_request(
         "POST",
-        "/api/v1/reports/550e8400-e29b-41d4-a716-446655440000/exports",
+        "/gvm/public/v1/reports/550e8400-e29b-41d4-a716-446655440000/exports",
     );
 
     // This policy decision happens before temporary-session creation, keeping

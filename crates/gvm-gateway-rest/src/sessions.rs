@@ -27,7 +27,7 @@ use crate::{
 // Response DTOs
 // ============================================================================
 
-/// JSON body returned by `POST /api/v1/session`.
+/// JSON body returned by `POST /gvm/public/v1/session`.
 #[derive(Serialize, JsonSchema)]
 #[schemars(rename = "SessionCreated")]
 pub(crate) struct SessionCreatedResponse {
@@ -57,7 +57,7 @@ impl From<DomainSessionState> for SessionState {
     }
 }
 
-/// JSON body returned by `GET /api/v1/session`.
+/// JSON body returned by `GET /gvm/public/v1/session`.
 #[derive(Serialize, JsonSchema)]
 #[schemars(rename = "SessionInfo")]
 pub(crate) struct SessionInfoResponse {
@@ -79,7 +79,7 @@ pub(crate) struct SessionInfoResponse {
 
 /// Create a new session via HTTP Basic authentication.
 ///
-/// `POST /api/v1/session`
+/// `POST /gvm/public/v1/session`
 pub async fn create_session(
     State(service): State<GatewayService>,
     headers: HeaderMap,
@@ -111,7 +111,7 @@ pub async fn create_session(
 
 /// Inspect a session.
 ///
-/// `GET /api/v1/session`
+/// `GET /gvm/public/v1/session`
 pub async fn get_session(
     State(service): State<GatewayService>,
     headers: HeaderMap,
@@ -141,7 +141,7 @@ pub async fn get_session(
 
 /// Close and destroy a session.
 ///
-/// `DELETE /api/v1/session`
+/// `DELETE /gvm/public/v1/session`
 pub async fn delete_session(
     State(service): State<GatewayService>,
     headers: HeaderMap,
@@ -198,7 +198,7 @@ fn extract_basic_credentials(headers: &HeaderMap) -> Result<(String, String), Ga
 // OpenAPI transforms
 // ============================================================================
 
-/// OpenAPI transform for `POST /api/v1/session`.
+/// OpenAPI transform for `POST /gvm/public/v1/session`.
 pub(crate) fn create_session_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("createSession")
@@ -217,7 +217,7 @@ pub(crate) fn create_session_docs(op: TransformOperation<'_>) -> TransformOperat
     problem_response::<502>(op, "Backend service unreachable or connection failed")
 }
 
-/// OpenAPI transform for `GET /api/v1/session`.
+/// OpenAPI transform for `GET /gvm/public/v1/session`.
 pub(crate) fn get_session_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("getSession")
@@ -231,7 +231,7 @@ pub(crate) fn get_session_docs(op: TransformOperation<'_>) -> TransformOperation
     problem_response::<404>(op, "Session not found")
 }
 
-/// OpenAPI transform for `DELETE /api/v1/session`.
+/// OpenAPI transform for `DELETE /gvm/public/v1/session`.
 pub(crate) fn delete_session_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
     let op = op
         .id("deleteSession")

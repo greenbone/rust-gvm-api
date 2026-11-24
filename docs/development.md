@@ -38,7 +38,7 @@ Use the following order when locating or changing behavior:
    behavior: routes, methods, parameters, schemas, status codes, headers, and
    semantics.
 2. `crates/gvm-gateway-rest/src/router.rs` is the runtime route inventory.
-   Its generated OpenAPI is served at `/api/v1/openapi.json` and contract-tested
+   Its generated OpenAPI is served at `/gvm/public/v1/openapi.json` and contract-tested
    against the curated specification.
 3. [`gateway-architecture.md`](gateway-architecture.md) defines component,
    session, and connection ownership.
@@ -148,9 +148,9 @@ client library.
 Persistent sessions and request-scoped Basic authentication share the same
 backend execution path:
 
-- `POST /api/v1/session` authenticates with Basic credentials and returns an
+- `POST /gvm/public/v1/session` authenticates with Basic credentials and returns an
   opaque bearer token.
-- `GET` and `DELETE /api/v1/session` operate on the current bearer session.
+- `GET` and `DELETE /gvm/public/v1/session` operate on the current bearer session.
 - Protected resource routes also accept Basic credentials for one request;
   the temporary backend context is removed before the response completes.
 - One persistent token owns one authenticated gvmd connection. Operations on

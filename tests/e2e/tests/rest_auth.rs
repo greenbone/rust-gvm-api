@@ -87,7 +87,7 @@ async fn rest_session_lifecycle_exposes_location_and_session_details() -> Result
 
     let created = harness.create_session_with_location().await?;
     assert!(
-        created.location.ends_with("/api/v1/session"),
+        created.location.ends_with("/gvm/public/v1/session"),
         "session Location {} did not point at the current-session resource",
         created.location
     );
