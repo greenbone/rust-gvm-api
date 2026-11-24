@@ -112,3 +112,15 @@ fn not_implemented_problem_uses_public_code() {
         serde_json::json!("https://gvm-gateway.greenbone.net/errors/not-implemented")
     );
 }
+
+#[test]
+fn temporary_inventory_issuance_failure_is_503_not_transport_502() {
+    // A known but temporarily unavailable issuer is distinct from an unsupported command or transport failure.
+    let error = RestError::from_gateway_error(
+        GatewayError::ServiceUnavailable("Inventory issuance is temporarily unavailable.".into()),
+        "/gvm/public/v1/agents/inventory-token",
+    );
+    assert_eq!(error.status, StatusCode::SERVICE_UNAVAILABLE);
+    assert_eq!(error.problem.code, "service_unavailable");
+    assert_eq!(error.problem.title, "Service Unavailable");
+}

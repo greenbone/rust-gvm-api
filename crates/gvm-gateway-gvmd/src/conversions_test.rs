@@ -469,7 +469,10 @@ fn agent_from_gmp_maps_nested_runtime_configuration() {
             .agent_script_executor
             .as_ref()
             .map(|executor| executor.scheduler_cron_time.clone()),
-        Some(vec!["0 */5 * * *".to_string(), "15 */5 * * *".to_string()])
+        Some(vec![
+            "0 */5 * * *".to_string().into(),
+            "15 */5 * * *".to_string().into()
+        ])
     );
     assert_eq!(
         config
@@ -1567,4 +1570,263 @@ fn task_from_gmp_preserves_typed_detail_fields() {
     assert_eq!(task.schedule_periods, Some(3));
     assert!(task.in_use);
     assert!(task.writable);
+}
+
+#[test]
+fn agent_os_metadata_preserves_open_strings_and_independent_absence() {
+    // Upstream parsing owns empty normalization; the adapter must not infer metadata.
+    for body in [
+        "<operating_system>Future OS</operating_system><architecture>future64</architecture><os_cpe>cpe:/o:future</os_cpe><os_status>new-status</os_status>",
+        "<operating_system/><architecture/><os_cpe/><os_status/>", "",
+        "<architecture>future64</architecture>",
+    ] {
+        let xml = format!(r#"<get_agents_response status="200" status_text="OK"><agent id="550e8400-e29b-41d4-a716-446655440000"><name>Agent</name>{body}</agent></get_agents_response>"#);
+        let parsed = GetAgentsResponse::from_response(&GmpResponse::from(xml.as_str())).unwrap();
+        let agent = agent_from_gmp(parsed.items.into_iter().next().unwrap());
+        if body.contains("Future OS") {
+            assert_eq!(agent.operating_system.as_deref(), Some("Future OS"));
+            assert_eq!(agent.os_cpe.as_deref(), Some("cpe:/o:future"));
+            assert_eq!(agent.os_status.as_deref(), Some("new-status"));
+        } else {
+            assert_eq!(agent.operating_system, None);
+            assert_eq!(agent.os_cpe, None);
+            assert_eq!(agent.os_status, None);
+        }
+        assert_eq!(agent.architecture.as_deref(), body.contains("future64").then_some("future64"));
+    }
+}
+
+/// Typed parsing owns missing/empty normalization; the gateway preserves future strings.
+#[test]
+fn target_source_conversion_preserves_upstream_optional_and_open_values() {
+    for (element, expected) in [
+        ("", None),
+        ("<source/>", None),
+        ("<source>manual</source>", Some("manual")),
+        (
+            "<source>active_directory</source>",
+            Some("active_directory"),
+        ),
+        (
+            "<source>future_directory</source>",
+            Some("future_directory"),
+        ),
+    ] {
+        let response = GmpResponse::from(
+            format!(
+                r#"<get_targets_response status="200" status_text="OK">
+                    <target id="550e8400-e29b-41d4-a716-446655440000">
+                        <name>Example</name>{element}
+                    </target>
+                </get_targets_response>"#
+            )
+            .into_bytes(),
+        );
+        let parsed = GetTargetsResponse::from_response(&response).unwrap();
+        let target = target_from_gmp(parsed.items.into_iter().next().unwrap());
+        assert_eq!(target.source.as_deref(), expected);
+    }
+}
+
+#[test]
+fn typed_result_and_nested_reference_types_remain_open_and_optional() {
+    // Intent (#735): test typed conversion, not just DTO construction; classic,
+    // nonclassic, future and parser-normalized empty values must agree across
+    // result, note and override sources, without fabricating a missing NVT.
+    for (element, expected) in [
+        ("<type>nvt</type>", Some("nvt")),
+        ("<type>package</type>", Some("package")),
+        ("<type>future-source</type>", Some("future-source")),
+        ("<type/>", None),
+        ("", None),
+    ] {
+        let nvt =
+            format!(r#"<nvt oid="1.2.3">{element}<type_metadata>opaque</type_metadata></nvt>"#);
+        let xml = format!(
+            r#"<get_results_response status="200" status_text="OK"><result id="11111111-1111-1111-1111-111111111111"><name>Result</name>{nvt}</result></get_results_response>"#
+        );
+        let parsed = GetResultsResponse::from_response(&GmpResponse::from(xml.as_str())).unwrap();
+        let result = result_from_gmp(parsed.items.into_iter().next().unwrap()).unwrap();
+        let mapped = result.nvt.unwrap();
+        assert_eq!(mapped.type_.as_deref(), expected);
+        assert_eq!(mapped.type_metadata.as_deref(), Some("opaque"));
+        let xml = format!(
+            r#"<get_notes_response status="200" status_text="OK"><note id="note-1"><name>Note</name>{nvt}</note></get_notes_response>"#
+        );
+        let parsed = GetNotesResponse::from_response(&GmpResponse::from(xml.as_str())).unwrap();
+        assert_eq!(
+            note_from_gmp(parsed.items.into_iter().next().unwrap())
+                .nvt
+                .unwrap()
+                .type_
+                .as_deref(),
+            expected
+        );
+        let xml = format!(
+            r#"<get_overrides_response status="200" status_text="OK"><override id="override-1"><name>Override</name>{nvt}</override></get_overrides_response>"#
+        );
+        let parsed = GetOverridesResponse::from_response(&GmpResponse::from(xml.as_str())).unwrap();
+        assert_eq!(
+            override_from_gmp(parsed.items.into_iter().next().unwrap())
+                .nvt
+                .unwrap()
+                .type_
+                .as_deref(),
+            expected
+        );
+    }
+    let parsed = GetResultsResponse::from_response(&GmpResponse::from(r#"<get_results_response status="200" status_text="OK"><result id="11111111-1111-1111-1111-111111111111"><name>No NVT</name></result></get_results_response>"#)).unwrap();
+    assert!(result_from_gmp(parsed.items.into_iter().next().unwrap())
+        .unwrap()
+        .nvt
+        .is_none());
+}
+
+// Intent: historical config identity/name must come from a typed report snapshot, not current task state.
+#[test]
+fn snapshot_config_preserves_identity_name_and_absence() {
+    for (config, expected) in [
+        (
+            r#"<scan_config id="11111111-1111-1111-1111-111111111111"><name>Old &amp; frozen</name></scan_config>"#,
+            true,
+        ),
+        ("", false),
+    ] {
+        let xml = format!(
+            r#"<get_scan_report_response status="200" status_text="OK"><report id="22222222-2222-2222-2222-222222222222"><name>Report</name><task id="33333333-3333-3333-3333-333333333333"><name>Task</name>{config}</task></report></get_scan_report_response>"#
+        );
+        let parsed = gvm_gmp::responses::GetScanReportResponse::from_response(&GmpResponse::from(
+            xml.as_str(),
+        ))
+        .unwrap();
+        let task = report_task_from_snapshot(parsed.report.task.unwrap()).unwrap();
+        assert_eq!(task.scan_config.is_some(), expected);
+        if let Some(config) = task.scan_config {
+            assert_eq!(config.id, "11111111-1111-1111-1111-111111111111");
+            assert_eq!(config.name.as_deref(), Some("Old & frozen"));
+        }
+    }
+}
+
+#[test]
+fn snapshot_task_omits_unavailable_name_like_generic_report_task() {
+    // Intent (#736): snapshot enrichment must retain the generic reference's
+    // optional-name convention when gvmd does not provide a task name.
+    let parsed = gvm_gmp::responses::GetScanReportResponse::from_response(&GmpResponse::from(
+        r#"<get_scan_report_response status="200" status_text="OK"><report id="22222222-2222-2222-2222-222222222222"><name>Report</name><task id="33333333-3333-3333-3333-333333333333"/></report></get_scan_report_response>"#,
+    )).unwrap();
+    let task = report_task_from_snapshot(parsed.report.task.unwrap()).unwrap();
+    assert!(task.name.is_none());
+    assert!(task.scan_config.is_none());
+}
+
+// Intent: raw references (including future feed types) survive both typed result and catalog projections.
+#[test]
+fn generic_references_preserve_unknown_types_and_identifiers() {
+    let refs = r#"<refs><ref type="cert-bund" id="CB-K13/0067"/><ref type="dfn-cert" id="DFN-CERT-2024-1700"/><ref type="future-feed" id="opaque &amp; id"/><ref type="cve" id="CVE-2024-6387"/><ref type="url" id="https://example.test/a?x=1&amp;y=2"/><ref type="bid" id="123"/><ref type="cwe" id="CWE-79"/><ref type="euvd" id="EUVD-2025-1"/><ref type="ghsa" id="GHSA-abcd-1234-abcd"/><ref type="dsa" id="DSA-1"/><ref type="usn" id="USN-1"/><ref type="rhsa" id="RHSA-1"/><ref type="cert-cc" id="VU#123"/><ref type="jvn" id="JVN#123"/><ref type="future-feed" id="opaque &amp; id"/></refs>"#;
+    let xml = format!(
+        r#"<get_results_response status="200" status_text="OK"><result id="11111111-1111-1111-1111-111111111111"><name>Finding</name><nvt oid="1.2.3">{refs}<type>future</type><type_metadata>{{"x":1}}</type_metadata></nvt></result></get_results_response>"#
+    );
+    let parsed = GetResultsResponse::from_response(&GmpResponse::from(xml.as_str())).unwrap();
+    let nvt = result_from_gmp(parsed.items.into_iter().next().unwrap())
+        .unwrap()
+        .nvt
+        .unwrap();
+    assert_eq!(nvt.type_.as_deref(), Some("future"));
+    assert_eq!(nvt.refs[0].id, "CB-K13/0067");
+    assert_eq!(nvt.refs[2].type_, "future-feed");
+    assert_eq!(nvt.refs[2].id, "opaque & id");
+    let xml = format!(
+        r#"<get_nvts_response status="200" status_text="OK"><nvt oid="1.2.3"><name>Catalog</name>{refs}</nvt></get_nvts_response>"#
+    );
+    let parsed = GetNvtsResponse::from_response(&GmpResponse::from(xml.as_str())).unwrap();
+    let catalog = nvt_from_gmp(parsed.items.into_iter().next().unwrap()).unwrap();
+    assert_eq!(catalog.refs, nvt.refs);
+    assert_eq!(nvt.cves, vec!["CVE-2024-6387"]);
+    assert_eq!(catalog.refs.len(), 15);
+    assert_eq!(catalog.refs[2], catalog.refs[14]); // Do not deduplicate raw observations.
+    assert_eq!(catalog.refs[4].id, "https://example.test/a?x=1&y=2");
+}
+
+// Intent: Agent-derived nonzero and explicit zero counts are preserved alongside server severity.
+#[test]
+fn application_typed_counts_do_not_recalculate_severity() {
+    for counts in [
+        "<hosts_count>2</hosts_count><occurrences>7</occurrences>",
+        "<hosts_count>0</hosts_count><occurrences>0</occurrences>",
+        "",
+    ] {
+        let xml = format!(
+            r#"<get_report_applications_response status="200" status_text="OK"><applications><application><name>Agent application</name><severity>9.7</severity><threat>Future</threat>{counts}</application></applications></get_report_applications_response>"#
+        );
+        let parsed = gvm_gmp::responses::GetReportApplicationsResponse::from_response(
+            &GmpResponse::from(xml.as_str()),
+        )
+        .unwrap();
+        let row = report_application_from_gmp(parsed.items.into_iter().next().unwrap());
+        assert_eq!(row.severity.as_deref(), Some("9.7"));
+        assert_eq!(row.threat.as_deref(), Some("Future"));
+        assert_eq!(row.hosts_count.is_some(), !counts.is_empty());
+        assert_eq!(row.occurrences.is_some(), !counts.is_empty());
+        if counts.contains(">2<") {
+            assert_eq!((row.hosts_count, row.occurrences), (Some(2), Some(7)));
+        }
+        if counts.contains(">0<") {
+            assert_eq!((row.hosts_count, row.occurrences), (Some(0), Some(0)));
+        }
+    }
+}
+
+#[test]
+fn typed_agent_and_group_delay_observations_preserve_full_u32_range() {
+    // Exercise the real typed-to-domain projections independently of write builders:
+    // successful backend observations above i32::MAX must not be rejected or truncated.
+    for delay in [2147483648u32, u32::MAX] {
+        let agent_xml = format!(
+            r#"<get_agents_response status="200" status_text="OK">
+            <agent id="550e8400-e29b-41d4-a716-446655440000"><name>Observed</name>
+            <config><agent_script_executor><scheduler_cron_time><item>
+            <cron>* * * * *</cron><max_delay_seconds>{delay}</max_delay_seconds>
+            </item></scheduler_cron_time></agent_script_executor></config></agent>
+            </get_agents_response>"#
+        );
+        let parsed =
+            GetAgentsResponse::from_response(&GmpResponse::from(agent_xml.as_str())).unwrap();
+        let typed = parsed.items.into_iter().next().unwrap();
+        assert_eq!(
+            typed
+                .config
+                .as_ref()
+                .unwrap()
+                .agent_script_executor
+                .as_ref()
+                .unwrap()
+                .scheduler_cron_time[0]
+                .max_delay_seconds,
+            Some(delay)
+        );
+        let projected = agent_from_gmp(typed);
+        assert_eq!(
+            projected
+                .config
+                .unwrap()
+                .agent_script_executor
+                .unwrap()
+                .scheduler_cron_time[0]
+                .max_delay_seconds,
+            Some(delay)
+        );
+
+        let group_xml = format!(
+            r#"<get_agent_groups_response status="200" status_text="OK">
+            <agent_group id="550e8400-e29b-41d4-a716-446655440000"><name>Observed</name>
+            <scheduler_cron_time>* * * * *</scheduler_cron_time>
+            <max_delay_seconds>{delay}</max_delay_seconds></agent_group>
+            </get_agent_groups_response>"#
+        );
+        let parsed =
+            GetAgentGroupsResponse::from_response(&GmpResponse::from(group_xml.as_str())).unwrap();
+        let projected = agent_group_from_gmp(parsed.items.into_iter().next().unwrap());
+        assert_eq!(projected.max_delay_seconds, Some(delay));
+    }
 }

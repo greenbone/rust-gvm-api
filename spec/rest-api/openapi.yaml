@@ -160,6 +160,8 @@ paths:
     $ref: './emerging.yaml#/paths/~1agents'
   /agents/{id}:
     $ref: './emerging.yaml#/paths/~1agents~1{id}'
+  /agents/inventory-token:
+    $ref: './emerging.yaml#/paths/~1agents~1inventory-token'
   /agents/sync:
     $ref: './emerging.yaml#/paths/~1agents~1sync'
   /agents/{id}/support-bundle:
@@ -294,6 +296,12 @@ paths:
     $ref: './credentials.yaml#/paths/~1credential-stores~1{id}'
   /credential-stores/{id}/actions/verify:
     $ref: './credentials.yaml#/paths/~1credential-stores~1{id}~1actions~1verify'
+  /credentials/{id}/actions/verify-active-directory:
+    $ref: "./credentials.yaml#/paths/~1credentials~1{id}~1actions~1verify-active-directory"
+  /active-directory/credential-verifications:
+    $ref: "./credentials.yaml#/paths/~1active-directory~1credential-verifications"
+  /active-directory/object-searches:
+    $ref: './active-directory.yaml#/paths/~1active-directory~1object-searches'
   /credentials:
     $ref: './credentials.yaml#/paths/~1credentials'
   /credentials/{id}:

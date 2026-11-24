@@ -85,6 +85,7 @@ pub(crate) struct TargetListQueryDoc {
 #[serde(deny_unknown_fields)]
 pub(crate) struct CreateTargetDoc {
     name: String,
+    source: Option<TargetSourceDoc>,
     comment: Option<String>,
     #[schemars(length(min = 1))]
     hosts: Vec<String>,
@@ -113,6 +114,7 @@ pub(crate) struct CreateTargetDoc {
 #[serde(deny_unknown_fields)]
 pub(crate) struct ModifyTargetDoc {
     name: Option<String>,
+    source: Option<TargetSourceDoc>,
     comment: Option<String>,
     hosts: Option<Vec<String>>,
     #[serde(rename = "excludeHosts")]
@@ -141,6 +143,14 @@ pub(crate) struct ModifyTargetDoc {
     /// clearing credential bindings is not supported by this request shape.
     #[serde(rename = "snmpCredentialId")]
     snmp_credential_id: Option<Uuid>,
+}
+
+/// Valid write selectors; response source strings deliberately remain open.
+#[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum TargetSourceDoc {
+    Manual,
+    ActiveDirectory,
 }
 
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]

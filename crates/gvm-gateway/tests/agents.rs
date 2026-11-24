@@ -232,6 +232,7 @@ async fn agent_group_rest_lifecycle_filter_trash_and_ultimate_delete() {
         .json(&json!({
             "name": "Blue Team",
             "schedulerCronTime": "0 */15 * * *",
+            "maxDelaySeconds": 30,
             "comment": "initial",
             "agentIds": []
         }))
@@ -248,7 +249,9 @@ async fn agent_group_rest_lifecycle_filter_trash_and_ultimate_delete() {
         .await
         .unwrap();
     assert_eq!(get.status(), StatusCode::OK);
-    assert_eq!(get.json::<Value>().await.unwrap()["name"], "Blue Team");
+    let group = get.json::<Value>().await.unwrap();
+    assert_eq!(group["name"], "Blue Team");
+    assert_eq!(group["maxDelaySeconds"], 30);
 
     let update = harness
         .client
@@ -257,6 +260,7 @@ async fn agent_group_rest_lifecycle_filter_trash_and_ultimate_delete() {
         .json(&json!({
             "name": "Updated",
             "schedulerCronTime": "0 */30 * * *",
+            "maxDelaySeconds": 0,
             "comment": "updated"
         }))
         .send()
@@ -266,6 +270,7 @@ async fn agent_group_rest_lifecycle_filter_trash_and_ultimate_delete() {
     let update = update.json::<Value>().await.unwrap();
     assert_eq!(update["name"], "Updated");
     assert_eq!(update["schedulerCronTime"], "0 */30 * * *");
+    assert_eq!(update["maxDelaySeconds"], 0);
 
     let clone = harness
         .client
@@ -456,4 +461,155 @@ async fn agent_routes_return_not_implemented_on_gmp_22_7() {
     assert_problem_status(response, StatusCode::NOT_IMPLEMENTED).await;
 
     harness.shutdown().await;
+}
+
+#[tokio::test]
+async fn inventory_token_route_is_authenticated_confidential_and_has_no_body() {
+    // Exercise the actual service/adapter route, not a local token generator.
+    let harness = specialized_target_harness(seed_agent_resource).await;
+    let url = harness.url("/gvm/public/v1/agents/inventory-token");
+    let response = harness
+        .client
+        .post(&url)
+        .bearer_auth(&harness.token)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.headers()[reqwest::header::CACHE_CONTROL],
+        "no-store"
+    );
+    assert_eq!(
+        response.json::<Value>().await.unwrap(),
+        json!({"token":"mock-agent-inventory-token"})
+    );
+    let rejected = harness
+        .client
+        .post(&url)
+        .bearer_auth(&harness.token)
+        .json(&json!({}))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(rejected.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(
+        rejected.headers()[reqwest::header::CACHE_CONTROL],
+        "no-store"
+    );
+    let unauthorized = harness.client.post(&url).send().await.unwrap();
+    assert_eq!(unauthorized.status(), StatusCode::UNAUTHORIZED);
+}
+
+#[tokio::test]
+async fn invalid_agent_and_group_delays_return_400_without_backend_dispatch() {
+    // Exercise every schedule/group input through HTTP: invalid JSON values must
+    // fail before even a discovery/read command reaches the backend.
+    let harness = specialized_target_harness(seed_agent_resource).await;
+    for delay in [
+        Value::Null,
+        json!(-1),
+        json!(2147483648u64),
+        json!(u32::MAX),
+        json!(1.5),
+    ] {
+        let schedule = json!({"agentScriptExecutor":{"schedulerCronTime":[
+            {"cron":"* * * * *","maxDelaySeconds":delay}
+        ]}});
+        for (method, path, body) in [
+            (
+                reqwest::Method::PUT,
+                format!("/gvm/public/v1/agents/{AGENT_ID}"),
+                json!({"config":schedule}),
+            ),
+            (
+                reqwest::Method::PUT,
+                format!("/gvm/public/v1/agent-control-scan-configs/{SCANNER_ID}"),
+                json!({"agentDefaults":schedule}),
+            ),
+            (
+                reqwest::Method::POST,
+                "/gvm/public/v1/agent-groups".to_string(),
+                json!({"name":"group","schedulerCronTime":"* * * * *","maxDelaySeconds":delay}),
+            ),
+            (
+                reqwest::Method::PUT,
+                format!("/gvm/public/v1/agent-groups/{AGENT_ID}"),
+                json!({"schedulerCronTime":"* * * * *","maxDelaySeconds":delay}),
+            ),
+        ] {
+            harness.server.clear_history();
+            let response = harness
+                .client
+                .request(method.clone(), harness.url(&path))
+                .bearer_auth(&harness.token)
+                .json(&body)
+                .send()
+                .await
+                .unwrap();
+            assert_eq!(
+                response.status(),
+                StatusCode::BAD_REQUEST,
+                "{method} {path}: {body}"
+            );
+            assert_eq!(
+                response.json::<Value>().await.unwrap()["code"],
+                "bad_request"
+            );
+            assert!(
+                harness.server.command_history().is_empty(),
+                "{method} {path} dispatched an invalid delay"
+            );
+        }
+    }
+    harness.shutdown().await;
+}
+
+#[tokio::test]
+async fn inventory_token_malformed_success_is_sanitized_502_and_never_cacheable() {
+    // Exercise real typed backend parsing through HTTP; no gateway XML validation.
+    for payload in [
+        "",
+        "<token/>",
+        "<token></token>",
+        "<token> </token>",
+        "<token>\t\r\n </token>",
+        "<token>&#x20;&#x9;&#xD;&#xA;</token>",
+    ] {
+        let xml = format!(
+            r#"<get_agent_inventory_token_response status="200" status_text="SECRET backend diagnostic">{payload}<diagnostic>SECRET payload</diagnostic></get_agent_inventory_token_response>"#
+        );
+        let server = gvm_mock_server::MockGmpServer::builder()
+            .mode(gvm_mock_server::ServerMode::Fixture)
+            .version(gvm_mock_server::GmpVersion::V22_8)
+            .override_response("help", r#"<help_response status="200" status_text="OK"><schema format="XML"><command><name>get_agent_inventory_token</name></command></schema></help_response>"#)
+            .override_response("get_agent_inventory_token", &xml)
+            .unix_socket_auto()
+            .build().await.unwrap();
+        let harness = common::specialized_target_harness_from_server(server).await;
+        let response = harness
+            .client
+            .post(harness.url("/gvm/public/v1/agents/inventory-token"))
+            .bearer_auth(&harness.token)
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_GATEWAY);
+        assert_eq!(
+            response.headers()[reqwest::header::CACHE_CONTROL],
+            "no-store"
+        );
+        assert!(response.headers()[reqwest::header::CONTENT_TYPE]
+            .to_str()
+            .unwrap()
+            .starts_with("application/problem+json"));
+        let body = response.text().await.unwrap();
+        assert!(!body.contains("SECRET"));
+        assert!(!body.contains("<token"));
+        let problem: Value = serde_json::from_str(&body).unwrap();
+        assert_eq!(problem["status"], 502);
+        assert_eq!(problem["code"], "backend_unavailable");
+        assert!(problem.get("token").is_none());
+        harness.shutdown().await;
+    }
 }

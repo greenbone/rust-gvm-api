@@ -77,6 +77,7 @@ impl TargetPort for CredentialReadbackTargetAdapter {
 
     async fn get_target(&self, _session_token: &str, id: &str) -> Result<Target, GatewayError> {
         Ok(Target {
+            source: None,
             id: id.to_string(),
             name: "Credential Target".to_string(),
             comment: None,
@@ -102,6 +103,7 @@ impl TargetPort for CredentialReadbackTargetAdapter {
         input: ModifyTargetInput,
     ) -> Result<Target, GatewayError> {
         Ok(Target {
+            source: None,
             id: id.to_string(),
             name: input
                 .name
@@ -527,5 +529,119 @@ async fn method_not_allowed() {
 
     assert_eq!(response.status(), StatusCode::METHOD_NOT_ALLOWED);
 
+    harness.shutdown().await;
+}
+
+/// Provenance survives the complete REST/typed GMP path; omission never resets AD origin.
+#[tokio::test]
+async fn target_source_roundtrip_defaults_partial_updates_and_clone() {
+    let harness = target_harness(|_| {}).await;
+    let response = harness
+        .create_target(serde_json::json!({
+            "name": "AD Target", "hosts": ["192.0.2.1"], "source": "active_directory"
+        }))
+        .await;
+    assert_eq!(response.status(), StatusCode::CREATED);
+    let created: serde_json::Value = response.json().await.unwrap();
+    let id = created["id"].as_str().unwrap();
+
+    let read: serde_json::Value = harness.get_target(id).await.json().await.unwrap();
+    assert_eq!(read["source"], "active_directory");
+
+    let response = harness
+        .update_target(id, serde_json::json!({"comment": "preserve origin"}))
+        .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let updated: serde_json::Value = response.json().await.unwrap();
+    assert_eq!(updated["source"], "active_directory");
+
+    // Cloning remains a typed copy operation; gvmd alone owns the copied provenance.
+    harness.server.clear_history();
+    let response = harness
+        .client
+        .post(harness.url(&format!("/gvm/public/v1/targets/{id}/clone")))
+        .bearer_auth(&harness.token)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::CREATED);
+    let cloned: serde_json::Value = response.json().await.unwrap();
+    assert!(!harness
+        .server
+        .command_history()
+        .iter()
+        .any(|record| matches!(record.command_name(), "modify_target" | "get_targets")));
+    let cloned_read: serde_json::Value = harness
+        .get_target(cloned["id"].as_str().unwrap())
+        .await
+        .json()
+        .await
+        .unwrap();
+    assert_eq!(cloned_read["source"], "active_directory");
+
+    let response = harness
+        .update_target(id, serde_json::json!({"source": "manual"}))
+        .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let updated: serde_json::Value = response.json().await.unwrap();
+    assert_eq!(updated["source"], "manual");
+    let response = harness
+        .update_target(id, serde_json::json!({"source": "active_directory"}))
+        .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let updated: serde_json::Value = response.json().await.unwrap();
+    assert_eq!(updated["source"], "active_directory");
+
+    let response = harness
+        .create_target(serde_json::json!({
+            "name": "Default Target", "hosts": ["192.0.2.2"]
+        }))
+        .await;
+    assert_eq!(response.status(), StatusCode::CREATED);
+    let created: serde_json::Value = response.json().await.unwrap();
+    let read: serde_json::Value = harness
+        .get_target(created["id"].as_str().unwrap())
+        .await
+        .json()
+        .await
+        .unwrap();
+    assert_eq!(read["source"], "manual");
+    harness.shutdown().await;
+}
+
+/// Bad provenance must fail at the HTTP boundary without issuing create/modify commands.
+#[tokio::test]
+async fn target_source_invalid_writes_fail_before_dispatch() {
+    let harness = target_harness(|_| {}).await;
+    for source in [
+        serde_json::json!(""),
+        serde_json::json!("ad"),
+        serde_json::json!("unknown"),
+        serde_json::json!(null),
+        serde_json::json!(false),
+    ] {
+        harness.server.clear_history();
+        let response = harness
+            .create_target(serde_json::json!({
+                "name": "Invalid Target", "hosts": ["192.0.2.1"], "source": source
+            }))
+            .await;
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        let response = harness
+            .update_target(
+                "123e4567-e89b-12d3-a456-426614174000",
+                serde_json::json!({"source": source}),
+            )
+            .await;
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        assert!(!harness
+            .server
+            .command_history()
+            .iter()
+            .any(|record| matches!(
+                record.command_name(),
+                "create_target" | "modify_target" | "get_targets"
+            )));
+    }
     harness.shutdown().await;
 }

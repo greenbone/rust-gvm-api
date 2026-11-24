@@ -1,5 +1,10 @@
 # Test Spec: GVM REST Gateway (`gvm-gateway-rest` / `gvm-gateway`)
 
+> **Future acceptance criteria:** [Planned GMP feature contracts (#727–736)](planned-gmp-features.md)
+> specify per-feature mapping, capability, confidentiality and migration tests.
+> These are not implemented tests or evidence of shipped REST support; existing
+> OpenAPI parity tests must continue to describe only registered behavior.
+
 ## 1. Test Strategy
 
 ### Test Pyramid
@@ -341,3 +346,43 @@ cargo test --workspace --features e2e-tests
 ```
 
 Coverage target: **80%** line coverage for route handlers and service layer.
+
+### Implemented agent schedules (#730)
+Legacy and structured writes, structured-only responses, delay omission/zero/maximum and rejection of negative/fractional/overflow values are deterministic contract tests. Writes reject null and values above i32::MAX without backend dispatch. Typed agent/group observations at 2147483648 and u32::MAX survive projection and serialization and validate against generated and curated response schemas. Group cron stays string-shaped and optional names preserve backend state. Live qualification remains separate.
+
+### Implemented inventory token (#731)
+Typed no-argument issuance, positive discovery, missing payload, 400 permission denial, 500 generation failure and 503 temporary issuance have focused adapter coverage. Token Debug/log capture is redacted; HTTP issuance is authenticated and no-store.
+
+### Implemented OS projections (#732)
+Typed parser fixtures exercise populated, empty, independently absent and unknown future OS strings. List/detail use an identical projection; read metadata cannot be written through update models.
+
+### Implemented support-bundle anonymization (#733)
+All nine encryption/anonymized omitted/false/true combinations preserve independent selectors. Invalid booleans fail before dispatch; typed backend errors propagate without local archive rewriting.
+
+
+### Report projection adoption regressions (#734–736, #742)
+
+Deterministic sidecar tests cover explicit zero/absence/nonzero application
+counts and unchanged server severity; open NVT type values and source-shaped
+metadata on full/summary DTOs; typed structured report task scanConfig UUID/name
+and missing-config omission; identical domain JSON-export/REST task serialization;
+raw result/catalog refs with unknown types and escaped opaque identifiers.
+Generated/curated OpenAPI parity remains required. These fixtures are not live
+Agent/gvmd or KEV-feed qualification. KEV-specific tests await actual producer
+and typed library contracts; absence is never a synthetic negative observation.
+
+
+## Report-result scope and comparison contract (#741)
+
+- Seed two reports with overlapping high/low severities. Both strict severity
+  predicates and explicit boolean alternatives must return only path-report rows,
+  with counts and pagination computed in that scope.
+- Compose saved and inline filters through the typed upstream scope helper;
+  reject attempts to replace report identity or endpoint-owned pagination.
+- Unsupported inclusive `>=`/`<=` comparators outside quoted literal values
+  return 400 before the results operation, never silently ignored success.
+- A successful backend response with a missing report association or another
+  report ID returns a sanitized 502 for both scoped-result and embedded-report
+  loading, not partial data with unadjusted counts.
+- Upper/lowercase UUID spellings identify the same report. Keep returned payload
+  spelling and optional source metadata unchanged.

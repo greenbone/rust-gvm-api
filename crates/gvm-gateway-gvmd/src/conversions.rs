@@ -37,6 +37,7 @@ pub(crate) fn target_from_gmp(target: gvm_gmp::responses::Target) -> Target {
         id: target.meta.id.to_string(),
         name: target.meta.name,
         comment: target.meta.comment,
+        source: target.source,
         hosts: target.hosts,
         exclude_hosts: target.exclude_hosts,
         alive_test: target.alive_tests,
@@ -59,6 +60,11 @@ pub(crate) fn agent_from_gmp(agent: gvm_gmp::responses::Agent) -> Agent {
         update_to_latest: agent.update_to_latest,
         status: agent.status,
         version: agent.version,
+        operating_system: agent.operating_system,
+        architecture: agent.architecture,
+        os_cpe: agent.os_cpe,
+        os_status: agent.os_status,
+
         last_update_time: agent.last_update_time,
         last_contact_time: agent.last_contact_time,
         scanner: agent.scanner.map(resource_ref_from_named_entity),
@@ -70,6 +76,7 @@ pub(crate) fn agent_group_from_gmp(agent_group: gvm_gmp::responses::AgentGroup) 
     AgentGroup {
         meta: supporting_meta_from_gmp(agent_group.meta),
         scheduler_cron_time: agent_group.scheduler_cron_time,
+        max_delay_seconds: agent_group.max_delay_seconds,
         agents: agent_group
             .agents
             .into_iter()
@@ -156,7 +163,14 @@ fn agent_script_executor_config_from_gmp(
         bulk_size: config.bulk_size,
         bulk_throttle_time_in_ms: config.bulk_throttle_time_in_ms,
         indexer_dir_depth: config.indexer_dir_depth,
-        scheduler_cron_time: config.scheduler_cron_time,
+        scheduler_cron_time: config
+            .scheduler_cron_time
+            .into_iter()
+            .map(|entry| gvm_gateway_domain::AgentSchedule {
+                cron: entry.cron,
+                max_delay_seconds: entry.max_delay_seconds,
+            })
+            .collect(),
     }
 }
 
@@ -226,6 +240,16 @@ pub(crate) fn schedule_from_gmp(schedule: gvm_gmp::responses::Schedule) -> Sched
 
 pub(crate) fn credential_from_gmp(credential: gvm_gmp::responses::Credential) -> Credential {
     Credential {
+        active_directory: credential.active_directory.map(|v| {
+            gvm_gateway_domain::ActiveDirectoryMetadata {
+                host: v.host,
+                port: v.port,
+                bind_dn: v.bind_dn,
+                base_dn: v.base_dn,
+                tls_mode: v.tls_mode,
+                ca_certificate: v.ca_certificate,
+            }
+        }),
         id: credential.meta.id.to_string(),
         name: credential.meta.name,
         comment: credential.meta.comment,
@@ -443,7 +467,10 @@ pub(crate) fn report_from_gmp(report: gvm_gmp::responses::Report) -> Report {
 
     Report {
         id: report.meta.id.to_string(),
-        task: report.task.map(resource_ref_from_named_entity),
+        task: report
+            .task
+            .map(resource_ref_from_named_entity)
+            .map(Into::into),
         scan_start: report.scan_start,
         scan_end: report.scan_end,
         severity,
@@ -460,6 +487,18 @@ pub(crate) fn report_from_gmp(report: gvm_gmp::responses::Report) -> Report {
     }
 }
 
+pub(crate) fn report_from_audit_gmp(report: gvm_gmp::responses::AuditReport) -> Report {
+    Report {
+        id: report.meta.id.to_string(),
+        task: report.task.and_then(report_task_from_snapshot),
+        scan_start: report.scan_start,
+        scan_end: report.scan_end,
+        severity: None,
+        result_count: None,
+        results: vec![],
+    }
+}
+
 pub(crate) fn result_from_gmp(
     result: gvm_gmp::responses::ScanResult,
 ) -> Result<ScanResult, GatewayError> {
@@ -470,12 +509,14 @@ pub(crate) fn result_from_gmp(
         .map(|n| {
             let cvss_base = n.cvss_base_score();
             Ok(NvtRef {
+                refs: n.refs.into_iter().map(nvt_reference_from_gmp).collect(),
                 oid: Some(n.oid),
                 name: n.name,
                 family: n.family,
                 cvss_base,
                 cves: n.cves,
                 tags: n.tags,
+                type_: n.type_,
                 type_metadata: n.type_metadata,
                 epss: n.epss.map(epss_from_gmp).transpose()?,
             })
@@ -516,12 +557,14 @@ pub(crate) fn result_from_report_vulnerability(
         )?,
         threat: vulnerability.threat,
         nvt: Some(NvtRef {
+            refs: vec![],
             oid: vulnerability.nvt_oid,
             name: nvt_name,
             family: vulnerability.family,
             cvss_base: None,
             cves: vulnerability.cves,
             tags: None,
+            type_: None,
             type_metadata: None,
             epss: None,
         }),
@@ -565,12 +608,14 @@ pub(crate) fn report_closed_cve_from_gmp(
         severity: parse_optional_backend_f64(closed_cve.severity, "closed CVE severity")?,
         threat: closed_cve.threat,
         nvt: Some(NvtRef {
+            refs: vec![],
             oid: closed_cve.nvt_oid,
             name: closed_cve.name,
             family: None,
             cvss_base: None,
             cves: closed_cve.cve.clone().into_iter().collect(),
             tags: None,
+            type_: None,
             type_metadata: None,
             epss: None,
         }),
@@ -807,6 +852,9 @@ pub(crate) fn report_application_from_gmp(
         id: application.id,
         name: application.name,
         severity: application.severity,
+        hosts_count: application.hosts_count,
+        occurrences: application.occurrences,
+        threat: application.threat,
     }
 }
 
@@ -921,6 +969,7 @@ pub(crate) fn nvt_from_gmp(nvt: gvm_gmp::responses::Nvt) -> Result<Nvt, GatewayE
     let severity = nvt.severity_score();
 
     Ok(Nvt {
+        refs: nvt.refs.into_iter().map(nvt_reference_from_gmp).collect(),
         oid: nvt.oid,
         name: nvt.name,
         family: nvt.family,
@@ -1111,9 +1160,11 @@ fn operating_system_host_from_gmp(
 
 fn nvt_ref_from_gmp(nvt: gvm_gmp::responses::common::NvtReference) -> NvtRef {
     NvtRef {
+        refs: vec![],
         oid: Some(nvt.oid),
         name: nvt.name,
-        family: nvt.type_,
+        family: nvt.type_.clone(),
+        type_: nvt.type_,
         cvss_base: None,
         cves: vec![],
         tags: None,
@@ -1247,3 +1298,23 @@ fn map_parser_server_error(
 #[cfg(test)]
 #[path = "conversions_test.rs"]
 mod conversions_test;
+
+/// Convert only the historical task embedded in the structured report.
+pub(crate) fn report_task_from_snapshot(
+    task: gvm_gmp::responses::StructuredReportTask,
+) -> Option<gvm_gateway_domain::ReportTaskRef> {
+    task.id.map(|id| gvm_gateway_domain::ReportTaskRef {
+        id: id.to_string(),
+        name: (!task.name.is_empty()).then_some(task.name),
+        scan_config: task.scan_config.map(resource_ref_from_named_entity),
+    })
+}
+
+fn nvt_reference_from_gmp(
+    reference: gvm_gmp::responses::common::NvtReferenceEntry,
+) -> gvm_gateway_domain::NvtReference {
+    gvm_gateway_domain::NvtReference {
+        type_: reference.type_,
+        id: reference.id,
+    }
+}

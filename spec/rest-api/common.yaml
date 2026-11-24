@@ -336,6 +336,7 @@ components:
     CredentialType:
       type: string
       enum:
+        - ad
         - cc
         - pw
         - smime
@@ -370,6 +371,7 @@ components:
       anyOf:
         - type: string
           enum:
+            - ad
             - cc
             - krb5
             - pw

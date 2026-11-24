@@ -99,6 +99,8 @@ pub(crate) struct AgentSupportBundleQueryParams {
     /// Request backend support-bundle encryption. Omission preserves the backend default and is
     /// distinct from explicit false.
     encryption: Option<bool>,
+    /// Request backend anonymization independently of encryption; omission preserves the server default.
+    anonymized: Option<bool>,
 }
 
 #[derive(Clone, Debug, Deserialize, JsonSchema, Serialize)]
@@ -147,6 +149,78 @@ impl From<gvm_gateway_domain::AgentControlConfig> for AgentControlConfigResponse
 }
 
 #[derive(Clone, Debug, Serialize, JsonSchema)]
+#[schemars(rename = "AgentScheduleResponse")]
+struct AgentScheduleResponse {
+    cron: String,
+    #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 0, max = 4294967295u32))]
+    max_delay_seconds: Option<u32>,
+}
+
+impl From<gvm_gateway_domain::AgentSchedule> for AgentScheduleResponse {
+    fn from(value: gvm_gateway_domain::AgentSchedule) -> Self {
+        Self {
+            cron: value.cron,
+            max_delay_seconds: value.max_delay_seconds,
+        }
+    }
+}
+
+// Writes follow the signed GMP command range; observations retain typed u32 values.
+#[derive(Clone, Debug, Deserialize, JsonSchema)]
+#[schemars(rename = "AgentScheduleInput")]
+struct AgentScheduleInput {
+    cron: String,
+    #[serde(
+        rename = "maxDelaySeconds",
+        default,
+        deserialize_with = "deserialize_delay"
+    )]
+    #[schemars(range(min = 0, max = 2147483647))]
+    max_delay_seconds: Option<u32>,
+}
+
+#[derive(Clone, Debug, Deserialize, JsonSchema)]
+#[serde(untagged)]
+enum AgentScheduleRequest {
+    Legacy(String),
+    Structured(AgentScheduleInput),
+}
+
+impl AgentScheduleRequest {
+    fn validate_into(self) -> Result<gvm_gateway_domain::AgentSchedule, GatewayError> {
+        let entry = match self {
+            Self::Legacy(cron) => AgentScheduleInput {
+                cron,
+                max_delay_seconds: None,
+            },
+            Self::Structured(entry) => entry,
+        };
+        validate_delay(entry.max_delay_seconds)?;
+        Ok(gvm_gateway_domain::AgentSchedule {
+            cron: required_trimmed("cron", Some(entry.cron))?,
+            max_delay_seconds: entry.max_delay_seconds,
+        })
+    }
+}
+
+// Omission uses serde's default; a present value must be an integer, never null.
+fn deserialize_delay<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Option<u32>, D::Error> {
+    u32::deserialize(deserializer).map(Some)
+}
+
+fn validate_delay(value: Option<u32>) -> Result<(), GatewayError> {
+    if value.is_some_and(|value| value > i32::MAX as u32) {
+        return Err(GatewayError::InvalidInput(
+            "maxDelaySeconds must be between 0 and 2147483647".into(),
+        ));
+    }
+    Ok(())
+}
+
+#[derive(Clone, Debug, Serialize, JsonSchema)]
 #[schemars(rename = "AgentScriptExecutorConfig")]
 struct AgentScriptExecutorConfigResponse {
     #[serde(rename = "bulkSize", skip_serializing_if = "Option::is_none")]
@@ -163,7 +237,7 @@ struct AgentScriptExecutorConfigResponse {
         default,
         skip_serializing_if = "Vec::is_empty"
     )]
-    scheduler_cron_time: Vec<String>,
+    scheduler_cron_time: Vec<AgentScheduleResponse>,
 }
 
 impl From<gvm_gateway_domain::AgentScriptExecutorConfig> for AgentScriptExecutorConfigResponse {
@@ -172,7 +246,11 @@ impl From<gvm_gateway_domain::AgentScriptExecutorConfig> for AgentScriptExecutor
             bulk_size: value.bulk_size,
             bulk_throttle_time_in_ms: value.bulk_throttle_time_in_ms,
             indexer_dir_depth: value.indexer_dir_depth,
-            scheduler_cron_time: value.scheduler_cron_time,
+            scheduler_cron_time: value
+                .scheduler_cron_time
+                .into_iter()
+                .map(Into::into)
+                .collect(),
         }
     }
 }
@@ -241,6 +319,18 @@ struct AgentResponse {
     status: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     version: Option<String>,
+    /// Backend-reported operatingSystem; open read-only metadata.
+    #[serde(rename = "operatingSystem", skip_serializing_if = "Option::is_none")]
+    operating_system: Option<String>,
+    /// Backend-reported architecture; open read-only metadata.
+    #[serde(rename = "architecture", skip_serializing_if = "Option::is_none")]
+    architecture: Option<String>,
+    /// Backend-reported osCpe; open read-only metadata.
+    #[serde(rename = "osCpe", skip_serializing_if = "Option::is_none")]
+    os_cpe: Option<String>,
+    /// Backend-reported osStatus; open read-only metadata.
+    #[serde(rename = "osStatus", skip_serializing_if = "Option::is_none")]
+    os_status: Option<String>,
     #[serde(rename = "lastUpdateTime", skip_serializing_if = "Option::is_none")]
     last_update_time: Option<String>,
     #[serde(rename = "lastContactTime", skip_serializing_if = "Option::is_none")]
@@ -265,6 +355,11 @@ impl From<gvm_gateway_domain::Agent> for AgentResponse {
             update_to_latest: value.update_to_latest,
             status: value.status,
             version: value.version,
+            operating_system: value.operating_system,
+            architecture: value.architecture,
+            os_cpe: value.os_cpe,
+            os_status: value.os_status,
+
             last_update_time: value.last_update_time,
             last_contact_time: value.last_contact_time,
             scanner: value.scanner.map(Into::into),
@@ -383,17 +478,20 @@ struct AgentScriptExecutorConfigRequest {
     #[serde(rename = "indexerDirDepth")]
     indexer_dir_depth: Option<u32>,
     #[serde(rename = "schedulerCronTime", default)]
-    scheduler_cron_time: Vec<String>,
+    scheduler_cron_time: Vec<AgentScheduleRequest>,
 }
 
 impl ValidateInto<AgentScriptExecutorConfig> for AgentScriptExecutorConfigRequest {
     fn validate_into(self) -> Result<AgentScriptExecutorConfig, GatewayError> {
-        validate_cron_items("schedulerCronTime", &self.scheduler_cron_time)?;
         Ok(AgentScriptExecutorConfig {
             bulk_size: self.bulk_size,
             bulk_throttle_time_in_ms: self.bulk_throttle_time_in_ms,
             indexer_dir_depth: self.indexer_dir_depth,
-            scheduler_cron_time: self.scheduler_cron_time,
+            scheduler_cron_time: self
+                .scheduler_cron_time
+                .into_iter()
+                .map(AgentScheduleRequest::validate_into)
+                .collect::<Result<_, _>>()?,
         })
     }
 }
@@ -469,6 +567,9 @@ struct AgentGroupResponse {
     in_use: bool,
     #[serde(rename = "schedulerCronTime", skip_serializing_if = "Option::is_none")]
     scheduler_cron_time: Option<String>,
+    #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 0, max = 4294967295u32))]
+    max_delay_seconds: Option<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     agents: Vec<ResourceRefResponse>,
 }
@@ -484,6 +585,7 @@ impl From<gvm_gateway_domain::AgentGroup> for AgentGroupResponse {
             writable: value.meta.writable,
             in_use: value.meta.in_use,
             scheduler_cron_time: value.scheduler_cron_time,
+            max_delay_seconds: value.max_delay_seconds,
             agents: value.agents.into_iter().map(Into::into).collect(),
         }
     }
@@ -513,6 +615,10 @@ struct CreateAgentGroupRequest {
     #[serde(rename = "schedulerCronTime")]
     #[schemars(required)]
     scheduler_cron_time: Option<String>,
+    #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 0, max = 2147483647))]
+    #[serde(default, deserialize_with = "deserialize_delay")]
+    max_delay_seconds: Option<u32>,
     comment: Option<String>,
     #[serde(rename = "agentIds", default)]
     agent_ids: Vec<Uuid>,
@@ -520,9 +626,11 @@ struct CreateAgentGroupRequest {
 
 impl ValidateInto<CreateAgentGroupInput> for CreateAgentGroupRequest {
     fn validate_into(self) -> Result<CreateAgentGroupInput, GatewayError> {
+        validate_delay(self.max_delay_seconds)?;
         Ok(CreateAgentGroupInput {
             name: required_trimmed("name", self.name)?,
             scheduler_cron_time: required_trimmed("schedulerCronTime", self.scheduler_cron_time)?,
+            max_delay_seconds: self.max_delay_seconds,
             comment: self.comment,
             agent_ids: self
                 .agent_ids
@@ -539,6 +647,10 @@ struct ModifyAgentGroupRequest {
     #[serde(rename = "schedulerCronTime")]
     #[schemars(required)]
     scheduler_cron_time: Option<String>,
+    #[serde(rename = "maxDelaySeconds", skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 0, max = 2147483647))]
+    #[serde(default, deserialize_with = "deserialize_delay")]
+    max_delay_seconds: Option<u32>,
     name: Option<String>,
     comment: Option<String>,
     #[serde(rename = "agentIds")]
@@ -550,6 +662,7 @@ struct ModifyAgentGroupRequest {
 
 impl ValidateInto<ModifyAgentGroupInput> for ModifyAgentGroupRequest {
     fn validate_into(self) -> Result<ModifyAgentGroupInput, GatewayError> {
+        validate_delay(self.max_delay_seconds)?;
         if self.agent_ids.as_ref().is_some_and(Vec::is_empty) {
             return Err(GatewayError::InvalidInput(
                 "agentIds must contain at least one entry; clearing the agent selection is unsupported until rust-gvm issue #812"
@@ -558,6 +671,7 @@ impl ValidateInto<ModifyAgentGroupInput> for ModifyAgentGroupRequest {
         }
         Ok(ModifyAgentGroupInput {
             scheduler_cron_time: required_trimmed("schedulerCronTime", self.scheduler_cron_time)?,
+            max_delay_seconds: self.max_delay_seconds,
             name: self.name,
             comment: self.comment,
             agent_ids: self
@@ -599,6 +713,7 @@ fn parse_agent_group_query(raw: &str) -> Result<AgentGroupQuery, GatewayError> {
 fn parse_agent_support_bundle_query(raw: &str) -> Result<AgentSupportBundleQuery, GatewayError> {
     let mut days = None;
     let mut encryption = None;
+    let mut anonymized = None;
     for (key, value) in decoded_query_pairs(raw) {
         match key.as_ref() {
             "days" => {
@@ -612,6 +727,11 @@ fn parse_agent_support_bundle_query(raw: &str) -> Result<AgentSupportBundleQuery
                 }
                 days = Some(parsed_days);
             }
+            "anonymized" => {
+                anonymized = Some(value.parse::<bool>().map_err(|_| {
+                    GatewayError::InvalidInput("anonymized must be true or false".into())
+                })?);
+            }
             "encryption" => {
                 encryption = Some(value.parse::<bool>().map_err(|_| {
                     GatewayError::InvalidInput("encryption must be true or false".to_string())
@@ -620,7 +740,11 @@ fn parse_agent_support_bundle_query(raw: &str) -> Result<AgentSupportBundleQuery
             _ => {}
         }
     }
-    Ok(AgentSupportBundleQuery { days, encryption })
+    Ok(AgentSupportBundleQuery {
+        days,
+        encryption,
+        anonymized,
+    })
 }
 
 fn parse_agent_installer_instruction_query(
@@ -658,15 +782,6 @@ fn required_trimmed(field: &str, value: Option<String>) -> Result<String, Gatewa
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty())
         .ok_or_else(|| GatewayError::InvalidInput(format!("{field} is required")))
-}
-
-fn validate_cron_items(field: &str, values: &[String]) -> Result<(), GatewayError> {
-    if values.iter().any(|value| value.trim().is_empty()) {
-        return Err(GatewayError::InvalidInput(format!(
-            "{field} cannot contain empty entries"
-        )));
-    }
-    Ok(())
 }
 
 fn safe_attachment_filename(value: &str) -> String {
@@ -1332,3 +1447,67 @@ pub(crate) fn clone_agent_group_docs(op: TransformOperation<'_>) -> TransformOpe
 #[cfg(test)]
 #[path = "agents_test.rs"]
 mod agents_test;
+
+#[derive(Serialize, JsonSchema)]
+#[schemars(rename = "AgentInventoryToken")]
+struct AgentInventoryTokenResponse {
+    token: String,
+}
+
+/// Issue an inventory token. No request body or agent identifier is accepted.
+pub async fn get_agent_inventory_token(
+    State(service): State<GatewayService>,
+    headers: HeaderMap,
+    uri: OriginalUri,
+    body: Bytes,
+) -> Response {
+    let instance = uri.path().to_string();
+    let result = match bearer_token(&headers) {
+        Err(error) => gateway_error(error, instance),
+        Ok(_) if !body.is_empty() => gateway_error(
+            GatewayError::InvalidInput("Inventory token issuance accepts no body.".into()),
+            instance,
+        ),
+        Ok(session) => match service.get_agent_inventory_token(&session).await {
+            Ok(token) => Json(AgentInventoryTokenResponse {
+                token: token.expose().to_owned(),
+            })
+            .into_response(),
+            Err(error) => gateway_error(error, instance),
+        },
+    };
+    inventory_token_no_store(result)
+}
+
+fn inventory_token_no_store(mut response: Response) -> Response {
+    response
+        .headers_mut()
+        .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
+    response
+}
+
+pub(crate) fn get_agent_inventory_token_docs(
+    mut op: TransformOperation<'_>,
+) -> TransformOperation<'_> {
+    // Bytes is used only to reject nonempty bodies, not to publish a request-body contract.
+    op.inner_mut().request_body = None;
+    let op = op
+        .id("getAgentInventoryToken")
+        .tag("Agents")
+        .summary("Issue a confidential agent inventory token")
+        .security_requirement("bearerAuth")
+        .response_with::<200, Json<AgentInventoryTokenResponse>, _>(|mut response| {
+                let mut value = serde_json::to_value(response.inner()).expect("response schema");
+                value["headers"]["Cache-Control"] = json!({"description":"Never cache inventory credentials", "schema":{"type":"string","const":"no-store"}});
+                *response.inner() = serde_json::from_value(value).expect("response header schema");
+                response.description("Confidential backend-issued token; Cache-Control: no-store")
+        });
+    let op = problem_response::<400>(op, "No body accepted");
+    let op = problem_response::<401>(op, "Authentication required");
+    let op = problem_response::<403>(op, "get_agents permission denied");
+    let op = problem_response::<500>(op, "Token generation failed");
+    let op = problem_response::<501>(op, "Unsupported or not discovered");
+    let op = problem_response::<502>(op, "Malformed response or connection failure");
+    let op = problem_response::<503>(op, "Issuance temporarily unavailable");
+    problem_response::<504>(op, "Backend timed out")
+}

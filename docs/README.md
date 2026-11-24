@@ -40,7 +40,11 @@ as an equally authoritative description of the running service.
 
 ## Specifications
 
-- [`spec/rest-api/`](../spec/rest-api/) is normative for public REST behavior.
+- [REST design](../spec/rest-api/openspec.md),
+  [test specification](../spec/rest-api/test-spec.md) and
+  [curated OpenAPI](../spec/rest-api/openapi.yaml) describe the public REST contract.
+- [Planned GMP feature contracts (#727–736)](../spec/rest-api/planned-gmp-features.md)
+  are a separate forward-looking supplement, **not shipped REST support**.
 
 ## Historical material
 

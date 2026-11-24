@@ -115,6 +115,11 @@ components:
     NvtRef:
       type: object
       properties:
+        refs:
+          type: array
+          items:
+            $ref: "./results.yaml#/components/schemas/NvtReference"
+          description: Generic backend references, including unknown types; omitted when unavailable.
         oid:
           type: string
         name:
@@ -130,6 +135,9 @@ components:
             type: string
         tags:
           type: string
+        type:
+          type: string
+          description: Open backend NVT discriminator; unknown values are preserved.
         typeMetadata:
           type: string
           description: Source-shaped NVT type metadata supplied by gvmd. The gateway preserves this value without parsing or narrowing its schema.
@@ -139,6 +147,11 @@ components:
     NvtRefSummary:
       type: object
       properties:
+        refs:
+          type: array
+          items:
+            $ref: "./results.yaml#/components/schemas/NvtReference"
+          description: Generic backend references, including unknown types; omitted when unavailable.
         oid:
           type: string
         name:
@@ -154,6 +167,9 @@ components:
             type: string
         tags:
           type: string
+        type:
+          type: string
+          description: Open backend NVT discriminator; unknown values are preserved.
         typeMetadata:
           type: string
           description: Source-shaped NVT type metadata supplied by gvmd. The gateway preserves this value without parsing or narrowing its schema.
@@ -211,3 +227,14 @@ components:
             $ref: "#/components/schemas/Result"
         pagination:
           $ref: "./common.yaml#/components/schemas/Pagination"
+
+    NvtReference:
+      type: object
+      required: [type, id]
+      properties:
+        type:
+          type: string
+          description: Open feed reference type, preserved verbatim.
+        id:
+          type: string
+          description: Opaque reference identifier, preserved verbatim.

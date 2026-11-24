@@ -82,13 +82,34 @@ impl From<gvm_gateway_domain::ResultCount> for ResultCountResponse {
     }
 }
 
+/// Task reference from a report snapshot, distinct from generic task references.
+#[derive(Clone, Debug, Serialize, JsonSchema)]
+#[schemars(rename = "ReportTaskRef")]
+pub(crate) struct ReportTaskRefResponse {
+    id: Uuid,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    name: Option<String>,
+    #[serde(rename = "scanConfig", skip_serializing_if = "Option::is_none")]
+    scan_config: Option<ResourceRefResponse>,
+}
+
+impl From<gvm_gateway_domain::ReportTaskRef> for ReportTaskRefResponse {
+    fn from(task: gvm_gateway_domain::ReportTaskRef) -> Self {
+        Self {
+            id: parse_uuid(&task.id),
+            name: task.name,
+            scan_config: task.scan_config.map(ResourceRefResponse::from),
+        }
+    }
+}
+
 /// JSON body returned for a single report.
 #[derive(Clone, Debug, Serialize, JsonSchema)]
 #[schemars(rename = "Report")]
 pub(crate) struct ReportResponse {
     id: Uuid,
     #[serde(skip_serializing_if = "Option::is_none")]
-    task: Option<ResourceRefResponse>,
+    task: Option<ReportTaskRefResponse>,
     #[serde(rename = "scanStart", skip_serializing_if = "Option::is_none")]
     #[schemars(schema_with = "datetime_schema")]
     scan_start: Option<String>,
@@ -108,7 +129,7 @@ impl From<gvm_gateway_domain::Report> for ReportResponse {
     fn from(r: gvm_gateway_domain::Report) -> Self {
         Self {
             id: parse_uuid(&r.id),
-            task: r.task.map(ResourceRefResponse::from),
+            task: r.task.map(ReportTaskRefResponse::from),
             scan_start: r.scan_start,
             scan_end: r.scan_end,
             severity: r.severity,
@@ -285,6 +306,17 @@ pub(crate) struct ReportApplicationResponse {
     name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     severity: Option<String>,
+    /// Server-provided hosts count.
+    #[serde(rename = "hostsCount", skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 0, max = 4294967295u64))]
+    hosts_count: Option<u32>,
+    /// Server-provided occurrences.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 0, max = 4294967295u64))]
+    occurrences: Option<u32>,
+    /// Server-provided threat.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    threat: Option<String>,
 }
 
 impl From<ReportApplication> for ReportApplicationResponse {
@@ -293,6 +325,9 @@ impl From<ReportApplication> for ReportApplicationResponse {
             id: application.id,
             name: application.name,
             severity: application.severity,
+            hosts_count: application.hosts_count,
+            occurrences: application.occurrences,
+            threat: application.threat,
         }
     }
 }
@@ -1303,13 +1338,18 @@ pub(crate) fn get_report_results_docs(op: TransformOperation<'_>) -> TransformOp
         .id("getReportResults")
         .tag("Reports")
         .summary("Get paginated results for a report")
-        .description("Returns a paginated list of results for a specific report.")
+        .description("Returns results and counts scoped to the report in the path, including boolean filters. Reserved report/pagination controls and unsupported inclusive comparisons such as severity>=7 return 400. Backend rows with missing or mismatched report references fail as 502 rather than being returned or silently discarded.")
         .security_requirement("bearerAuth")
         .input::<(Path<ResourceIdPathDoc>, Query<ReportResultsQueryDoc>)>()
         .response_with::<200, Json<ResultListResponse>, _>(ok_json("Paginated list of results"));
 
+    let op = problem_response::<400>(op, "Invalid filter or request");
     let op = problem_response::<401>(op, "Authentication required or session expired");
-    problem_response::<404>(op, "Resource not found")
+    let op = problem_response::<404>(op, "Resource not found");
+    problem_response::<502>(
+        op,
+        "Backend response violates report scope or is unavailable",
+    )
 }
 
 /// OpenAPI transform for `GET /gvm/public/v1/reports/{id}/vulnerabilities`.

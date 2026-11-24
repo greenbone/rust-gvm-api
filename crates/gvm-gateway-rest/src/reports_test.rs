@@ -141,12 +141,14 @@ fn report_vulnerability_response_preserves_aggregate_fields() {
             data: vec![ReportVulnerability {
                 id: Some("row-1".to_string()),
                 nvt: Some(gvm_gateway_domain::NvtRef {
+                    refs: vec![],
                     oid: Some("1.3.6.1.4.1.25623.1.0.100000".to_string()),
                     name: Some("TLS finding".to_string()),
                     family: Some("General".to_string()),
                     cvss_base: None,
                     cves: vec!["CVE-2026-0001".to_string()],
                     tags: None,
+                    type_: None,
                     type_metadata: None,
                     epss: None,
                 }),
@@ -212,12 +214,14 @@ fn report_closed_cve_response_preserves_closed_cve_fields() {
         data: vec![ReportClosedCve {
             id: Some("row-3".to_string()),
             nvt: Some(gvm_gateway_domain::NvtRef {
+                refs: vec![],
                 oid: Some("1.3.6.1.4.1.25623.1.0.200000".to_string()),
                 name: Some("Closed check".to_string()),
                 family: None,
                 cvss_base: None,
                 cves: vec!["CVE-2025-9999".to_string()],
                 tags: None,
+                type_: None,
                 type_metadata: None,
                 epss: None,
             }),
@@ -283,6 +287,9 @@ fn report_drill_downs_serialize_as_purpose_shaped_summaries() {
                 id: Some("application-row".to_string()),
                 name: Some("nginx".to_string()),
                 severity: Some("5.0".to_string()),
+                hosts_count: None,
+                occurrences: None,
+                threat: None,
             }],
             pagination: pagination.clone(),
         }))
@@ -339,4 +346,84 @@ fn report_operating_system_response_preserves_the_live_gvmd_row_shape() {
     assert!(row.get("id").is_none());
     assert!(row.get("name").is_none());
     assert!(row.get("severity").is_none());
+}
+
+// Intent: preserve explicit zero and future threat; omit unavailable fields.
+#[test]
+fn application_optional_counts_json_contract() {
+    let row = super::ReportApplicationResponse::from(ReportApplication {
+        id: None,
+        name: None,
+        severity: Some("9.7".into()),
+        hosts_count: Some(0),
+        occurrences: Some(7),
+        threat: Some("Future".into()),
+    });
+    let json = serde_json::to_value(row).unwrap();
+    assert_eq!(json["hostsCount"], 0);
+    assert_eq!(json["occurrences"], 7);
+    assert_eq!(json["severity"], "9.7");
+    assert_eq!(json["threat"], "Future");
+    let absent = serde_json::to_value(super::ReportApplicationResponse::from(ReportApplication {
+        id: None,
+        name: None,
+        severity: None,
+        hosts_count: None,
+        occurrences: None,
+        threat: None,
+    }))
+    .unwrap();
+    assert!(absent.get("hostsCount").is_none());
+    assert!(absent.get("occurrences").is_none());
+    assert!(absent.get("threat").is_none());
+}
+
+// Intent: report-only scanConfig survives REST and domain JSON exports; generic refs remain unchanged.
+#[test]
+fn report_task_snapshot_json_contract() {
+    let task = gvm_gateway_domain::ReportTaskRef {
+        id: "33333333-3333-3333-3333-333333333333".into(),
+        name: Some("Task".into()),
+        scan_config: Some(gvm_gateway_domain::ResourceRef {
+            id: "11111111-1111-1111-1111-111111111111".into(),
+            name: Some("Old & frozen".into()),
+        }),
+    };
+    let report = gvm_gateway_domain::Report {
+        id: "22222222-2222-2222-2222-222222222222".into(),
+        task: Some(task.clone()),
+        scan_start: None,
+        scan_end: None,
+        severity: None,
+        result_count: None,
+        results: vec![],
+    };
+    let detail = serde_json::to_value(super::ReportResponse::from(report.clone())).unwrap();
+    let full_export = serde_json::to_value(gvm_gateway_domain::ReportJsonExport {
+        report,
+        results: vec![],
+        generated_at: None,
+    })
+    .unwrap();
+    assert_eq!(
+        detail["task"]["scanConfig"],
+        full_export["report"]["task"]["scanConfig"]
+    );
+    assert_eq!(
+        detail["task"]["scanConfig"]["id"],
+        "11111111-1111-1111-1111-111111111111"
+    );
+    let export = serde_json::to_value(&task).unwrap();
+    let rest = serde_json::to_value(super::ReportTaskRefResponse::from(task)).unwrap();
+    assert_eq!(export, rest);
+    assert_eq!(rest["scanConfig"]["name"], "Old & frozen");
+    let absent = serde_json::to_value(super::ReportTaskRefResponse::from(
+        gvm_gateway_domain::ReportTaskRef {
+            id: "33333333-3333-3333-3333-333333333333".into(),
+            name: None,
+            scan_config: None,
+        },
+    ))
+    .unwrap();
+    assert!(absent.get("scanConfig").is_none());
 }

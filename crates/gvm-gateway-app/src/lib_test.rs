@@ -303,6 +303,7 @@ async fn service_generic_resource_operations_use_sessions_and_typed_ports() {
 async fn service_create_target_requires_valid_session() {
     let service = create_test_service();
     let input = CreateTargetInput {
+        source: None,
         name: "test".to_string(),
         comment: None,
         hosts: vec!["127.0.0.1".to_string()],
@@ -1300,10 +1301,13 @@ impl ReportPort for MissingReportPort {
 fn test_report(id: &str) -> Report {
     Report {
         id: id.to_string(),
-        task: Some(ResourceRef {
-            id: "223e4567-e89b-12d3-a456-426614174000".to_string(),
-            name: Some("Task".to_string()),
-        }),
+        task: Some(
+            ResourceRef {
+                id: "223e4567-e89b-12d3-a456-426614174000".to_string(),
+                name: Some("Task".to_string()),
+            }
+            .into(),
+        ),
         scan_start: None,
         scan_end: None,
         severity: Some(0.0),
@@ -1525,6 +1529,7 @@ async fn audit_logs_target_mutation_without_raw_session_token() {
                 .create_target(
                     &session.token,
                     CreateTargetInput {
+                        source: None,
                         name: "target-a".to_string(),
                         comment: None,
                         hosts: vec!["192.0.2.10".to_string()],

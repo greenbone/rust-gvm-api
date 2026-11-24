@@ -163,6 +163,9 @@ components:
           format: uuid
         name:
           type: string
+        source:
+          type: string
+          description: Server-supplied provenance. Future values are preserved; absent on older payloads.
         comment:
           type: string
         hosts:
@@ -203,6 +206,10 @@ components:
       properties:
         name:
           type: string
+        source:
+          type: string
+          enum: [manual, active_directory]
+          description: Provenance. Omission retains the server manual default.
         comment:
           type: string
         hosts:
@@ -242,6 +249,10 @@ components:
       properties:
         name:
           type: string
+        source:
+          type: string
+          enum: [manual, active_directory]
+          description: Provenance. Omission preserves the stored value.
         comment:
           type: string
         hosts:

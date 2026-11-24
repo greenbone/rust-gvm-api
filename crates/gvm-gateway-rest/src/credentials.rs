@@ -47,13 +47,14 @@ fn credential_type_response_schema(_: &mut schemars::SchemaGenerator) -> schemar
 }
 
 const CREDENTIAL_TYPE_REQUEST_VALUES: &[&str] = &[
-    "cc", "pw", "smime", "snmp", "snmpv3", "up", "usk", "cs_pw", "cs_pgp", "cs_smime", "cs_snmp",
-    "cs_up", "cs_usk",
+    "ad", "cc", "pw", "smime", "snmp", "snmpv3", "up", "usk", "cs_pw", "cs_pgp", "cs_smime",
+    "cs_snmp", "cs_up", "cs_usk",
 ];
 
 open_string_enum! {
     /// Credential type code.
     pub(crate) enum CredentialType {
+        ActiveDirectory => "ad",
         ClientCertificate => "cc",
         Kerberos5 => "krb5",
         PasswordOnly => "pw",
@@ -75,6 +76,8 @@ open_string_enum! {
 #[derive(Clone, Debug, Serialize, JsonSchema)]
 #[schemars(rename = "Credential")]
 pub(crate) struct CredentialResponse {
+    #[serde(rename = "activeDirectory", skip_serializing_if = "Option::is_none")]
+    active_directory: Option<ActiveDirectoryMetadataResponse>,
     id: Uuid,
     name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -93,6 +96,7 @@ pub(crate) struct CredentialResponse {
 impl From<Credential> for CredentialResponse {
     fn from(credential: Credential) -> Self {
         Self {
+            active_directory: credential.active_directory.map(Into::into),
             id: parse_uuid(&credential.id),
             name: credential.name,
             comment: credential.comment,
@@ -267,6 +271,9 @@ impl From<CredentialPage> for CredentialListResponse {
 #[schemars(rename = "CreateCredential")]
 #[serde(deny_unknown_fields)]
 pub(crate) struct CreateCredentialRequest {
+    #[serde(rename = "activeDirectory", default, deserialize_with = "ad_present")]
+    #[schemars(default, schema_with = "ad_create_schema")]
+    active_directory: Option<ActiveDirectoryRequest>,
     name: String,
     comment: Option<String>,
     #[serde(rename = "type")]
@@ -304,6 +311,7 @@ impl fmt::Debug for CreateCredentialRequest {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("CreateCredentialRequest")
+            .field("active_directory", &self.active_directory)
             .field("name", &self.name)
             .field("comment", &self.comment)
             .field("credential_type", &self.credential_type)
@@ -334,10 +342,36 @@ impl CreateCredentialRequest {
             return Err(GatewayError::InvalidInput("name is required".to_string()));
         }
         let credential_type = self.credential_type.as_str();
+        if (credential_type == "ad") != self.active_directory.is_some() {
+            return Err(GatewayError::InvalidInput(
+                "AD fields require explicit ad type and vice versa".into(),
+            ));
+        }
+        if let Some(ad) = &self.active_directory {
+            ad.validate(true)?;
+        }
+
         if !CREDENTIAL_TYPE_REQUEST_VALUES.contains(&credential_type) {
             return Err(GatewayError::InvalidInput(format!(
                 "unsupported credential type: {credential_type}"
             )));
+        }
+        if self.active_directory.is_some()
+            && (self.login.is_some()
+                || self.password.is_some()
+                || self.private_key.is_some()
+                || self.certificate.is_some()
+                || self.community.is_some()
+                || self.auth_algorithm.is_some()
+                || self.privacy_algorithm.is_some()
+                || self.privacy_password.is_some()
+                || self.credential_store_id.is_some()
+                || self.vault_id.is_some()
+                || self.host_identifier.is_some())
+        {
+            return Err(GatewayError::InvalidInput(
+                "AD connector fields cannot be combined with other credential values".into(),
+            ));
         }
         let store_backed = credential_type.starts_with("cs_");
         let has_store_fields = self.credential_store_id.is_some()
@@ -382,6 +416,7 @@ impl CreateCredentialRequest {
             ));
         }
         Ok(CreateCredentialInput {
+            active_directory: self.active_directory.map(Into::into),
             name: self.name,
             comment: self.comment,
             credential_type: credential_type.to_string(),
@@ -410,6 +445,8 @@ impl ValidateInto<CreateCredentialInput> for CreateCredentialRequest {
 #[schemars(rename = "ModifyCredential")]
 #[serde(deny_unknown_fields)]
 pub struct ModifyCredentialRequest {
+    #[serde(rename = "activeDirectory", default, deserialize_with = "ad_present")]
+    pub active_directory: Option<ActiveDirectoryRequest>,
     pub name: Option<String>,
     pub comment: Option<String>,
     pub login: Option<String>,
@@ -458,6 +495,7 @@ impl fmt::Debug for ModifyCredentialRequest {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("ModifyCredentialRequest")
+            .field("active_directory", &self.active_directory)
             .field("name", &self.name)
             .field("comment", &self.comment)
             .field("login", &self.login)
@@ -484,6 +522,7 @@ impl fmt::Debug for ModifyCredentialRequest {
 impl ModifyCredentialRequest {
     fn validate(self) -> ModifyCredentialInput {
         ModifyCredentialInput {
+            active_directory: self.active_directory.map(Into::into),
             name: self.name,
             comment: self.comment,
             login: self.login,
@@ -503,6 +542,25 @@ impl ModifyCredentialRequest {
 
 impl ValidateInto<ModifyCredentialInput> for ModifyCredentialRequest {
     fn validate_into(self) -> Result<ModifyCredentialInput, GatewayError> {
+        if let Some(ad) = &self.active_directory {
+            ad.validate(false)?;
+            if self.login.is_some()
+                || self.password.is_some()
+                || self.private_key.is_some()
+                || self.certificate.is_some()
+                || self.community.is_some()
+                || self.auth_algorithm.is_some()
+                || self.privacy_algorithm.is_some()
+                || self.privacy_password.is_some()
+                || self.credential_store_id.is_some()
+                || self.vault_id.is_some()
+                || self.host_identifier.is_some()
+            {
+                return Err(GatewayError::InvalidInput(
+                    "AD connector fields cannot be combined with other credential values".into(),
+                ));
+            }
+        }
         Ok(self.validate())
     }
 }
@@ -858,3 +916,239 @@ pub(crate) fn delete_credential_docs(op: TransformOperation<'_>) -> TransformOpe
 #[cfg(test)]
 #[path = "credentials_test.rs"]
 mod credentials_test;
+
+#[derive(Clone, Default, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ActiveDirectoryRequest {
+    #[serde(default, deserialize_with = "ad_present")]
+    #[schemars(length(min = 1))]
+    pub host: Option<String>,
+    #[serde(default, deserialize_with = "ad_present")]
+    #[schemars(range(min = 1, max = 65535))]
+    pub port: Option<u16>,
+    #[serde(default)]
+    pub clear_port: bool,
+    #[serde(default, deserialize_with = "ad_present")]
+    #[schemars(length(min = 1))]
+    pub bind_dn: Option<String>,
+    #[serde(default, deserialize_with = "ad_present")]
+    #[schemars(schema_with = "ad_password_schema")]
+    pub bind_password: Option<String>,
+    #[serde(default, deserialize_with = "ad_present")]
+    #[schemars(length(min = 1))]
+    pub base_dn: Option<String>,
+    #[serde(default, deserialize_with = "ad_present")]
+    #[schemars(schema_with = "ad_tls_schema")]
+    pub tls_mode: Option<String>,
+    #[serde(default, deserialize_with = "ad_present")]
+    pub ca_certificate: Option<String>,
+}
+fn ad_present<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    T::deserialize(deserializer).map(Some)
+}
+impl fmt::Debug for ActiveDirectoryRequest {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("ActiveDirectoryRequest(<redacted>)")
+    }
+}
+impl ActiveDirectoryRequest {
+    fn validate(&self, complete: bool) -> Result<(), GatewayError> {
+        let invalid = self.port == Some(0)
+            || self.clear_port && (complete || self.port.is_some())
+            || [
+                &self.host,
+                &self.bind_dn,
+                &self.base_dn,
+                &self.bind_password,
+            ]
+            .into_iter()
+            .any(|v| v.as_ref().is_some_and(String::is_empty))
+            || self
+                .tls_mode
+                .as_deref()
+                .is_some_and(|v| !["ldaps", "starttls"].contains(&v))
+            || complete
+                && ([
+                    &self.host,
+                    &self.bind_dn,
+                    &self.base_dn,
+                    &self.bind_password,
+                ]
+                .into_iter()
+                .any(Option::is_none)
+                    || self.tls_mode.is_none());
+        if invalid {
+            return Err(GatewayError::InvalidInput(
+                "invalid or incomplete activeDirectory fields".into(),
+            ));
+        }
+        Ok(())
+    }
+}
+impl From<ActiveDirectoryRequest> for gvm_gateway_domain::ActiveDirectoryInput {
+    fn from(v: ActiveDirectoryRequest) -> Self {
+        Self {
+            host: v.host,
+            port: v.port,
+            clear_port: v.clear_port,
+            bind_dn: v.bind_dn,
+            bind_password: v.bind_password,
+            base_dn: v.base_dn,
+            tls_mode: v.tls_mode,
+            ca_certificate: v.ca_certificate,
+        }
+    }
+}
+#[derive(Clone, Serialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ActiveDirectoryMetadataResponse {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    host: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[schemars(range(min = 1, max = 65535))]
+    port: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    bind_dn: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    base_dn: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tls_mode: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ca_certificate: Option<String>,
+}
+impl fmt::Debug for ActiveDirectoryMetadataResponse {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("ActiveDirectoryMetadataResponse(<redacted>)")
+    }
+}
+impl From<gvm_gateway_domain::ActiveDirectoryMetadata> for ActiveDirectoryMetadataResponse {
+    fn from(v: gvm_gateway_domain::ActiveDirectoryMetadata) -> Self {
+        Self {
+            host: v.host,
+            port: v.port,
+            bind_dn: v.bind_dn,
+            base_dn: v.base_dn,
+            tls_mode: v.tls_mode,
+            ca_certificate: v.ca_certificate,
+        }
+    }
+}
+#[derive(Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct InlineActiveDirectoryVerification {
+    #[schemars(schema_with = "ad_create_schema")]
+    active_directory: ActiveDirectoryRequest,
+}
+
+fn ad_no_store(mut response: Response) -> Response {
+    response.headers_mut().insert(
+        axum::http::header::CACHE_CONTROL,
+        axum::http::HeaderValue::from_static("no-store"),
+    );
+    response
+}
+pub async fn verify_active_directory_saved(
+    State(service): State<GatewayService>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+    uri: OriginalUri,
+    body: Bytes,
+) -> Response {
+    let instance = uri.path().to_string();
+    let result = async {
+        if Uuid::parse_str(&id).is_err() || !body.is_empty() {
+            return Err(GatewayError::InvalidInput(
+                "valid id and empty body required".into(),
+            ));
+        }
+        let session = bearer_token(&headers)?;
+        service
+            .verify_active_directory(
+                &session,
+                gvm_gateway_domain::VerifyActiveDirectoryInput::Saved(id),
+            )
+            .await
+    }
+    .await;
+    ad_no_store(match result {
+        Ok(()) => no_content(),
+        Err(error) => gateway_error(error, instance),
+    })
+}
+pub async fn verify_active_directory_inline(
+    State(service): State<GatewayService>,
+    headers: HeaderMap,
+    uri: OriginalUri,
+    body: Bytes,
+) -> Response {
+    let instance = uri.path().to_string();
+    let result = async {
+        let input: InlineActiveDirectoryVerification =
+            serde_json::from_slice(&body).map_err(credential_json_body_error)?;
+        input.active_directory.validate(true)?;
+        let session = bearer_token(&headers)?;
+        service
+            .verify_active_directory(
+                &session,
+                gvm_gateway_domain::VerifyActiveDirectoryInput::Inline(
+                    input.active_directory.into(),
+                ),
+            )
+            .await
+    }
+    .await;
+    ad_no_store(match result {
+        Ok(()) => no_content(),
+        Err(error) => gateway_error(error, instance),
+    })
+}
+pub(crate) fn verify_active_directory_saved_docs(
+    mut op: TransformOperation<'_>,
+) -> TransformOperation<'_> {
+    // Bytes enforces the empty-body contract at runtime, but must not publish
+    // an inferred binary request body for this bodyless saved action.
+    op.inner_mut().request_body = None;
+    ad_verify_docs(
+        op.id("verifyActiveDirectoryCredential")
+            .input::<Path<ResourceIdPathDoc>>(),
+    )
+}
+pub(crate) fn verify_active_directory_inline_docs(
+    op: TransformOperation<'_>,
+) -> TransformOperation<'_> {
+    ad_verify_docs(
+        op.id("verifyInlineActiveDirectoryCredential")
+            .input::<Json<InlineActiveDirectoryVerification>>(),
+    )
+}
+fn ad_verify_docs(op: TransformOperation<'_>) -> TransformOperation<'_> {
+    let op = op
+        .tag("Credentials")
+        .summary("Verify an Active Directory credential")
+        .security_requirement("bearerAuth")
+        .response_with::<204, (), _>(|r| r.description("Verified; no resource persisted"));
+    let op = problem_response::<400>(op, "Invalid request");
+    let op = problem_response::<401>(op, "Authentication required");
+    let op = problem_response::<403>(op, "Permission denied");
+    let op = problem_response::<404>(op, "Credential not found");
+    let op = problem_response::<409>(op, "Resource conflict");
+    let op = problem_response::<500>(op, "Backend operation failed");
+    let op = problem_response::<501>(op, "Backend capability unavailable");
+    let op = problem_response::<502>(op, "Directory operation failed");
+    problem_response::<504>(op, "Backend timeout")
+}
+
+fn ad_create_schema(generator: &mut schemars::SchemaGenerator) -> schemars::Schema {
+    let fields = generator.subschema_for::<ActiveDirectoryRequest>();
+    schemars::json_schema!({"allOf":[fields, {"type":"object","required":["host","bindDn","baseDn","bindPassword","tlsMode"],"properties":{"clearPort":{"const":false}}}]})
+}
+fn ad_password_schema(_: &mut schemars::SchemaGenerator) -> schemars::Schema {
+    schemars::json_schema!({"type":"string","minLength":1,"format":"password","writeOnly":true})
+}
+fn ad_tls_schema(_: &mut schemars::SchemaGenerator) -> schemars::Schema {
+    schemars::json_schema!({"type":"string","enum":["ldaps","starttls"]})
+}

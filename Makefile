@@ -45,6 +45,7 @@ docs-check:
 
 # Validate the E2E contract inventory, ownership, schemas, and OSP baseline.
 e2e-evidence-check:
+	python3 tests/test_registry_retry.py
 	python3 scripts/check-e2e-evidence.py
 	python3 tests/test_e2e_evidence.py
 	python3 tests/test_enterprise_agent_control.py

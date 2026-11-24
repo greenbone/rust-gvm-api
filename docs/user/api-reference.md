@@ -9,7 +9,7 @@ The normative contract is
 [`spec/rest-api`](https://github.com/greenbone-hive/rust-gvm-api/tree/main/spec/rest-api)
 in the source repository and `api/rest/openapi.yaml` in the release docs
 archive. The curated contract and runtime-generated contract are tested for
-alignment. The current contract contains 121 paths and 199 operations.
+alignment. The current contract contains 125 paths and 203 operations.
 
 ## Base paths and documentation
 
@@ -183,6 +183,7 @@ the tables are relative to `/gvm/public/v1` except `/gvm/health` and `/gvm/ready
 | `POST` | `/targets/{id}/clone` | Clone a target |
 | `GET` | `/agents` | List agents |
 | `GET`, `PUT`, `DELETE` | `/agents/{id}` | Read, update, or delete an agent |
+| `POST` | `/agents/inventory-token` | Issue a confidential inventory token (no body; no-store) |
 | `POST` | `/agents/sync` | Synchronize agent state |
 | `GET` | `/agents/{id}/support-bundle` | Download an agent support bundle |
 | `PUT` | `/agent-control-scan-configs/{id}` | Update an agent-control scan configuration |
@@ -271,8 +272,27 @@ completion.
 | `POST` | `/credential-stores/{id}/actions/verify` | Verify a credential store |
 | `GET`, `POST` | `/credentials` | List or create credentials |
 | `GET`, `PUT`, `DELETE` | `/credentials/{id}` | Read, update, or delete a credential |
+| `POST` | `/credentials/{id}/actions/verify-active-directory` | Verify a saved Active Directory credential without persisting changes |
+| `POST` | `/active-directory/credential-verifications` | Verify inline Active Directory credentials without saving a credential |
+| `POST` | `/active-directory/object-searches` | Search a bounded live directory subset using a saved AD credential |
 | `GET`, `POST` | `/port-lists` | List or create port lists |
 | `GET`, `PUT`, `DELETE` | `/port-lists/{id}` | Read, update, or delete a port list |
+
+Active Directory credentials use type `ad` and nested `activeDirectory` fields.
+Create and inline verification require connection, bind, and TLS settings;
+updates preserve omitted fields. The bind password is write-only. Both saved
+and inline verification return `204 No Content` on success, without creating a
+resource or returning a `Location` header. Verification is backend-capability
+dependent; unsupported backends return `501`, not a simulated bind result.
+
+Active Directory object search accepts JSON selectors, not DN query parameters,
+and never persists a search, target, or task. Responses use `Cache-Control:
+no-store` and return a bounded fetched subset, not REST pagination or global
+directory totals. Preserve the optional `objects` envelope and optional nested
+expansions; inspect `truncated` and fetched-subset `counts` when present. Omitted
+options retain backend defaults. Search requires backend capability discovery;
+unsupported or failed searches never become an empty successful result. Scripted
+tests do not establish live AD/TLS interoperability.
 
 ### Identity and current-user settings
 
@@ -340,3 +360,9 @@ them.
 
 For the complete method-level upstream disposition, see the repository's
 [`upstream-surface-dispositions.tsv`](https://github.com/greenbone-hive/rust-gvm-api/blob/main/docs/upstream-surface-dispositions.tsv).
+
+Inventory tokens are opaque backend-issued confidential credentials, not sessions. The endpoint requires GMP 22.8, positive help discovery and `get_agents` permission. Unsupported capability returns 501, temporary issuance 503, internal generation 500, and malformed successful payload 502. Mock tokens are nonfunctional test fixtures, not live agent authentication qualification.
+
+Agent list/detail responses preserve optional read-only operatingSystem, architecture, osCpe, and osStatus as open backend strings. Missing or empty upstream fields are omitted; unknown future values are preserved. No OS update or administration surface is added (#732).
+
+Support-bundle downloads accept optional boolean anonymized independently of encryption; omitted, false and true are forwarded distinctly. days and binary/content headers are unchanged. gvmd performs anonymization: the gateway does not rewrite archives or guarantee that all contents are safe to share. Live backend qualification remains required (#733).

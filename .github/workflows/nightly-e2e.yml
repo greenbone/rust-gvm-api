@@ -67,7 +67,11 @@ jobs:
           components: rustfmt
           cache-key: cargo-e2e-rest-discovery-${{ runner.os }}-${{ runner.arch }}-stable-${{ hashFiles('**/Cargo.lock') }}
       - name: Start compose-backed runtime
-        run: ./scripts/compose-dev.sh up -d --build
+        run: |
+          # Retry only registry pulls, never builds or container startup. --pull
+          # never also overrides service pull_policy: always after this phase.
+          python3 scripts/registry_retry.py ./scripts/compose-dev.sh pull --ignore-buildable
+          ./scripts/compose-dev.sh up -d --build --pull never
       - name: Capture exact E2E runtime provenance
         if: always()
         run: |

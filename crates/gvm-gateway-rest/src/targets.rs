@@ -65,6 +65,8 @@ pub(crate) struct TargetResponse {
     name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     comment: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    source: Option<String>,
     hosts: Vec<String>,
     #[serde(
         rename = "excludeHosts",
@@ -99,6 +101,7 @@ impl From<gvm_gateway_domain::Target> for TargetResponse {
             id: parse_uuid(&t.id),
             name: t.name,
             comment: t.comment,
+            source: t.source,
             hosts: t.hosts,
             exclude_hosts: t.exclude_hosts,
             alive_test: t.alive_test.as_deref().map(AliveTest::parse),
@@ -165,6 +168,9 @@ impl TargetListQuery {
 pub struct CreateTargetRequest {
     /// Optional name so validation can return RFC 9457 instead of extractor failures.
     pub name: Option<String>,
+    /// Optional provenance. Explicit null is invalid; omission preserves backend defaults.
+    #[serde(default, deserialize_with = "deserialize_target_source")]
+    pub source: Option<String>,
     /// Optional comment.
     pub comment: Option<String>,
     /// Hosts.
@@ -211,6 +217,7 @@ impl CreateTargetRequest {
                 "hosts must contain at least one entry".to_string(),
             ));
         }
+        validate_target_source(self.source.as_deref())?;
         validate_optional_uuid("portListId", self.port_list_id.as_deref())?;
         validate_optional_uuid("sshCredentialId", self.ssh_credential_id.as_deref())?;
         validate_optional_uuid("smbCredentialId", self.smb_credential_id.as_deref())?;
@@ -219,6 +226,7 @@ impl CreateTargetRequest {
 
         Ok(CreateTargetInput {
             name,
+            source: self.source,
             comment: self.comment,
             hosts: self.hosts,
             exclude_hosts: self.exclude_hosts,
@@ -246,6 +254,9 @@ impl ValidateInto<CreateTargetInput> for CreateTargetRequest {
 pub struct ModifyTargetRequest {
     /// Optional name.
     pub name: Option<String>,
+    /// Optional provenance. Explicit null is invalid; omission preserves backend defaults.
+    #[serde(default, deserialize_with = "deserialize_target_source")]
+    pub source: Option<String>,
     /// Optional comment.
     pub comment: Option<String>,
     /// Optional hosts.
@@ -282,6 +293,7 @@ pub struct ModifyTargetRequest {
 impl ModifyTargetRequest {
     /// Validate the request and convert it into the application command.
     pub fn validate(self) -> Result<ModifyTargetInput, GatewayError> {
+        validate_target_source(self.source.as_deref())?;
         validate_optional_uuid("portListId", self.port_list_id.as_deref())?;
         validate_optional_uuid("sshCredentialId", self.ssh_credential_id.as_deref())?;
         validate_optional_uuid("smbCredentialId", self.smb_credential_id.as_deref())?;
@@ -290,6 +302,7 @@ impl ModifyTargetRequest {
 
         Ok(ModifyTargetInput {
             name: self.name,
+            source: self.source,
             comment: self.comment,
             hosts: self.hosts,
             exclude_hosts: self.exclude_hosts,
@@ -438,6 +451,22 @@ pub fn build_gmp_filter(
     _filter_id: Option<String>,
 ) -> Option<String> {
     filter_string.filter(|value| !value.trim().is_empty())
+}
+
+fn deserialize_target_source<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    String::deserialize(deserializer).map(Some)
+}
+
+fn validate_target_source(source: Option<&str>) -> Result<(), GatewayError> {
+    match source {
+        None | Some("manual" | "active_directory") => Ok(()),
+        Some(_) => Err(GatewayError::InvalidInput(
+            "source must be manual or active_directory".to_string(),
+        )),
+    }
 }
 
 fn validate_optional_uuid(field: &str, value: Option<&str>) -> Result<(), GatewayError> {

@@ -35,11 +35,12 @@ use crate::{
         clone_agent_group, clone_agent_group_docs, create_agent_group, create_agent_group_docs,
         delete_agent, delete_agent_docs, delete_agent_group, delete_agent_group_docs, get_agent,
         get_agent_docs, get_agent_group, get_agent_group_docs, get_agent_installer_instruction,
-        get_agent_installer_instruction_docs, get_agent_support_bundle,
-        get_agent_support_bundle_docs, list_agent_groups, list_agent_groups_docs, list_agents,
-        list_agents_docs, modify_agent_control_scan_config_docs, modify_agent_docs,
-        modify_agent_group_docs, sync_agents, sync_agents_docs, update_agent,
-        update_agent_control_scan_config, update_agent_group,
+        get_agent_installer_instruction_docs, get_agent_inventory_token,
+        get_agent_inventory_token_docs, get_agent_support_bundle, get_agent_support_bundle_docs,
+        list_agent_groups, list_agent_groups_docs, list_agents, list_agents_docs,
+        modify_agent_control_scan_config_docs, modify_agent_docs, modify_agent_group_docs,
+        sync_agents, sync_agents_docs, update_agent, update_agent_control_scan_config,
+        update_agent_group,
     },
     alerts::{
         create_alert, create_alert_docs, delete_alert, delete_alert_docs, get_alert,
@@ -50,7 +51,9 @@ use crate::{
         get_credential, get_credential_docs, get_credential_store, get_credential_store_docs,
         list_credential_stores, list_credential_stores_docs, list_credentials,
         list_credentials_docs, update_credential, update_credential_docs, update_credential_store,
-        update_credential_store_docs, verify_credential_store, verify_credential_store_docs,
+        update_credential_store_docs, verify_active_directory_inline,
+        verify_active_directory_inline_docs, verify_active_directory_saved,
+        verify_active_directory_saved_docs, verify_credential_store, verify_credential_store_docs,
     },
     docs::{api_docs, redoc_js},
     error::RestError,
@@ -316,6 +319,10 @@ fn documented_router() -> ApiRouter<GatewayService> {
         )
         // Agents and agent groups
         .api_route(
+            "/gvm/public/v1/agents/inventory-token",
+            post_with(get_agent_inventory_token, get_agent_inventory_token_docs),
+        )
+        .api_route(
             "/gvm/public/v1/agents",
             get_with(list_agents, list_agents_docs),
         )
@@ -517,6 +524,27 @@ fn documented_router() -> ApiRouter<GatewayService> {
             delete_with(delete_schedule, delete_schedule_docs),
         )
         // Credentials
+        .api_route(
+            "/gvm/public/v1/active-directory/object-searches",
+            post_with(
+                crate::active_directory::search_active_directory_objects,
+                crate::active_directory::search_active_directory_objects_docs,
+            ),
+        )
+        .api_route(
+            "/gvm/public/v1/credentials/{id}/actions/verify-active-directory",
+            post_with(
+                verify_active_directory_saved,
+                verify_active_directory_saved_docs,
+            ),
+        )
+        .api_route(
+            "/gvm/public/v1/active-directory/credential-verifications",
+            post_with(
+                verify_active_directory_inline,
+                verify_active_directory_inline_docs,
+            ),
+        )
         .api_route(
             "/gvm/public/v1/credential-stores",
             get_with(list_credential_stores, list_credential_stores_docs),

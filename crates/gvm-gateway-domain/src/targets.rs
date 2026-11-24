@@ -17,6 +17,9 @@ pub struct Target {
     /// Optional comment.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
+    /// Optional server-supplied provenance; future values are preserved.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
     /// Host entries.
     pub hosts: Vec<String>,
     /// Excluded host entries.
@@ -84,6 +87,8 @@ pub struct TargetQuery {
 pub struct CreateTargetInput {
     /// Name.
     pub name: String,
+    /// Optional provenance (`manual` or `active_directory`); omission delegates to gvmd.
+    pub source: Option<String>,
     /// Optional comment.
     pub comment: Option<String>,
     /// Host entries.
@@ -113,6 +118,8 @@ pub struct CreateTargetInput {
 pub struct ModifyTargetInput {
     /// Optional name.
     pub name: Option<String>,
+    /// Optional provenance (`manual` or `active_directory`); omission delegates to gvmd.
+    pub source: Option<String>,
     /// Optional comment.
     pub comment: Option<String>,
     /// Optional hosts.

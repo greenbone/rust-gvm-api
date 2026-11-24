@@ -14,22 +14,19 @@ const RUST_GVM_COMPONENTS: &[&str] = &[
     "gvm-mock-server",
     "gvm-protocol",
 ];
-// Issue #723 advances the workspace to the published rust-gvm v0.11.0 release.
-// Guard the canonical repository URL and immutable release commit so all five
-// workspace components share one upstream baseline.
+// Issue #763 advances all five components atomically to the published rust-gvm
+// v0.12.0 release commit.
 const RUST_GVM_DEPENDENCY_URL: &str = "https://github.com/greenbone/rust-gvm";
-const RUST_GVM_DEPENDENCY_VERSION: &str = "0.11.0";
-const RUST_GVM_DEPENDENCY_REVISION: &str = "bee36e69c2bfe9e4bc169a346600fcc9cebc2283";
-// Issue #588 established the reviewed rust-gvm v0.8.0 facade inventory, and
-// issues #620 and #634 advanced the accepted baseline through v0.10.0. Direct
-// comparison of the v0.10.0 and v0.11.0 typed-facade trees shows the same 267
-// public async helpers, so all reviewed dispositions remain valid while the
-// release metadata advances atomically.
+const RUST_GVM_DEPENDENCY_VERSION: &str = "0.12.0";
+const RUST_GVM_DEPENDENCY_REVISION: &str = "ab437cfaab51b636b0ef69bddde09103dbb16b92";
+// The v0.12.0 release retains the reviewed 270-helper feature-stack facade.
+// Advance the matching snapshot and disposition ledger to the release tag
+// without changing their deliberately reviewed classifications.
 const RUST_GVM_PIN_REFERENCE: &str = "release-tag";
-const RUST_GVM_FACADE_TAG: &str = "v0.11.0";
-const RUST_GVM_FACADE_REVISION: &str = "bee36e69c2bfe9e4bc169a346600fcc9cebc2283";
-const RUST_GVM_TYPED_FACADE_METHOD_COUNT: usize = 267;
-const RUST_GVM_TYPED_FACADE_SNAPSHOT: &str = "tests/fixtures/rust-gvm-v0.11.0-typed-facade.tsv";
+const RUST_GVM_FACADE_TAG: &str = "v0.12.0";
+const RUST_GVM_FACADE_REVISION: &str = "ab437cfaab51b636b0ef69bddde09103dbb16b92";
+const RUST_GVM_TYPED_FACADE_METHOD_COUNT: usize = 270;
+const RUST_GVM_TYPED_FACADE_SNAPSHOT: &str = "tests/fixtures/rust-gvm-v0.12.0-typed-facade.tsv";
 const RUST_GVM_DISPOSITION_LEDGER: &str = "../../docs/upstream-surface-dispositions.tsv";
 const ALLOWED_DISPOSITIONS: &[&str] = &[
     "exposed", "mapped", "internal", "blocked", "deferred", "omitted",
