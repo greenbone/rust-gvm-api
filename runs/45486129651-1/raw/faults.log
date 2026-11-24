@@ -1,0 +1,118 @@
+exercising direct-OpenVASD fault scenario http-400 through gvmd/gateway
+md   main:MESSAGE:2026-11-24 21h12.32 utc:2007:    Greenbone Vulnerability Manager version 26.43.0 (DB revision 282)
+md manage:   INFO:2026-11-24 21h12.32 utc:2007:    Modifying scanner.
+Scanner modified.
+[1m[33mwarning[0m[1m: unused workspace dependency `tower-http`[0m
+  [1m[94m--> [0mCargo.toml:44:1
+   [1m[94m|[0m
+[1m[94m44[0m [1m[94m|[0m tower-http = { version = "0.6.11", features = ["trace"] }
+   [1m[94m|[0m [1m[33m^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: `cargo::unused_workspace_dependencies` is set to `warn` by default
+[1m[96mhelp[0m: consider removing the workspace dependency `tower-http`
+[1m[33mwarning[0m: workspace (manifest) generated 1 warning
+[1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+[1m[92m     Running[0m tests/rest_openvasd_fault_mapping.rs (target/debug/build/gvm-gateway-e2e/b06091c8538d0298/out/rest_openvasd_fault_mapping-b06091c8538d0298)
+
+running 1 test
+gateway ready: {"status":"ready"}
+FAULT_EVIDENCE {"gatewayMapping":"task:Interrupted","injectedAt":"openvasd-http-boundary","outcome":"pass","scenario":"http-400","target":"e2e-target"}
+test rest_openvasd_faults_have_bounded_gateway_mappings ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.33s
+
+exercising direct-OpenVASD fault scenario http-500 through gvmd/gateway
+md   main:MESSAGE:2026-11-24 21h12.34 utc:2032:    Greenbone Vulnerability Manager version 26.43.0 (DB revision 282)
+md manage:   INFO:2026-11-24 21h12.34 utc:2032:    Modifying scanner.
+Scanner modified.
+[1m[33mwarning[0m[1m: unused workspace dependency `tower-http`[0m
+  [1m[94m--> [0mCargo.toml:44:1
+   [1m[94m|[0m
+[1m[94m44[0m [1m[94m|[0m tower-http = { version = "0.6.11", features = ["trace"] }
+   [1m[94m|[0m [1m[33m^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: `cargo::unused_workspace_dependencies` is set to `warn` by default
+[1m[96mhelp[0m: consider removing the workspace dependency `tower-http`
+[1m[33mwarning[0m: workspace (manifest) generated 1 warning
+[1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+[1m[92m     Running[0m tests/rest_openvasd_fault_mapping.rs (target/debug/build/gvm-gateway-e2e/b06091c8538d0298/out/rest_openvasd_fault_mapping-b06091c8538d0298)
+
+running 1 test
+gateway ready: {"status":"ready"}
+FAULT_EVIDENCE {"gatewayMapping":"task:Interrupted","injectedAt":"openvasd-http-boundary","outcome":"pass","scenario":"http-500","target":"e2e-target"}
+test rest_openvasd_faults_have_bounded_gateway_mappings ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.33s
+
+exercising direct-OpenVASD fault scenario malformed-body through gvmd/gateway
+md   main:MESSAGE:2026-11-24 21h12.37 utc:2058:    Greenbone Vulnerability Manager version 26.43.0 (DB revision 282)
+md manage:   INFO:2026-11-24 21h12.37 utc:2058:    Modifying scanner.
+Scanner modified.
+[1m[33mwarning[0m[1m: unused workspace dependency `tower-http`[0m
+  [1m[94m--> [0mCargo.toml:44:1
+   [1m[94m|[0m
+[1m[94m44[0m [1m[94m|[0m tower-http = { version = "0.6.11", features = ["trace"] }
+   [1m[94m|[0m [1m[33m^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: `cargo::unused_workspace_dependencies` is set to `warn` by default
+[1m[96mhelp[0m: consider removing the workspace dependency `tower-http`
+[1m[33mwarning[0m: workspace (manifest) generated 1 warning
+[1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+[1m[92m     Running[0m tests/rest_openvasd_fault_mapping.rs (target/debug/build/gvm-gateway-e2e/b06091c8538d0298/out/rest_openvasd_fault_mapping-b06091c8538d0298)
+
+running 1 test
+gateway ready: {"status":"ready"}
+FAULT_EVIDENCE {"gatewayMapping":"task:Interrupted","injectedAt":"openvasd-http-boundary","outcome":"pass","scenario":"malformed-body","target":"e2e-target"}
+test rest_openvasd_faults_have_bounded_gateway_mappings ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.33s
+
+exercising direct-OpenVASD fault scenario malformed-header through gvmd/gateway
+md   main:MESSAGE:2026-11-24 21h12.40 utc:2084:    Greenbone Vulnerability Manager version 26.43.0 (DB revision 282)
+md manage:   INFO:2026-11-24 21h12.40 utc:2084:    Modifying scanner.
+Scanner modified.
+[1m[33mwarning[0m[1m: unused workspace dependency `tower-http`[0m
+  [1m[94m--> [0mCargo.toml:44:1
+   [1m[94m|[0m
+[1m[94m44[0m [1m[94m|[0m tower-http = { version = "0.6.11", features = ["trace"] }
+   [1m[94m|[0m [1m[33m^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: `cargo::unused_workspace_dependencies` is set to `warn` by default
+[1m[96mhelp[0m: consider removing the workspace dependency `tower-http`
+[1m[33mwarning[0m: workspace (manifest) generated 1 warning
+[1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+[1m[92m     Running[0m tests/rest_openvasd_fault_mapping.rs (target/debug/build/gvm-gateway-e2e/b06091c8538d0298/out/rest_openvasd_fault_mapping-b06091c8538d0298)
+
+running 1 test
+gateway ready: {"status":"ready"}
+FAULT_EVIDENCE {"gatewayMapping":"task:Interrupted","injectedAt":"openvasd-http-boundary","outcome":"pass","scenario":"malformed-header","target":"e2e-target"}
+test rest_openvasd_faults_have_bounded_gateway_mappings ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.33s
+
+exercising direct-OpenVASD fault scenario timeout through gvmd/gateway
+md   main:MESSAGE:2026-11-24 21h12.43 utc:2113:    Greenbone Vulnerability Manager version 26.43.0 (DB revision 282)
+md manage:   INFO:2026-11-24 21h12.43 utc:2113:    Modifying scanner.
+Scanner modified.
+[1m[33mwarning[0m[1m: unused workspace dependency `tower-http`[0m
+  [1m[94m--> [0mCargo.toml:44:1
+   [1m[94m|[0m
+[1m[94m44[0m [1m[94m|[0m tower-http = { version = "0.6.11", features = ["trace"] }
+   [1m[94m|[0m [1m[33m^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: `cargo::unused_workspace_dependencies` is set to `warn` by default
+[1m[96mhelp[0m: consider removing the workspace dependency `tower-http`
+[1m[33mwarning[0m: workspace (manifest) generated 1 warning
+[1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+[1m[92m     Running[0m tests/rest_openvasd_fault_mapping.rs (target/debug/build/gvm-gateway-e2e/b06091c8538d0298/out/rest_openvasd_fault_mapping-b06091c8538d0298)
+
+running 1 test
+gateway ready: {"status":"ready"}
+FAULT_EVIDENCE {"gatewayMapping":"task:Interrupted","injectedAt":"openvasd-http-boundary","outcome":"pass","scenario":"timeout","target":"e2e-target"}
+test rest_openvasd_faults_have_bounded_gateway_mappings ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.33s
+
+md   main:MESSAGE:2026-11-24 21h12.56 utc:2160:    Greenbone Vulnerability Manager version 26.43.0 (DB revision 282)
+md manage:   INFO:2026-11-24 21h12.56 utc:2160:    Modifying scanner.
+Scanner modified.

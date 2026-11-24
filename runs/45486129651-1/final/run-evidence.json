@@ -1,0 +1,30 @@
+{
+  "runId": 45486129651,
+  "runAttempt": 1,
+  "runNumber": 1273,
+  "event": "push",
+  "headBranch": "main",
+  "headSha": "f0b7cff3ae9b362959419b32b1481e369a0e55bc",
+  "createdAt": "2026-11-24T20:57:38Z",
+  "runUrl": "https://github.com/greenbone/rust-gvm-api/actions/runs/45486129651",
+  "jobId": 138771946317,
+  "jobUrl": "https://github.com/greenbone/rust-gvm-api/actions/runs/45486129651/job/138771946317",
+  "conclusion": "success",
+  "timingsSeconds": {
+    "startup": 739.0,
+    "tests": 132.0,
+    "total": 955.0
+  },
+  "retried": false,
+  "artifacts": {
+    "expected": [
+      "e2e-direct-openvasd-shadow-raw"
+    ],
+    "present": [
+      "e2e-direct-openvasd-shadow-raw"
+    ],
+    "complete": true
+  },
+  "failureClassification": null,
+  "failureOwnerRole": null
+}
