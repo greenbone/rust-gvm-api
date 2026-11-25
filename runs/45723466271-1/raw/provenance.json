@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "gateway": {
+    "sourceRevision": "de9203087ba83bbd89518baf7d513c78b085c859",
+    "image": "local/gvm-gateway:direct-openvasd",
+    "imageDigest": "sha256:f98ae67f01e3828859b30b2d168cd601799a871e6901697dad07142b7261cf5b"
+  },
+  "gvmd": {
+    "sourceRevision": "10e702cba57a83a32eb01d0ee2c6318c4c6dc437",
+    "image": "ghcr.io/greenbone/gvmd:all-features-26.43.0@sha256:ad4428c3a6270065a5f7a5a4c189fe2834920fc4b281bda5bfce42fbf7457aee",
+    "imageDigest": "sha256:cda04510feec13c88dd5adfa7ef5096d2e6aaed53252adcb13e16fbf83c366e0"
+  },
+  "scanner": {
+    "sourceRevision": "141e9cb57e786572178f4352c995e0b43b463bf5",
+    "image": "ghcr.io/greenbone/gvm-openapi-emulator:edge@sha256:296d6ee3a3752071f840995d7df3f260f19d281d5014bd5a604f2dd26871c0c9",
+    "imageDigest": "sha256:c5f69d59deeafafba12c5af6657bfd5048c92cdffb73ddd67887233db740a6e1"
+  },
+  "feedData": [
+    {
+      "name": "vulnerability-tests",
+      "revision": "registry.community.greenbone.net/community/vulnerability-tests:latest@sha256:dd8d97343a8fd6f6963e8eb763bc830bc155f885be1fec93f53c657f0a6e7763"
+    },
+    {
+      "name": "data-objects",
+      "revision": "registry.community.greenbone.net/community/data-objects:latest@sha256:8640ed0ab16a33e20ad7a030df4b9dd889c8fbedc2e0388d23bbb3b16029b1c5"
+    },
+    {
+      "name": "report-formats",
+      "revision": "registry.community.greenbone.net/community/report-formats:latest@sha256:51e1f0f915466efaf8a8657cbd19339dcee7cda3c0fe388c8103383a8b5e2042"
+    },
+    {
+      "name": "gpg-data",
+      "revision": "registry.community.greenbone.net/community/gpg-data:latest@sha256:f89f21b93ef1d1dc4774178d664a02759350621ba70719dd8742d644b5bf3cd5"
+    },
+    {
+      "name": "notus-data",
+      "revision": "registry.community.greenbone.net/community/notus-data:latest@sha256:f1b839de137e9cb2dcc7e7e06b30d8ef4f2570d6b57a9a1d8cb1a6151fc6eb28"
+    }
+  ],
+  "fixtures": [
+    {
+      "name": "tests/e2e/compose.direct-openvasd.yaml",
+      "revision": "sha256:61766762f927b5e815c0e206ca7a1cc81bbfb3a27ed4596c559708f6dc4d9318"
+    },
+    {
+      "name": "GVM_GATEWAY_E2E_TARGET_HOST",
+      "revision": "e2e-target"
+    },
+    {
+      "name": "scanner-backend-identity",
+      "revision": "openvasd-backend"
+    },
+    {
+      "name": "synthetic-target-identity",
+      "revision": "e2e-target"
+    },
+    {
+      "name": "synthetic-target-image",
+      "revision": "sha256:6769dc3a703c719c1d2756bda113659be28ae16cf0da58dd5fd823d6b9a050ea"
+    },
+    {
+      "name": "tests/e2e/evidence/direct-openvasd-pins.json",
+      "revision": "sha256:d7a0d1506c746d4935a2c965cf21a847c687c29374e7308a310ba15a66432702"
+    },
+    {
+      "name": "gvm-openapi-emulator/examples/openvasd/swagger.json",
+      "revision": "sha256:c57e15573b66d6fdba29a5378865f2029c6ea5e7a64e4dda640f68f793e0b825"
+    },
+    {
+      "name": "gvm-openapi-emulator/examples/openvasd",
+      "revision": "sha256:0d2c5af7d064ea244cbb7cda252e4dea706b347983c952f7c08a6eff3f481146"
+    },
+    {
+      "name": "tests/e2e-harness",
+      "revision": "sha256:2d34724fec13ea63f8318a72670cba4f3a606ad685b08ae39d65d226402f57d7"
+    }
+  ],
+  "apiContract": {
+    "name": "spec/rest-api/openapi.yaml",
+    "revision": "sha256:8d2c5d0d0199dc934af67dc1e4358bd53a836926725874c289303b97d56f93de"
+  },
+  "composeSha256": "61766762f927b5e815c0e206ca7a1cc81bbfb3a27ed4596c559708f6dc4d9318",
+  "runner": {
+    "os": "Linux",
+    "architecture": "X64",
+    "image": "ubuntu24:20261116.376.1"
+  },
+  "harnessRevision": "de9203087ba83bbd89518baf7d513c78b085c859"
+}
