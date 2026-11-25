@@ -34,6 +34,9 @@ after a release.
 
 `Publish Release` builds and uploads:
 
+- standalone `gvm-gateway` Linux archives for amd64 and arm64 (`.tar.gz`)
+- SHA-256 checksums and Sigstore signature/certificate sidecars for each
+  standalone archive and checksum
 - `gvm-gateway` Debian packages (`.deb`)
 - `gvm-gateway` Arch Linux packages (`.pkg.tar.zst`)
 - `gvm-gateway` OCI image archives (`.oci.tar`)
@@ -72,6 +75,11 @@ For local testing without releasing:
 ```bash
 cargo build --locked --release -p gvm-gateway
 cargo test
+./scripts/build-binary-archive.sh --version "$(./scripts/workspace-version.sh)" --architecture amd64
+./scripts/binary-archive-smoke.sh \
+  --archive "dist/binaries/gvm-gateway_$(./scripts/workspace-version.sh)_linux_amd64.tar.gz" \
+  --version "$(./scripts/workspace-version.sh)" \
+  --architecture amd64
 ./scripts/package-build.sh --packager deb --version "$(./scripts/workspace-version.sh)"
 ./scripts/package-build.sh --packager archlinux --version "$(./scripts/workspace-version.sh)"
 ./scripts/oci-build.sh --tag local/gvm-gateway:dev
@@ -92,5 +100,9 @@ Compose stack validation and OCI archive export are also covered in CI/release a
 ## Packaging Notes
 
 - The first pass packages the unified `gvm-gateway` binary.
+- Standalone archives contain the native `gvm-gateway` executable, example
+  configuration, README, license, and `BUILDINFO` provenance. Their checksums
+  reference asset basenames so downstream builders can verify them from any
+  directory.
 - Packages create `/etc/gvm-gateway` and ship an example config at `/etc/gvm-gateway/gvm-gateway.toml.example`; administrators may copy it to `/etc/gvm-gateway/gvm-gateway.toml`.
 - OCI image builds ship a container-oriented config at `/etc/gvm-gateway/gvm-gateway.toml` with `0.0.0.0:8080` and a shared `/run/gvmd` socket contract.

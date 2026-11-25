@@ -68,6 +68,9 @@ jobs:
     name: Package (${{ matrix.packager }}, ${{ matrix.package_arch }})
     needs: [validate, test]
     runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -98,11 +101,52 @@ jobs:
         run: ./scripts/package-build.sh --packager "${{ matrix.packager }}" --architecture "${{ matrix.package_arch }}" --version "${{ needs.validate.outputs.version }}" --output-dir dist/packages
       - name: Smoke test package install
         run: ./scripts/package-smoke.sh --packager "${{ matrix.packager }}" --package-dir dist/packages
+      - name: Build standalone Linux archive
+        if: matrix.packager == 'deb'
+        run: |
+          ./scripts/build-binary-archive.sh \
+            --version "${{ needs.validate.outputs.version }}" \
+            --architecture "${{ matrix.package_arch }}" \
+            --output-dir dist/binaries
+      - name: Smoke test standalone Linux archive
+        if: matrix.packager == 'deb'
+        run: |
+          ./scripts/binary-archive-smoke.sh \
+            --archive "dist/binaries/gvm-gateway_${{ needs.validate.outputs.version }}_linux_${{ matrix.package_arch }}.tar.gz" \
+            --version "${{ needs.validate.outputs.version }}" \
+            --architecture "${{ matrix.package_arch }}"
+      - name: Sign standalone Linux archive
+        if: matrix.packager == 'deb'
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+          ARCHITECTURE: ${{ matrix.package_arch }}
+        run: |
+          archive="dist/binaries/gvm-gateway_${VERSION}_linux_${ARCHITECTURE}.tar.gz"
+          identity="https://github.com/${GITHUB_REPOSITORY}/.github/workflows/release-publish.yml@${GITHUB_REF}"
+          for artifact in "${archive}" "${archive}.sha256"; do
+            cosign sign-blob --yes \
+              --output-signature "${artifact}.sig" \
+              --output-certificate "${artifact}.pem" \
+              "${artifact}"
+            cosign verify-blob \
+              --certificate-identity "${identity}" \
+              --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+              --certificate "${artifact}.pem" \
+              --signature "${artifact}.sig" \
+              "${artifact}"
+          done
       - name: Store package assets
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: gvm-gateway-${{ matrix.packager }}-${{ matrix.package_arch }}-release-assets
           path: dist/packages/*
+          if-no-files-found: error
+      - name: Store standalone Linux archive assets
+        if: matrix.packager == 'deb'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: gvm-gateway-linux-${{ matrix.package_arch }}-release-assets
+          path: dist/binaries/*
           if-no-files-found: error
 
   oci:
@@ -173,12 +217,13 @@ jobs:
           pattern: "*-release-assets"
           path: dist/release-assets
           merge-multiple: true
-      - name: Verify OS packages and OCI archive
+      - name: Verify release assets
         run: |
           shopt -s nullglob
           deb_packages=(dist/release-assets/*.deb)
           arch_packages=(dist/release-assets/*.pkg.tar.zst)
           os_packages=("${deb_packages[@]}" "${arch_packages[@]}")
+          binary_archives=(dist/release-assets/gvm-gateway_*_linux_*.tar.gz)
           oci_archives=(dist/release-assets/*.oci.tar)
           docs_archives=(dist/release-assets/rust-gvm-api-docs-*.tar.gz)
 
@@ -192,6 +237,19 @@ jobs:
             exit 1
           fi
 
+          if (( ${#binary_archives[@]} != 2 )); then
+            echo "Expected two standalone Linux binary archives, found ${#binary_archives[@]}" >&2
+            exit 1
+          fi
+
+          for architecture in amd64 arm64; do
+            archive="dist/release-assets/gvm-gateway_${{ needs.validate.outputs.version }}_linux_${architecture}.tar.gz"
+            if [[ ! -f "${archive}" ]]; then
+              echo "Missing standalone Linux binary archive for ${architecture}" >&2
+              exit 1
+            fi
+          done
+
           if (( ${#oci_archives[@]} == 0 )); then
             echo "No OCI image archive was generated for the release" >&2
             exit 1
@@ -202,11 +260,20 @@ jobs:
             exit 1
           fi
 
-          for asset in "${os_packages[@]}" "${oci_archives[@]}" "${docs_archives[@]}"; do
+          for asset in "${os_packages[@]}" "${binary_archives[@]}" "${oci_archives[@]}" "${docs_archives[@]}"; do
             if [[ ! -f "${asset}.sha256" ]]; then
               echo "Missing checksum for ${asset}" >&2
               exit 1
             fi
+          done
+
+          for archive in "${binary_archives[@]}"; do
+            for signed_asset in "${archive}" "${archive}.sha256"; do
+              if [[ ! -f "${signed_asset}.sig" || ! -f "${signed_asset}.pem" ]]; then
+                echo "Missing Sigstore sidecars for ${signed_asset}" >&2
+                exit 1
+              fi
+            done
           done
       - name: Ensure GitHub release exists
         env:
