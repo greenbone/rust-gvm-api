@@ -45,7 +45,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Rust
-        uses: greenbone/actions/setup-rust@d6d4c9500cb4e83f8a516ec1d40b04bcc720bd22 # v3
+        uses: greenbone/actions/setup-rust@c28cd1740972049d898f7ea2cdd871a94bd9bd77 # v3
         with:
           rust-version: stable
           components: rustfmt
@@ -62,7 +62,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up Rust
-        uses: greenbone/actions/setup-rust@d6d4c9500cb4e83f8a516ec1d40b04bcc720bd22 # v3
+        uses: greenbone/actions/setup-rust@c28cd1740972049d898f7ea2cdd871a94bd9bd77 # v3
         with:
           rust-version: stable
           components: clippy
@@ -83,7 +83,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Rust
-        uses: greenbone/actions/setup-rust@d6d4c9500cb4e83f8a516ec1d40b04bcc720bd22 # v3
+        uses: greenbone/actions/setup-rust@c28cd1740972049d898f7ea2cdd871a94bd9bd77 # v3
         with:
           rust-version: ${{ matrix.rust }}
           components: rustfmt
@@ -98,7 +98,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Rust
-        uses: greenbone/actions/setup-rust@d6d4c9500cb4e83f8a516ec1d40b04bcc720bd22 # v3
+        uses: greenbone/actions/setup-rust@c28cd1740972049d898f7ea2cdd871a94bd9bd77 # v3
         with:
           rust-version: stable
           components: rustfmt
@@ -117,7 +117,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Rust
-        uses: greenbone/actions/setup-rust@d6d4c9500cb4e83f8a516ec1d40b04bcc720bd22 # v3
+        uses: greenbone/actions/setup-rust@c28cd1740972049d898f7ea2cdd871a94bd9bd77 # v3
         with:
           rust-version: stable
           components: rustfmt
@@ -165,7 +165,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Rust
-        uses: greenbone/actions/setup-rust@d6d4c9500cb4e83f8a516ec1d40b04bcc720bd22 # v3
+        uses: greenbone/actions/setup-rust@c28cd1740972049d898f7ea2cdd871a94bd9bd77 # v3
         with:
           rust-version: stable
           components: rustfmt
@@ -183,7 +183,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Rust
-        uses: greenbone/actions/setup-rust@d6d4c9500cb4e83f8a516ec1d40b04bcc720bd22 # v3
+        uses: greenbone/actions/setup-rust@c28cd1740972049d898f7ea2cdd871a94bd9bd77 # v3
         with:
           rust-version: stable
           components: llvm-tools-preview
@@ -207,7 +207,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Rust
-        uses: greenbone/actions/setup-rust@d6d4c9500cb4e83f8a516ec1d40b04bcc720bd22 # v3
+        uses: greenbone/actions/setup-rust@c28cd1740972049d898f7ea2cdd871a94bd9bd77 # v3
         with:
           rust-version: "1.89.0"
           components: rustfmt
@@ -235,7 +235,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Rust
-        uses: greenbone/actions/setup-rust@d6d4c9500cb4e83f8a516ec1d40b04bcc720bd22 # v3
+        uses: greenbone/actions/setup-rust@c28cd1740972049d898f7ea2cdd871a94bd9bd77 # v3
         with:
           rust-version: stable
           components: rustfmt
