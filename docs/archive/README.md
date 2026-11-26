@@ -1,7 +1,7 @@
 # Documentation archive
 
 These documents are preserved for design history. They describe completed
-migrations or plans that predate the current 0.8.1 workspace and must not be
+migrations or plans that predate the current 0.8.2 workspace and must not be
 used as the API contract or as implementation instructions.
 
 | Document | Why it is archived | Current replacement |
