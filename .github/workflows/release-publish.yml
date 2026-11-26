@@ -97,6 +97,8 @@ jobs:
       - name: Build release binary
         run: cargo build --locked --release -p gvm-gateway
       - uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
+        with:
+          cosign-release: v2.6.1
       - name: Build package
         run: ./scripts/package-build.sh --packager "${{ matrix.packager }}" --architecture "${{ matrix.package_arch }}" --version "${{ needs.validate.outputs.version }}" --output-dir dist/packages
       - name: Smoke test package install
