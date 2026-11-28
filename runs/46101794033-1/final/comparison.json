@@ -1,0 +1,371 @@
+{
+  "schemaVersion": 1,
+  "baselineLane": "community-osp",
+  "candidateLane": "community-direct-openvasd-shadow",
+  "contracts": [
+    {
+      "contract": "gmp.typed-gvmd-api",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.auth.request-scoped-basic",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.auth.session-lifecycle",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.auth.session-rejection",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.automation.alert-lifecycle",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.automation.schedule-lifecycle",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.compliance.audit-scan-lifecycle",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.compliance.usage-scope",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.credential-store.capability-mutation",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.credential-store.fixture-selection",
+      "baseline": "not-run",
+      "candidate": "pass",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.credential-store.request-shape-redaction",
+      "baseline": "not-run",
+      "candidate": "pass",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.cross-cutting.headers",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.discovery.scan-lifecycle",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.discovery.scan-result-context",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.discovery.target-lifecycle",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.discovery.task-action-state",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.discovery.task-lifecycle",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.dto.credential-store-capabilities",
+      "baseline": "not-run",
+      "candidate": "pass",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.dto.epss",
+      "baseline": "not-run",
+      "candidate": "pass",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.dto.identity-meta",
+      "baseline": "not-run",
+      "candidate": "pass",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.dto.identity-owner",
+      "baseline": "not-run",
+      "candidate": "pass",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.dto.report-operating-system-summary",
+      "baseline": "not-run",
+      "candidate": "pass",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.dto.result-qod",
+      "baseline": "not-run",
+      "candidate": "pass",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.dto.summary-nvt-boundary",
+      "baseline": "not-run",
+      "candidate": "pass",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.enterprise.agent-control",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "enterprise-feature-coverage"
+    },
+    {
+      "contract": "rest.errors.negative-routing",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.errors.problem-details",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.identity.admin-catalogs",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.identity.auth-rejection",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.identity.group-lifecycle",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.identity.user-settings",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.reports.export-jobs",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.reports.import-lifecycle",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.reports.result-drilldown",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.resources.put-id-stability",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.scan-config.preference-mutation",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.scan-config.preference-nvt-identity",
+      "baseline": "not-run",
+      "candidate": "pass",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.scan-config.preference-value-selection",
+      "baseline": "not-run",
+      "candidate": "pass",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.supporting.catalogs",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.supporting.credential-lifecycle",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.supporting.port-list-lifecycle",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.supporting.scan-config-lifecycle",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.system.health-readiness-version",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.system.timezone-catalog",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.tracing.w3c",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.triage.filtered-read",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "rest.triage.note-override-lifecycle",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "scanner.agent-backed-scan-correlation",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "enterprise-feature-coverage"
+    },
+    {
+      "contract": "scanner.agent-control-error-mapping",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "enterprise-feature-coverage"
+    },
+    {
+      "contract": "scanner.direct-openvasd-error-mapping",
+      "baseline": "not-run",
+      "candidate": "pass",
+      "disposition": "backend-specific",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "scanner.identity-separation",
+      "baseline": "not-run",
+      "candidate": "pass",
+      "disposition": "backend-specific",
+      "ownerRole": "community-contract-lane"
+    },
+    {
+      "contract": "scanner.osp-scan-execution",
+      "baseline": "not-run",
+      "candidate": "not-run",
+      "disposition": "gap",
+      "ownerRole": "community-contract-lane"
+    }
+  ]
+}
