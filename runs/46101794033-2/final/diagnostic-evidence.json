@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "runId": 46101794033,
+  "runAttempt": 2,
+  "expected": [
+    "compose-ps.txt",
+    "compose.log",
+    "runner-container-runtime.txt"
+  ],
+  "present": [
+    "compose-ps.txt",
+    "compose.log",
+    "runner-container-runtime.txt"
+  ],
+  "complete": true
+}
